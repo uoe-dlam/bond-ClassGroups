@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<schema xmlns="http://www.blackboard.com/bb-schema"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.blackboard.com/bb-schema http://fibbba.medu.com/xsd/bb-schema.xsd"
+        name="ClassGroups" license="Course Delivery">
+    <comment>Database entites to support the bond-ClassGroups building block.</comment>
+
+    <table name="bond_ClassGroups_groupext">
+        <column name="external_system_id" data-type="nvarchar(256)" nullable="false" />
+        <column name="groups_pk1" data-type="id" nullable="true" />
+        <column name="title" data-type="nvarchar(200)" nullable="true" />
+        <column name="sync_ind" data-type="char(1)" default="'Y'" nullable="false">
+            <value-constraint name="bond_ClassGroups_ge_sync_ind">
+                <accepted-value value="Y"/>
+                <accepted-value value="N"/>
+            </value-constraint>
+        </column>
+        <column name="gradebook_custom_view_pk1" data-type="id" nullable="true" />
+        <column name="leader_feed_cu_pk1" data-type="id" nullable="true" />
+        <column name="leader_override_cu_pk1" data-type="id" nullable="true" />
+        <column name="leader_override_ind" data-type="char(1)" default="'N'" nullable="false">
+            <value-constraint name="bond_ClassGroups_ge_loi">
+                <accepted-value value="Y"/>
+                <accepted-value value="N"/>
+            </value-constraint>
+        </column>
+        <primary-key name="bond_ClassGroups_groupext_pk">
+            <columnref name="external_system_id" />
+        </primary-key>
+        <foreign-key name="bond_ClassGroups_groupext_fk1" reference-table="groups" on-delete="setnull">
+            <columnref name="groups_pk1" />
+        </foreign-key>
+        <foreign-key name="bond_ClassGroups_groupext_fk2" reference-table="gradebook_custom_view" on-delete="setnull">
+            <columnref name="gradebook_custom_view_pk1" />
+        </foreign-key>
+        <foreign-key name="bond_ClassGroups_groupext_fk3" reference-table="course_users" on-delete="setnull">
+            <columnref name="leader_feed_cu_pk1" />
+        </foreign-key>
+        <foreign-key name="bond_ClassGroups_groupext_fk4" reference-table="course_users" on-delete="setnull">
+            <columnref name="leader_override_cu_pk1" />
+        </foreign-key>
+        <index name="bond_ClassGroups_groupext_ak1" unique="true">
+            <columnref name="groups_pk1" />
+        </index>
+    </table>
+
+    <table name="bond_ClassGroups_task">
+        <column name="pk1" data-type="id" nullable="false" identity="true" />
+        <column name="status" data-type="nvarchar(10)" nullable="false" />
+        <column name="entered_date" data-type="datetime" nullable="false" />
+        <column name="scheduled_date" data-type="datetime" nullable="true" />
+        <column name="started_date" data-type="datetime" nullable="true" />
+        <column name="ended_date" data-type="datetime" nullable="true" />
+        <column name="entered_node" data-type="nvarchar(50)" nullable="false" />
+        <column name="processing_node" data-type="nvarchar(50)" nullable="true" />
+        <column name="total_groups" data-type="integer" nullable="true" />
+        <column name="processed_groups" data-type="integer" nullable="true" />
+        <primary-key name="bond_ClassGroups_task_pk">
+            <columnref name="pk1" />
+        </primary-key>
+    </table>
+
+    <table name="bond_ClassGroups_log">
+        <column name="pk1" data-type="id" nullable="false" identity="true" />
+        <column name="task_pk1" data-type="int" nullable="false" />
+        <column name="logged_date" data-type="datetime" nullable="false" />
+        <column name="log_level" data-type="nvarchar(10)" nullable="false" />
+        <column name="message" data-type="nvarchar(255)" nullable="false" />
+        <column name="stacktrace" data-type="ntext" nullable="true" />
+        <primary-key name="bond_ClassGroups_log_pk">
+            <columnref name="pk1" />
+        </primary-key>
+        <foreign-key name="bond_ClassGroups_log_fk1" reference-table="bond_ClassGroups_task" on-delete="cascade">
+            <columnref name="task_pk1" />
+        </foreign-key>
+    </table>q
+
+    <stored-procedures>
+        <stored-procedure name="bond_classgroups_createschedule.sql.db-mssql" comment="Atomically creates a new schedule." availability="SqlServer" />
+        <stored-procedure name="bond_classgroups_createschedule.sql.db-oracle" comment="Atomically creates a new schedule." availability="Oracle" />
+        <stored-procedure name="bond_classgroups_createschedule.sql.db-pgsql" comment="Atomically creates a new schedule." availability="PostgreSQL" />
+
+
+    </stored-procedures>
+
+</schema>

@@ -1,0 +1,16 @@
+CREATE OR REPLACE FUNCTION bond_classgroups_createsched(
+  p_entered_date timestamp without time zone,
+  p_scheduled_date timestamp without time zone,
+  p_entered_node character varying(50)
+)
+RETURNS VOID AS $$
+BEGIN
+INSERT INTO bond_classgroups_task (pk1, status, entered_date, scheduled_date, entered_node)
+  SELECT nextval('bond_classgroups_task_seq'), 'SCHEDULED', p_entered_date, p_scheduled_date, p_entered_node
+  WHERE NOT EXISTS (
+      SELECT pk1 FROM bond_classgroups_task WHERE scheduled_date = p_scheduled_date
+  );
+
+
+END;
+$$ LANGUAGE plpgsql;

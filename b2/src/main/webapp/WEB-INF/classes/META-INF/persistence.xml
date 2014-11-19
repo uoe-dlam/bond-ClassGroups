@@ -1,0 +1,12 @@
+<persistence xmlns="http://java.sun.com/xml/ns/persistence" version="1.0">
+	<persistence-unit name="hibernatePersistenceUnit" transaction-type="RESOURCE_LOCAL">
+		<provider>org.hibernate.ejb.HibernatePersistence</provider>
+        <class>au.edu.bond.classgroups.groupext.GroupExtension</class>
+        <class>au.edu.bond.classgroups.model.Task</class>
+        <class>au.edu.bond.classgroups.model.LogEntry</class>
+
+        <properties>
+            <property name="hibernate.show_sql" value="false" />
+        </properties>
+	</persistence-unit>
+</persistence>

@@ -1,0 +1,155 @@
+.deserialiserTabList {
+    margin-bottom: 0;
+    padding: 0 0.5em;
+}
+.deserialiserTab {
+    display: inline-block;
+    border-radius: 0.5em 0.5em 0 0;
+    border: 1px solid #ccc;
+    border-bottom: none;
+    margin: 0;
+}
+.deserialiserTab a {
+    display: inline-block;
+    color: inherit;
+    padding: 0.4em 1em;
+    font-weight: bold;
+}
+.tabSelected {
+    background-color: #efefef;
+}
+.deserialiserTabFrame {
+    border-radius: 0.5em;
+    border: 1px solid #ccc;
+    padding: 2em;
+    margin: 0;
+}
+input[type="text"] {
+    max-width: 80em;
+    width: 100%;
+}
+
+p {
+    padding-bottom: 0.3em;
+}
+
+
+.level-error, .status-failed, .status-unknown {
+    background-color: #fcc !important;
+}
+.level-warning, .status-skipped {
+    background-color: #ffc !important;
+}
+.status-complete {
+    background-color: #cfc !important;
+}
+
+.level-error:hover {
+    background-color: #fee !important;
+}
+.level-warning:hover {
+    background-color: #ffe !important;
+}
+
+#log {
+    display: table;
+    border-spacing: 0.3em;
+    border-collapse: separate;
+    right: 0;
+    left: 0;
+    width: 100%;
+}
+.logEntry {
+    display: table-row;
+    background-color: #eee;
+}
+.logEntry:hover {
+    background-color: #f4f4f4;
+}
+.logEntryColumn {
+    display: table-cell;
+    padding: 0.3em 0.5em;
+    min-width: 2em;
+}
+
+.stacktraceText {
+    padding: 1em;
+    white-space: pre;
+    font-family: monospace;
+    font-size: 1.2em;
+}
+
+.stacktraceLink {
+    cursor: pointer;
+}
+
+.taskSummary {
+    display: table;
+    border-spacing: 0.3em;
+    border-collapse: separate;
+}
+.taskSummaryRow {
+    display: table-row;
+}
+.taskSummaryColumn {
+    display: table-cell;
+    padding: 0.3em;
+    background-color: #eee;
+}
+
+.taskSummaryColumn.label {
+    font-weight: bold;
+}
+
+.cleanUpDaysToKeep {
+    width: 5em !important;
+}
+
+
+#scheduleTable {
+    display: table;
+    border-spacing: 0.3em;
+    border-collapse: separate;
+}
+.scheduleRow {
+    display: table-row;
+}
+.scheduleColumn {
+    display: table-cell;
+    padding: 0.3em;
+}
+
+.scheduleColumn .hour, .scheduleColumn .minute {
+    width: 5em !important;
+}
+
+.scheduleColumn.header {
+    font-weight: bold;
+    padding-left: 1em;
+    padding-bottom: 0;
+}
+
+
+
+.genericButton {
+    cursor: pointer;
+}
+
+
+.leader {
+    display: inline-block;
+    background-color: #eee;
+    padding: 1em;
+    margin: 1em 1em 5em 3em;
+    border-radius: 0.5em;
+    min-width: 35em
+}
+
+.leaderContent {
+    display: inline-block;
+    margin: 6px;
+}
+
+.leader .browse {
+    float:right;
+}

@@ -1,0 +1,25 @@
+apply plugin: 'java'
+version = '2.0.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testCompile 'junit:junit:4.11',
+                'org.mockito:mockito-all:1.9.5'
+
+    compile 'commons-io:commons-io:2.4',
+            'commons-lang:commons-lang:2.6',
+            'net.sf.supercsv:super-csv:2.2.0',
+            'org.hibernate:hibernate-entitymanager:4.3.5.Final',
+            'org.springframework:spring-beans:4.0.5.RELEASE',
+            'org.springframework:spring-context:4.0.5.RELEASE',
+            'com.thoughtworks.xstream:xstream:1.4.4'
+
+}
+
+jar {
+    // Changes the produced WAR files name to the name of the root project.
+    baseName rootProject.name + '-' + project.name
+}

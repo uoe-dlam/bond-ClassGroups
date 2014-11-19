@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context.xsd
+       http://www.springframework.org/schema/tx
+       http://www.springframework.org/schema/tx/spring-tx.xsd
+       ">
+
+    <bean id="customAutowireBeanFactoryProcessor"
+          class="blackboard.platform.spring.beans.CustomAutowireBeanFactoryProcessor" />
+
+    <context:annotation-config />
+    <context:component-scan base-package="au.edu.bond.classgroups" />
+
+
+    <bean id="hibernateDataSource" class="blackboard.platform.spring.jdbc.LearnDataSource"/>
+
+    <bean id="entityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+        <property name="persistenceXmlLocation" value="classpath:META-INF/persistence.xml" />
+        <property name="persistenceUnitName" value="hibernatePersistenceUnit" />
+        <property name="dataSource" ref="hibernateDataSource" />
+    </bean>
+
+    <bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+        <property name="entityManagerFactory" ref="entityManagerFactory" />
+        <property name="dataSource" ref="hibernateDataSource" />
+    </bean>
+
+    <tx:annotation-driven transaction-manager="transactionManager" />
+
+
+    <bean id="taskScope" class="au.edu.bond.classgroups.spring.TaskScope" />
+    <bean class="org.springframework.beans.factory.config.CustomScopeConfigurer">
+        <property name="scopes">
+            <map>
+                <entry key="task" value-ref="taskScope" />
+            </map>
+        </property>
+    </bean>
+
+    <bean id="groupExtensionDAO" class="au.edu.bond.classgroups.groupext.GroupExtensionDAO" destroy-method="close" />
+    <bean id="logEntryDAO" class="au.edu.bond.classgroups.dao.LogEntryDAO" destroy-method="close" />
+    <bean id="taskService" class="au.edu.bond.classgroups.service.TaskService" destroy-method="close" />
+    <bean id="taskDAO" class="au.edu.bond.classgroups.dao.TaskDAO" destroy-method="close" />
+
+    <bean id="bbAvailableGroupToolDAO" class="au.edu.bond.classgroups.dao.BbAvailableGroupToolDAO" />
+    <bean id="bbCourseDAO" class="au.edu.bond.classgroups.dao.BbCourseDAO" />
+    <bean id="bbCourseMembershipDAO" class="au.edu.bond.classgroups.dao.BbCourseMembershipDAO" />
+    <bean id="bbGradebookCustomViewDAO" class="au.edu.bond.classgroups.dao.BbGradebookCustomViewDAO" />
+    <bean id="bbGroupDAO" class="au.edu.bond.classgroups.dao.BbGroupDAO" />
+    <bean id="bbGroupMembershipDAO" class="au.edu.bond.classgroups.dao.BbGroupMembershipDAO" />
+    <bean id="bbUserDAO" class="au.edu.bond.classgroups.dao.BbUserDAO" />
+
+    <bean id="bbAvailableGroupToolService" class="au.edu.bond.classgroups.service.BbAvailableGroupToolService" scope="task" lazy-init="true" />
+    <bean id="bbCourseMembershipService" class="au.edu.bond.classgroups.service.BbCourseMembershipService" scope="task" lazy-init="true" />
+    <bean id="bbCourseService" class="au.edu.bond.classgroups.service.BbCourseService" scope="task" lazy-init="true" />
+    <bean id="bbGradebookCustomViewService" class="au.edu.bond.classgroups.service.BbGradebookCustomViewService" scope="task" lazy-init="true" />
+    <bean id="bbGroupMembershipService" class="au.edu.bond.classgroups.service.BbGroupMembershipService" scope="task" lazy-init="true" />
+    <bean id="bbGroupService" class="au.edu.bond.classgroups.service.BbGroupService" scope="task" lazy-init="true" />
+    <bean id="bbUserService" class="au.edu.bond.classgroups.service.BbUserService" scope="task" lazy-init="true" />
+    <bean id="groupExtensionService" class="au.edu.bond.classgroups.groupext.GroupExtensionService" scope="task" lazy-init="true" />
+
+    <bean id="groupTitleService" class="au.edu.bond.classgroups.service.EscapingGroupTitleService" scope="task" lazy-init="true" >
+        <constructor-arg><bean class="au.edu.bond.classgroups.service.LeaderGroupTitleService" /></constructor-arg>
+    </bean>
+
+    <bean id="scheduleManager" class="au.edu.bond.classgroups.manager.ScheduleManager" />
+
+    <bean id="groupManager" class="au.edu.bond.classgroups.manager.BbGroupManager" scope="task" lazy-init="true" />
+    <bean id="memberManager" class="au.edu.bond.classgroups.manager.BbMemberManager" scope="task" lazy-init="true" />
+    <bean id="toolManager" class="au.edu.bond.classgroups.manager.BbToolManager" scope="task" lazy-init="true" />
+    <bean id="smartViewManager" class="au.edu.bond.classgroups.manager.BbSmartViewManager" scope="task" lazy-init="true" />
+
+    <bean id="currentTask" scope="task" factory-bean="taskService" factory-method="getCurrentTask" lazy-init="true" />
+
+    <bean id="nonCurrentTaskLogger" class="au.edu.bond.classgroups.logging.HibernateTaskLogger" scope="prototype" />
+    <bean id="currentTaskLogger" class="au.edu.bond.classgroups.logging.HibernateTaskLogger" scope="task" lazy-init="true">
+        <property name="task" ref="currentTask" />
+    </bean>
+
+
+    <bean id="configurationService" class="au.edu.bond.classgroups.config.CachingConfigurationService">
+        <constructor-arg>
+            <bean class="au.edu.bond.classgroups.config.XmlConfigurationService ">
+                <property name="configurationPollingFreq" value="5000" />
+            </bean>
+        </constructor-arg>
+    </bean>
+    <bean id="configurationDirectoryFactory" class="au.edu.bond.classgroups.config.BbDirectoryFactory" />
+    <bean id="configurationDirectory" factory-bean="configurationDirectoryFactory" factory-method="getConfigurationDirectory" />
+    <bean id="configurationXMLFile" class="java.io.File">
+        <constructor-arg value="config.xml" />
+        <constructor-arg ref="configurationDirectory" />
+    </bean>
+    <bean id="configurationXMLLockFile" class="java.io.File">
+        <constructor-arg value="config.xml.lock" />
+        <constructor-arg ref="configurationDirectory" />
+    </bean>
+
+    <bean id="configuration" scope="prototype" factory-bean="configurationService" factory-method="loadConfiguration" />
+    <bean id="pullFileCsvFeedDeserialiserConfig" scope="prototype" factory-bean="configuration" factory-method="getPullFileCsvFeedDeserialiser" />
+    <bean id="pullUrlCsvFeedDeserialiserConfig" scope="prototype" factory-bean="configuration" factory-method="getPullUrlCsvFeedDeserialiser" />
+    <bean id="pushCsvFeedDeserialiserConfig" scope="prototype" factory-bean="configuration" factory-method="getPushCsvFeedDeserialiser" />
+
+    <bean id="taskProcessorFactory" class="au.edu.bond.classgroups.task.TaskProcessorFactory" />
+    <bean id="currentTaskProcessor" class="au.edu.bond.classgroups.task.TaskProcessor" scope="task" lazy-init="true" />
+    <bean id="taskExecutor" class="au.edu.bond.classgroups.task.TaskExecutor" destroy-method="close" />
+    <bean id="scheduledTaskProcessor" class="au.edu.bond.classgroups.task.ScheduledTaskProcessor" />
+
+    <bean id="feedDeserialiserFactory" class="au.edu.bond.classgroups.feed.FeedDeserialiserFactory" />
+
+    <bean id="defaultFeedDeserialiser" scope="task" factory-bean="feedDeserialiserFactory" factory-method="getDefault" lazy-init="true" />
+    <bean id="csvFeedDeserialiser" class="au.edu.bond.classgroups.feed.csv.CsvFeedDeserialiser" scope="task" lazy-init="true" />
+    <bean id="pullFileCsvFeedDeserialiser" class="au.edu.bond.classgroups.feed.csv.FileCsvFeedDeserialiser" scope="task" lazy-init="true">
+        <property name="groupsFile">
+            <bean class="java.io.File">
+                <constructor-arg>
+                    <bean factory-bean="pullFileCsvFeedDeserialiserConfig" factory-method="getGroupsFilePath" />
+                </constructor-arg>
+            </bean>
+        </property>
+        <property name="membersFile">
+            <bean class="java.io.File">
+                <constructor-arg>
+                    <bean factory-bean="pullFileCsvFeedDeserialiserConfig" factory-method="getMembersFilePath" />
+                </constructor-arg>
+            </bean>
+        </property>
+    </bean>
+    <bean id="pullUrlCsvFeedDeserialiser" class="au.edu.bond.classgroups.feed.csv.UrlCsvFeedDeserialiser" scope="task" lazy-init="true">
+        <property name="groupsUrl">
+            <bean class="java.net.URL">
+                <constructor-arg>
+                    <bean factory-bean="pullUrlCsvFeedDeserialiserConfig" factory-method="getGroupsUrl" />
+                </constructor-arg>
+            </bean>
+        </property>
+        <property name="membersUrl">
+            <bean class="java.net.URL">
+                <constructor-arg>
+                    <bean factory-bean="pullUrlCsvFeedDeserialiserConfig" factory-method="getMembersUrl" />
+                </constructor-arg>
+            </bean>
+        </property>
+    </bean>
+    <bean id="httpPushCsvFeedDeserialiser" class="au.edu.bond.classgroups.feed.csv.FileCsvFeedDeserialiser" scope="task" lazy-init="true" />
+
+    <bean id="pluginsUrl" class="java.lang.String">
+        <constructor-arg value="/webapps/portal/execute/tabs/tabAction?tabType=admin" />
+    </bean>
+
+    <bean id="scheduledTaskRunner" class="au.edu.bond.classgroups.task.ScheduledTaskRunner" />
+
+    <bean id="taskCleanupRunner" class="au.edu.bond.classgroups.task.TaskCleanupRunner" />
+    <bean id="cleanupDelaySeconds" class="java.lang.Long">
+        <constructor-arg value="0"/>
+    </bean>
+    <bean id="cleanupPeriodSeconds" class="java.lang.Long">
+        <constructor-arg value="3600"/>
+    </bean>
+
+    <bean id="dbUtil" class="au.edu.bond.classgroups.util.BbDbUtil" />
+
+    <bean id="resourceService" class="au.edu.bond.classgroups.service.BbResourceService">
+        <constructor-arg name="vendorId" value="bond" />
+        <constructor-arg name="handle" value="ClassGroups" />
+    </bean>
+
+</beans>

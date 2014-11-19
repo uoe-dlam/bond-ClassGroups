@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest>
+    <plugin>
+        <name value="b2.name"/>
+        <handle value="ClassGroups"/>
+        <description value="b2.description"/>
+        <version value="2.0.1"/>
+        <requires>
+            <bbversion value="9.1"/>
+        </requires>
+        <vendor>
+            <id value="bond"/>
+            <name value="Bond University"/>
+            <url value="http://www.bond.edu.au/"/>
+            <description value="Bond University, Information Services"/>
+        </vendor>
+
+        <default-locale value="en_GB" />
+
+        <http-actions>
+            <config value="Config.action"/>
+        </http-actions>
+
+        <schema-dirs>
+            <schema-dir dir-name="bond-ClassGroups" />
+        </schema-dirs>
+
+        <application-defs>
+            <application handle="ClassGroups" type="system" name="bond.classgroups.applications.system">
+                <description lang="en_US">Class Groups</description>
+                <links>
+                    <link>
+                        <type value="system_tool"/>
+                        <handle value="landing"/>
+                        <name value="bond.classgroups.link.tool"/>
+                        <navhandle value="" />
+                        <description value="bond.classgroups.link.tool.description"/>
+                        <url value="Index.action"/>
+                        <entitlement-uid value="bond.classgroups.admin.MODIFY" />
+                    </link>
+                    <link>
+                        <type value="nav_handle_param"/>
+                        <handle value="configure"/>
+                        <name value="bond.classgroups.link.configure"/>
+                        <description value="bond.classgroups.link.configure.description"/>
+                        <url value="Config.action"/>
+                        <navhandle value="bond-ClassGroups-nav-landing" />
+                        <component value="admin"/>
+                        <entitlement-uid value="bond.classgroups.admin.MODIFY" />
+                    </link>
+                    <link>
+                        <type value="nav_handle_param"/>
+                        <handle value="defaultDeserialiser"/>
+                        <name value="bond.classgroups.link.defaultdeserialiser"/>
+                        <description value="bond.classgroups.link.defaultdeserialiser.description"/>
+                        <url value="DefaultDeserialiser.action"/>
+                        <navhandle value="bond-ClassGroups-nav-landing" />
+                        <component value="admin"/>
+                        <entitlement-uid value="bond.classgroups.admin.MODIFY" />
+                    </link>
+                    <link>
+                        <type value="nav_handle_param"/>
+                        <handle value="taskList"/>
+                        <name value="bond.classgroups.link.tasklist"/>
+                        <description value="bond.classgroups.link.tasklist.description"/>
+                        <url value="TaskList.action"/>
+                        <navhandle value="bond-ClassGroups-nav-landing" />
+                        <component value="admin"/>
+                        <entitlement-uid value="bond.classgroups.admin.MODIFY" />
+                    </link>
+                    <link>
+                        <type value="nav_handle_param"/>
+                        <handle value="recentLog"/>
+                        <name value="bond.classgroups.link.mostrecentlog"/>
+                        <description value="bond.classgroups.link.mostrecentlog.description"/>
+                        <url value="Log.action"/>
+                        <navhandle value="bond-ClassGroups-nav-landing" />
+                        <component value="admin"/>
+                        <entitlement-uid value="bond.classgroups.admin.MODIFY" />
+                    </link>
+                    <link>
+                        <type value="nav_handle_param"/>
+                        <handle value="lookupLog"/>
+                        <name value="bond.classgroups.link.log"/>
+                        <description value="bond.classgroups.link.log.description"/>
+                        <url value="Log.action"/>
+                        <navhandle value="bond-ClassGroups-nav-taskList" />
+                        <component value="admin"/>
+                        <entitlement-uid value="bond.classgroups.admin.MODIFY" />
+                    </link>
+                    <link>
+                        <type value="nav_handle_param"/>
+                        <handle value="cleanUp"/>
+                        <name value="bond.classgroups.link.cleanup"/>
+                        <description value="bond.classgroups.link.cleanup.description"/>
+                        <url value="CleanUp.action"/>
+                        <navhandle value="bond-ClassGroups-nav-landing" />
+                        <component value="admin"/>
+                        <entitlement-uid value="bond.classgroups.admin.MODIFY" />
+                    </link>
+                </links>
+            </application>
+            <application handle="ClassGroupsCourseSettings" type="course" name="bond.classgroups.applications.course">
+                <description>Class Groups course level settings.</description>
+                <links>
+                    <link>
+                        <type value="nav_handle_param" />
+                        <subgroup value="users_group" />
+                        <handle value="courseSettings" />
+                        <navhandle value="course_top" />
+                        <name value="bond.classgroups.link.coursesettings" />
+                        <url value="CourseSettings.action?course_id=@X@course.pk_string@X@" />
+                        <entitlement-uid value="bond.classgroups.coursesettings.MODIFY" />
+                        <description value="bond.classgroups.link.coursesettings.description" />
+                    </link>
+                </links>
+            </application>
+        </application-defs>
+
+        <entitlements>
+            <entitlement uid="bond.classgroups.coursesettings.MODIFY"
+                         label="bond.classgroups.entitlement.course"
+                         type="Course"
+                         template="course.control_panel.VIEW" />
+            <entitlement uid="bond.classgroups.admin.MODIFY"
+                         label="bond.classgroups.entitlement.system"
+                         type="System"
+                         template="system.administration.VIEW" />
+        </entitlements>
+
+        <permissions>
+            <permission type="java.lang.RuntimePermission" name="createClassLoader"/>
+            <permission type="java.lang.reflect.ReflectPermission" name="suppressAccessChecks"/>
+
+            <permission type="java.lang.RuntimePermission" name="accessDeclaredMembers" />
+            <permission type="java.lang.RuntimePermission" name="createClassLoader" />
+            <permission type="java.lang.RuntimePermission" name="setContextClassLoader" />
+            <permission type="java.io.FilePermission" name="${java.home}/lib/*" actions="read" />
+            <permission type="java.util.PropertyPermission" name="jboss.i18n.generate-proxies" actions="write" />
+            <permission type="java.lang.RuntimePermission" name="getenv.spring.liveBeansView.mbeanDomain" />
+            <permission type="java.lang.RuntimePermission" name="getProtectionDomain" />
+            <permission type="java.lang.RuntimePermission" name="modifyThread" />
+
+            <permission type="attribute" name="user.*" actions="get" />
+
+            <permission type="blackboard.persist.PersistPermission" name="availablegrouptool" actions="create,modify,delete"/>
+            <permission type="blackboard.persist.PersistPermission" name="group" actions="create,modify"/>
+            <permission type="blackboard.persist.PersistPermission" name="groupmembership" actions="create,modify,delete"/>
+            <permission type="blackboard.persist.PersistPermission" name="wiki" actions="create,modify,delete"/>
+            <permission type="blackboard.persist.PersistPermission" name="blog" actions="create,modify,delete"/>
+            <permission type="blackboard.persist.PersistPermission" name="gradebookcustomview" actions="create,modify"/>
+
+            <permission type="blackboard.persist.PersistPermission" name="tab" actions="create" />
+            <permission type="blackboard.persist.PersistPermission" name="layoutfamily" actions="modify" />
+
+            <permission type="java.io.FilePermission" name="&amp;lt;&amp;lt;ALL FILES&amp;gt;&amp;gt;" actions="read,write,delete" />
+            <permission type="java.net.SocketPermission" name="*" actions="connect,resolve" />
+
+        </permissions>
+    </plugin>
+</manifest>

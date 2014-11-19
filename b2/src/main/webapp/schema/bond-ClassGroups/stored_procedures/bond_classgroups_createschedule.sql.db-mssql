@@ -1,0 +1,25 @@
+BEGIN
+  IF OBJECT_ID( 'bond_classgroups_createsched', 'P' ) IS NOT NULL
+    DROP PROCEDURE bond_classgroups_createsched;
+
+  CREATE PROCEDURE bond_classgroups_createsched
+    @p_entered_date DATETIME,
+    @p_scheduled_date DATETIME,
+    @p_entered_node VARCHAR(50)
+  AS
+  BEGIN
+
+    SET NOCOUNT, XACT_ABORT ON
+
+    BEGIN TRANSACTION;
+
+    IF NOT EXISTS (SELECT * FROM bond_classgroups_task WITH (UPDLOCK, HOLDLOCK) WHERE scheduled_date = @p_scheduled_date)
+    BEGIN
+      INSERT INTO bond_classgroups_task (status, entered_date, scheduled_date, entered_node)
+      VALUES ('SCHEDULED', @p_entered_date, @p_scheduled_date, @p_entered_node);
+    END;
+
+    COMMIT;
+
+  END
+END

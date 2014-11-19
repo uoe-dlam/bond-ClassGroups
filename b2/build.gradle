@@ -1,0 +1,66 @@
+apply plugin: 'war'
+version = getB2Version()
+
+ext {
+//    deployServer = "bb-app-dev.ad.bond.edu.au"
+//    deployInstance = "BBLEARN"
+    deployServer = "localhost:9876"
+    deployInstance = "BBLEARN"
+}
+
+configurations {
+    deployB2
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        url "https://bbprepo.blackboard.com/content/repositories/releases/"
+    }
+}
+
+dependencies {
+    providedCompile 'blackboard.platform:bb-platform:9.1.140152.0',
+                    'blackboard.platform:bb-taglibs:9.1.140152.0',
+                    'javax.servlet:servlet-api:2.5'
+
+    compile 'javax.inject:javax.inject:1',
+            'org.springframework:spring-orm:4.0.5.RELEASE',
+            'org.springframework:spring-beans:4.0.5.RELEASE',
+            'org.springframework:spring-context:4.0.5.RELEASE',
+            'org.springframework:spring-web:4.0.5.RELEASE',
+            'org.hibernate:hibernate-core:4.3.5.Final',
+            'org.hibernate:hibernate-entitymanager:4.3.5.Final',
+            'blackboard.platform:bb-spring-webapi:10.1',
+            'com.google.code.gson:gson:2.2.4'
+
+    compile 'net.sourceforge.stripes:stripes:1.5.7',
+            files('../lib/bb-stripes-utils-1.0.0.jar')
+
+    compile project(':api')
+
+    //Ant deploy
+    deployB2 "org.oscelot:b2deploy-task:0.1.0"
+
+    testCompile 'junit:junit:4.11',
+                'org.mockito:mockito-all:1.9.5'
+}
+
+war {
+    // Changes the produced WAR files name to the name of the root project.
+    baseName rootProject.name
+}
+
+build.dependsOn(project(':api').build);
+
+// Determines the building block version based from the bb-manifest.xml file
+String getB2Version() {
+    File mfFile = new File(file(webAppDir), 'WEB-INF/bb-manifest.xml');
+    def manifest = new XmlSlurper().parse(mfFile);
+    return manifest.plugin.version['@value'];
+}
+
+task deployB2( dependsOn: "build" ) << {
+    ant.taskdef( name: "b2deploy", classname: "org.oscelot.ant.B2DeployTask", classpath: project.configurations.deployB2.asPath )
+    ant.b2deploy( localfilepath: project.war.archivePath, host: project.ext.deployServer, courseorgavailable: 'true', clean: 'true', webappName: 'bb-starting-block-' + project.ext.deployInstance )
+}

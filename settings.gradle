@@ -1,0 +1,4 @@
+include 'api'
+include 'b2'
+
+rootProject.name = 'bond-ClassGroups'
