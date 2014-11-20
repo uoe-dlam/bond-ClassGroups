@@ -73,14 +73,12 @@
         <foreign-key name="bond_ClassGroups_log_fk1" reference-table="bond_ClassGroups_task" on-delete="cascade">
             <columnref name="task_pk1" />
         </foreign-key>
-    </table>q
+    </table>
 
     <stored-procedures>
-        <stored-procedure name="bond_classgroups_createschedule.sql.db-mssql" comment="Atomically creates a new schedule." availability="SqlServer" />
-        <stored-procedure name="bond_classgroups_createschedule.sql.db-oracle" comment="Atomically creates a new schedule." availability="Oracle" />
-        <stored-procedure name="bond_classgroups_createschedule.sql.db-pgsql" comment="Atomically creates a new schedule." availability="PostgreSQL" />
-
-
+        <stored-procedure name="bond_classgroups_createsched.sql.db-mssql" comment="Atomically creates a new schedule." availability="SqlServer" />
+        <stored-procedure name="bond_classgroups_createsched.sql.db-oracle" comment="Atomically creates a new schedule." availability="Oracle" />
+        <stored-procedure name="bond_classgroups_createsched.sql.db-pgsql" comment="Atomically creates a new schedule." availability="PostgreSQL" />
     </stored-procedures>
 
 </schema>
