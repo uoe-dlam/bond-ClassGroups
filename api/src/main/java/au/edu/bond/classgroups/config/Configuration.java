@@ -1,4 +1,4 @@
-package au.edu.bond.classgroups.config.model;
+package au.edu.bond.classgroups.config;
 
 import au.edu.bond.classgroups.model.Schedule;
 

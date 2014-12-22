@@ -1,6 +1,6 @@
 package au.edu.bond.classgroups.manager;
 
-import au.edu.bond.classgroups.config.model.Configuration;
+import au.edu.bond.classgroups.config.Configuration;
 import au.edu.bond.classgroups.groupext.GroupExtension;
 import au.edu.bond.classgroups.groupext.GroupExtensionService;
 import au.edu.bond.classgroups.logging.TaskLogger;
@@ -9,7 +9,6 @@ import au.edu.bond.classgroups.service.BbAvailableGroupToolService;
 import au.edu.bond.classgroups.service.BbCourseService;
 import au.edu.bond.classgroups.service.BbGroupService;
 import au.edu.bond.classgroups.service.ResourceService;
-import blackboard.data.ValidationException;
 import blackboard.data.course.AvailableGroupTool;
 import blackboard.persist.Id;
 import blackboard.persist.KeyNotFoundException;

@@ -70,15 +70,13 @@
     <listener>
         <listener-class>org.springframework.web.context.request.RequestContextListener</listener-class>
     </listener>
-    <listener>
-        <listener-class>au.edu.bond.classgroups.ConfigMonitoringContextListener</listener-class>
-    </listener>
-    <listener>
-        <listener-class>au.edu.bond.classgroups.TaskScheduleContextListener</listener-class>
-    </listener>
 
     <listener>
         <listener-class>blackboard.platform.plugin.PluginLocalizationContextListener</listener-class>
+    </listener>
+
+    <listener>
+        <listener-class>com.alltheducks.configutils.servlet.SpringBeanConfigMonitoringContextListener</listener-class>
     </listener>
 
 </web-app>

@@ -1,6 +1,6 @@
 package au.edu.bond.classgroups.task;
 
-import au.edu.bond.classgroups.config.model.Configuration;
+import au.edu.bond.classgroups.config.Configuration;
 import au.edu.bond.classgroups.exception.FeedDeserialisationException;
 import au.edu.bond.classgroups.exception.InvalidTaskStateException;
 import au.edu.bond.classgroups.feed.FeedDeserialiser;

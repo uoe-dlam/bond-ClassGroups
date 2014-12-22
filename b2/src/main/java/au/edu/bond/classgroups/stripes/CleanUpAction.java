@@ -1,13 +1,7 @@
 package au.edu.bond.classgroups.stripes;
 
-import au.edu.bond.classgroups.config.ConfigurationService;
-import au.edu.bond.classgroups.config.model.Configuration;
-import au.edu.bond.classgroups.logging.TaskLogger;
-import au.edu.bond.classgroups.model.Task;
+import au.edu.bond.classgroups.config.Configuration;
 import au.edu.bond.classgroups.service.TaskService;
-import au.edu.bond.classgroups.task.TaskExecutor;
-import au.edu.bond.classgroups.task.TaskProcessor;
-import au.edu.bond.classgroups.task.TaskProcessorFactory;
 import com.alltheducks.bb.stripes.EntitlementRestrictions;
 import net.sourceforge.stripes.action.*;
 import net.sourceforge.stripes.integration.spring.SpringBean;

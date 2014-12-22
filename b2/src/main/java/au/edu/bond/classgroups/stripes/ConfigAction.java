@@ -1,19 +1,13 @@
 package au.edu.bond.classgroups.stripes;
 
-import au.edu.bond.classgroups.config.ConfigurationService;
-import au.edu.bond.classgroups.config.model.Configuration;
+import au.edu.bond.classgroups.config.Configuration;
 import au.edu.bond.classgroups.dao.BbAvailableGroupToolDAO;
 import au.edu.bond.classgroups.model.Schedule;
 import blackboard.data.navigation.NavigationApplication;
-import blackboard.data.navigation.NavigationApplicationUtil;
-import blackboard.data.navigation.NavigationItem;
 import blackboard.persist.PersistenceException;
-import blackboard.persist.course.GroupDbLoader;
-import blackboard.persist.navigation.NavigationApplicationDbLoader;
-import blackboard.persist.navigation.NavigationItemDbLoader;
 import com.alltheducks.bb.stripes.EntitlementRestrictions;
+import com.alltheducks.configutils.service.ConfigurationService;
 import com.google.gson.Gson;
-import com.sun.net.httpserver.Filter;
 import net.sourceforge.stripes.action.*;
 import net.sourceforge.stripes.controller.LifecycleStage;
 import net.sourceforge.stripes.integration.spring.SpringBean;
@@ -32,7 +26,7 @@ public class ConfigAction implements ActionBean {
     private ActionBeanContext context;
 
     private Configuration configuration;
-    private ConfigurationService configurationService;
+    private ConfigurationService<Configuration> configurationService;
     private BbAvailableGroupToolDAO bbAvailableGroupToolDAO;
 
     @DefaultHandler
@@ -61,11 +55,21 @@ public class ConfigAction implements ActionBean {
         return gson.toJson(configuration.getSchedules());
     }
 
+    @Before(stages = LifecycleStage.BindingAndValidation)
+    public void prepare() {
+        configuration = configurationService.loadConfiguration();
+        if (configuration == null) {
+            configuration = new Configuration();
+        }
+    }
+
     @Before(on = "save", stages = LifecycleStage.BindingAndValidation)
     public void clearScheduleList() {
-        final List<Schedule> schedules = configuration.getSchedules();
-        if(schedules != null) {
-            schedules.clear();
+        if(configuration != null) {
+            final List<Schedule> schedules = configuration.getSchedules();
+            if (schedules != null) {
+                schedules.clear();
+            }
         }
     }
 
@@ -88,12 +92,12 @@ public class ConfigAction implements ActionBean {
         this.configuration = configuration;
     }
 
-    public ConfigurationService getConfigurationService() {
+    public ConfigurationService<Configuration> getConfigurationService() {
         return configurationService;
     }
 
     @SpringBean
-    public void setConfigurationService(ConfigurationService configurationService) {
+    public void setConfigurationService(ConfigurationService<Configuration> configurationService) {
         this.configurationService = configurationService;
     }
 

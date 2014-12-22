@@ -1,4 +1,4 @@
-package au.edu.bond.classgroups.config.model;
+package au.edu.bond.classgroups.config;
 
 /**
  * Created by Shane Argo on 27/06/2014.

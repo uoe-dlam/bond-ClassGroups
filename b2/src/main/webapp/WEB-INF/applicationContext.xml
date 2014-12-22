@@ -3,12 +3,15 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:context="http://www.springframework.org/schema/context"
        xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:util="http://www.springframework.org/schema/util"
        xsi:schemaLocation="http://www.springframework.org/schema/beans
        http://www.springframework.org/schema/beans/spring-beans.xsd
        http://www.springframework.org/schema/context
        http://www.springframework.org/schema/context/spring-context.xsd
        http://www.springframework.org/schema/tx
        http://www.springframework.org/schema/tx/spring-tx.xsd
+       http://www.springframework.org/schema/util
+       http://www.springframework.org/schema/util/spring-util.xsd
        ">
 
     <bean id="customAutowireBeanFactoryProcessor"
@@ -32,7 +35,6 @@
     </bean>
 
     <tx:annotation-driven transaction-manager="transactionManager" />
-
 
     <bean id="taskScope" class="au.edu.bond.classgroups.spring.TaskScope" />
     <bean class="org.springframework.beans.factory.config.CustomScopeConfigurer">
@@ -83,30 +85,6 @@
         <property name="task" ref="currentTask" />
     </bean>
 
-
-    <bean id="configurationService" class="au.edu.bond.classgroups.config.CachingConfigurationService">
-        <constructor-arg>
-            <bean class="au.edu.bond.classgroups.config.XmlConfigurationService ">
-                <property name="configurationPollingFreq" value="5000" />
-            </bean>
-        </constructor-arg>
-    </bean>
-    <bean id="configurationDirectoryFactory" class="au.edu.bond.classgroups.config.BbDirectoryFactory" />
-    <bean id="configurationDirectory" factory-bean="configurationDirectoryFactory" factory-method="getConfigurationDirectory" />
-    <bean id="configurationXMLFile" class="java.io.File">
-        <constructor-arg value="config.xml" />
-        <constructor-arg ref="configurationDirectory" />
-    </bean>
-    <bean id="configurationXMLLockFile" class="java.io.File">
-        <constructor-arg value="config.xml.lock" />
-        <constructor-arg ref="configurationDirectory" />
-    </bean>
-
-    <bean id="configuration" scope="prototype" factory-bean="configurationService" factory-method="loadConfiguration" />
-    <bean id="pullFileCsvFeedDeserialiserConfig" scope="prototype" factory-bean="configuration" factory-method="getPullFileCsvFeedDeserialiser" />
-    <bean id="pullUrlCsvFeedDeserialiserConfig" scope="prototype" factory-bean="configuration" factory-method="getPullUrlCsvFeedDeserialiser" />
-    <bean id="pushCsvFeedDeserialiserConfig" scope="prototype" factory-bean="configuration" factory-method="getPushCsvFeedDeserialiser" />
-
     <bean id="taskProcessorFactory" class="au.edu.bond.classgroups.task.TaskProcessorFactory" />
     <bean id="currentTaskProcessor" class="au.edu.bond.classgroups.task.TaskProcessor" scope="task" lazy-init="true" />
     <bean id="taskExecutor" class="au.edu.bond.classgroups.task.TaskExecutor" destroy-method="close" />
@@ -154,7 +132,7 @@
         <constructor-arg value="/webapps/portal/execute/tabs/tabAction?tabType=admin" />
     </bean>
 
-    <bean id="scheduledTaskRunner" class="au.edu.bond.classgroups.task.ScheduledTaskRunner" />
+    <bean id="scheduledTaskConfigurationChangeListener" class="au.edu.bond.classgroups.task.ScheduledTaskConfigurationChangeListener" />
 
     <bean id="taskCleanupRunner" class="au.edu.bond.classgroups.task.TaskCleanupRunner" />
     <bean id="cleanupDelaySeconds" class="java.lang.Long">
@@ -170,5 +148,43 @@
         <constructor-arg name="vendorId" value="bond" />
         <constructor-arg name="handle" value="ClassGroups" />
     </bean>
+
+
+
+    <!--Configuration-->
+    <bean id="configurationDirectoryFactory" class="au.edu.bond.classgroups.config.BbDirectoryFactory" />
+    <bean id="configurationDirectory" factory-bean="configurationDirectoryFactory" factory-method="getConfigurationDirectory" />
+    <bean id="configurationXMLFile" class="java.io.File">
+        <constructor-arg value="config.xml" />
+        <constructor-arg ref="configurationDirectory" />
+    </bean>
+
+    <bean id="configurationService" class="au.edu.bond.classgroups.config.ClassGroupsConfigurationService">
+        <constructor-arg name="internalConfigurationService">
+            <bean class="com.alltheducks.configutils.service.XmlConfigurationService">
+                <property name="configurationXMLFile" ref="configurationXMLFile" />
+                <property name="XStream">
+                    <bean class="au.edu.bond.classgroups.config.ConfigurationXStreamFactory" factory-method="getConfigXStream" />
+                </property>
+            </bean>
+        </constructor-arg>
+    </bean>
+
+    <bean id="configurationMonitor"
+          class="com.alltheducks.configutils.monitor.PollingConfigurationMonitor">
+        <constructor-arg name="configurationFile" ref="configurationXMLFile" />
+        <constructor-arg name="configurationService" ref="configurationService" />
+        <constructor-arg name="pollFreqSeconds" value="10" />
+        <constructor-arg name="listeners">
+            <list>
+                <ref bean="scheduledTaskConfigurationChangeListener"/>
+            </list>
+        </constructor-arg>
+    </bean>
+
+    <bean id="configuration" scope="prototype" factory-bean="configurationService" factory-method="loadConfiguration" />
+    <bean id="pullFileCsvFeedDeserialiserConfig" scope="prototype" factory-bean="configuration" factory-method="getPullFileCsvFeedDeserialiser" />
+    <bean id="pullUrlCsvFeedDeserialiserConfig" scope="prototype" factory-bean="configuration" factory-method="getPullUrlCsvFeedDeserialiser" />
+    <bean id="pushCsvFeedDeserialiserConfig" scope="prototype" factory-bean="configuration" factory-method="getPushCsvFeedDeserialiser" />
 
 </beans>

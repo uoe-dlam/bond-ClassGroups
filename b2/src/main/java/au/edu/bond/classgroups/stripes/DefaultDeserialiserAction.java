@@ -1,7 +1,6 @@
 package au.edu.bond.classgroups.stripes;
 
-import au.edu.bond.classgroups.config.model.Configuration;
-import au.edu.bond.classgroups.service.ResourceService;
+import au.edu.bond.classgroups.config.Configuration;
 import au.edu.bond.classgroups.task.TaskExecutor;
 import au.edu.bond.classgroups.task.TaskProcessor;
 import au.edu.bond.classgroups.task.TaskProcessorFactory;

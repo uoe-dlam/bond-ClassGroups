@@ -1,7 +1,8 @@
 package au.edu.bond.classgroups.feed;
 
-import au.edu.bond.classgroups.config.ConfigurationService;
+import au.edu.bond.classgroups.config.Configuration;
 import au.edu.bond.classgroups.feed.csv.FileCsvFeedDeserialiser;
+import com.alltheducks.configutils.service.ConfigurationService;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -13,7 +14,7 @@ public class FeedDeserialiserFactory {
     @Autowired
     private BeanFactory beanFactory;
     @Autowired
-    private ConfigurationService configurationService;
+    private ConfigurationService<Configuration> configurationService;
 
     public FeedDeserialiser getDefault() {
         final String defaultFeedDeserialiserBean = configurationService.loadConfiguration().getDefaultFeedDeserialiserBean();
@@ -39,11 +40,11 @@ public class FeedDeserialiserFactory {
         this.beanFactory = beanFactory;
     }
 
-    public ConfigurationService getConfigurationService() {
+    public ConfigurationService<Configuration> getConfigurationService() {
         return configurationService;
     }
 
-    public void setConfigurationService(ConfigurationService configurationService) {
+    public void setConfigurationService(ConfigurationService<Configuration> configurationService) {
         this.configurationService = configurationService;
     }
 }

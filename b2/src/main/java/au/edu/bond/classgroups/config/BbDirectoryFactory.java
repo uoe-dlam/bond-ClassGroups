@@ -19,7 +19,7 @@ public class BbDirectoryFactory extends DirectoryFactory {
         try {
             rootConfigDir = PlugInUtil.getConfigDirectory("bond", "ClassGroups");
         } catch (PlugInException ex) {
-            Logger.getLogger(XmlConfigurationService.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(BbDirectoryFactory.class.getName()).log(Level.SEVERE, null, ex);
             throw new RuntimeException("Problem while trying to get Building Block Config Directory", ex);
         }
         return rootConfigDir;

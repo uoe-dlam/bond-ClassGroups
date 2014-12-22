@@ -1,6 +1,6 @@
 package au.edu.bond.classgroups.stripes;
 
-import au.edu.bond.classgroups.config.model.PushCsvFeedDeserialiserConfig;
+import au.edu.bond.classgroups.config.PushCsvFeedDeserialiserConfig;
 import au.edu.bond.classgroups.exception.InvalidPasskeyException;
 import au.edu.bond.classgroups.exception.InvalidTaskStateException;
 import au.edu.bond.classgroups.service.ResourceService;

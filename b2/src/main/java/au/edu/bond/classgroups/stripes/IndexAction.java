@@ -1,16 +1,8 @@
 package au.edu.bond.classgroups.stripes;
 
-import au.edu.bond.classgroups.config.ConfigurationService;
-import au.edu.bond.classgroups.config.model.Configuration;
-import au.edu.bond.classgroups.dao.BbAvailableGroupToolDAO;
-import blackboard.data.navigation.NavigationApplication;
-import blackboard.persist.PersistenceException;
 import com.alltheducks.bb.stripes.EntitlementRestrictions;
 import net.sourceforge.stripes.action.*;
 import net.sourceforge.stripes.integration.spring.SpringBean;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Created by Shane Argo on 3/06/2014.

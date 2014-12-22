@@ -1,6 +1,6 @@
 package au.edu.bond.classgroups;
 
-import au.edu.bond.classgroups.config.model.Configuration;
+import au.edu.bond.classgroups.config.Configuration;
 import au.edu.bond.classgroups.feed.FeedDeserialiser;
 import au.edu.bond.classgroups.feed.FeedDeserialiserFactory;
 import au.edu.bond.classgroups.logging.TaskLogger;

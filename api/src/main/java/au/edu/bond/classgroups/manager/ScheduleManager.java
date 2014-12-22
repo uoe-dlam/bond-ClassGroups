@@ -1,12 +1,12 @@
 package au.edu.bond.classgroups.manager;
 
-import au.edu.bond.classgroups.config.ConfigurationService;
-import au.edu.bond.classgroups.config.model.Configuration;
+import au.edu.bond.classgroups.config.Configuration;
 import au.edu.bond.classgroups.model.Schedule;
 import au.edu.bond.classgroups.model.Task;
 import au.edu.bond.classgroups.service.TaskService;
 import au.edu.bond.classgroups.task.ScheduledTaskProcessor;
 import au.edu.bond.classgroups.task.TaskCleanupRunner;
+import com.alltheducks.configutils.service.ConfigurationService;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.Closeable;
@@ -25,7 +25,7 @@ public class ScheduleManager implements Closeable {
     public static final long SHUTDOWN_TIMEOUT_MILLISECONDS = 30000;
 
     @Autowired
-    private ConfigurationService configurationService;
+    private ConfigurationService<Configuration> configurationService;
     @Autowired
     private TaskService taskService;
     @Autowired
@@ -117,11 +117,11 @@ public class ScheduleManager implements Closeable {
         }
     }
 
-    public ConfigurationService getConfigurationService() {
+    public ConfigurationService<Configuration> getConfigurationService() {
         return configurationService;
     }
 
-    public void setConfigurationService(ConfigurationService configurationService) {
+    public void setConfigurationService(ConfigurationService<Configuration> configurationService) {
         this.configurationService = configurationService;
     }
 

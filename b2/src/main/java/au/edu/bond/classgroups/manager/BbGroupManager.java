@@ -1,6 +1,6 @@
 package au.edu.bond.classgroups.manager;
 
-import au.edu.bond.classgroups.config.model.Configuration;
+import au.edu.bond.classgroups.config.Configuration;
 import au.edu.bond.classgroups.groupext.GroupExtension;
 import au.edu.bond.classgroups.groupext.GroupExtensionService;
 import au.edu.bond.classgroups.logging.TaskLogger;
