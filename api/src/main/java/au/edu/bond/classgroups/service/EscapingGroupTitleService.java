@@ -16,7 +16,7 @@ public class EscapingGroupTitleService implements GroupTitleService {
     }
 
     @Override
-    public String getGroupTitle(Group group, GroupExtension extension) {
-        return StringEscapeUtils.escapeHtml(internalGroupTitleService.getGroupTitle(group, extension));
+    public String getGroupTitle(String baseTitle, GroupExtension extension) {
+        return StringEscapeUtils.escapeHtml(internalGroupTitleService.getGroupTitle(baseTitle, extension));
     }
 }

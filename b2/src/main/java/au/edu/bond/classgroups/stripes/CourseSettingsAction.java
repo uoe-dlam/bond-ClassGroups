@@ -6,6 +6,7 @@ import au.edu.bond.classgroups.dao.BbGroupMembershipDAO;
 import au.edu.bond.classgroups.dao.BbUserDAO;
 import au.edu.bond.classgroups.groupext.GroupExtension;
 import au.edu.bond.classgroups.groupext.GroupExtensionDAO;
+import au.edu.bond.classgroups.service.GroupTitleService;
 import au.edu.bond.classgroups.util.EqualityUtil;
 import blackboard.data.ValidationException;
 import blackboard.data.course.Course;
@@ -39,7 +40,7 @@ public class CourseSettingsAction implements ActionBean {
     private BbUserDAO bbUserDAO;
     private BbCourseMembershipDAO bbCourseMembershipDAO;
     private BbGroupMembershipDAO bbGroupMembershipDAO;
-    private String groupTitleFormat;
+    private GroupTitleService groupTitleCachelessService;
 
     private List<GroupData> groupDataList;
 
@@ -100,7 +101,7 @@ public class CourseSettingsAction implements ActionBean {
                 final CourseMembership newBbCourseMembership = bbCourseMembershipDAO.getById(newBbCourseUserId);
                 final User user = bbUserDAO.getById(newBbCourseMembership.getUserId());
 
-                String title = String.format(groupTitleFormat, groupExtension.getTitle(), user.getGivenName(), user.getFamilyName());
+                String title = groupTitleCachelessService.getGroupTitle(groupExtension.getTitle(), groupExtension);
                 bbGroup.setTitle(title);
 
                 GroupMembership newGroupMembership = new GroupMembership();
@@ -238,15 +239,6 @@ public class CourseSettingsAction implements ActionBean {
         this.bbCourseMembershipDAO = bbCourseMembershipDAO;
     }
 
-    public String getGroupTitleFormat() {
-        return groupTitleFormat;
-    }
-
-    @SpringBean
-    public void setGroupTitleFormat(String groupTitleFormat) {
-        this.groupTitleFormat = groupTitleFormat;
-    }
-
     public BbGroupMembershipDAO getBbGroupMembershipDAO() {
         return bbGroupMembershipDAO;
     }
@@ -254,6 +246,15 @@ public class CourseSettingsAction implements ActionBean {
     @SpringBean
     public void setBbGroupMembershipDAO(BbGroupMembershipDAO bbGroupMembershipDAO) {
         this.bbGroupMembershipDAO = bbGroupMembershipDAO;
+    }
+
+    public GroupTitleService getGroupTitleCachelessService() {
+        return groupTitleCachelessService;
+    }
+
+    @SpringBean
+    public void setGroupTitleCachelessService(GroupTitleService groupTitleCachelessService) {
+        this.groupTitleCachelessService = groupTitleCachelessService;
     }
 
     public GroupExtension getGroupExtension() {

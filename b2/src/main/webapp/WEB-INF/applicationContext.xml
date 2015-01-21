@@ -59,16 +59,33 @@
     <bean id="bbUserDAO" class="au.edu.bond.classgroups.dao.BbUserDAO" />
 
     <bean id="bbAvailableGroupToolService" class="au.edu.bond.classgroups.service.BbAvailableGroupToolService" scope="task" lazy-init="true" />
-    <bean id="bbCourseMembershipService" class="au.edu.bond.classgroups.service.BbCourseMembershipService" scope="task" lazy-init="true" />
-    <bean id="bbCourseService" class="au.edu.bond.classgroups.service.BbCourseService" scope="task" lazy-init="true" />
+    <bean id="bbCourseMembershipCachingService" class="au.edu.bond.classgroups.service.BbCourseMembershipCachingService" scope="task" lazy-init="true" />
     <bean id="bbGradebookCustomViewService" class="au.edu.bond.classgroups.service.BbGradebookCustomViewService" scope="task" lazy-init="true" />
     <bean id="bbGroupMembershipService" class="au.edu.bond.classgroups.service.BbGroupMembershipService" scope="task" lazy-init="true" />
+    <bean id="bbCourseService" class="au.edu.bond.classgroups.service.BbCourseService" scope="task" lazy-init="true" />
     <bean id="bbGroupService" class="au.edu.bond.classgroups.service.BbGroupService" scope="task" lazy-init="true" />
-    <bean id="bbUserService" class="au.edu.bond.classgroups.service.BbUserService" scope="task" lazy-init="true" />
+    <bean id="bbUserCachingService" class="au.edu.bond.classgroups.service.BbUserCachingService" scope="task" lazy-init="true" />
     <bean id="groupExtensionService" class="au.edu.bond.classgroups.groupext.GroupExtensionService" scope="task" lazy-init="true" />
 
-    <bean id="groupTitleService" class="au.edu.bond.classgroups.service.EscapingGroupTitleService" scope="task" lazy-init="true" >
-        <constructor-arg><bean class="au.edu.bond.classgroups.service.LeaderGroupTitleService" /></constructor-arg>
+    <bean id="bbUserCachelessService" class="au.edu.bond.classgroups.service.BbUserCachelessService" />
+    <bean id="bbCourseMembershipCachelessService" class="au.edu.bond.classgroups.service.BbCourseMembershipCachelessService" />
+
+    <bean id="groupTitleService" class="au.edu.bond.classgroups.service.EscapingGroupTitleService"  scope="task" lazy-init="true">
+        <constructor-arg>
+            <bean class="au.edu.bond.classgroups.service.LeaderGroupTitleService">
+                <property name="bbCourseMembershipService" ref="bbCourseMembershipCachingService" />
+                <property name="bbUserService" ref="bbUserCachingService" />
+            </bean>
+        </constructor-arg>
+    </bean>
+
+    <bean id="groupTitleCachelessService" class="au.edu.bond.classgroups.service.EscapingGroupTitleService" >
+        <constructor-arg>
+            <bean class="au.edu.bond.classgroups.service.LeaderGroupTitleService">
+                <property name="bbCourseMembershipService" ref="bbCourseMembershipCachelessService" />
+                <property name="bbUserService" ref="bbUserCachelessService" />
+            </bean>
+        </constructor-arg>
     </bean>
 
     <bean id="scheduleManager" class="au.edu.bond.classgroups.manager.ScheduleManager" />

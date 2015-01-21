@@ -8,7 +8,7 @@ import au.edu.bond.classgroups.model.Group;
  */
 public interface GroupTitleService {
 
-    public String getGroupTitle(Group group, GroupExtension extension);
+    public String getGroupTitle(String baseTitle, GroupExtension extension);
 
 
 }

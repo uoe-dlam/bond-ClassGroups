@@ -9,6 +9,7 @@ import au.edu.bond.classgroups.service.*;
 import au.edu.bond.classgroups.util.EqualityUtil;
 import blackboard.base.FormattedText;
 import blackboard.data.ValidationException;
+import blackboard.data.course.Course;
 import blackboard.data.course.CourseMembership;
 import blackboard.data.user.User;
 import blackboard.persist.Id;
@@ -31,9 +32,9 @@ public class BbGroupManager implements GroupManager {
     @Autowired
     private GroupExtensionService groupExtensionService;
     @Autowired
-    private BbUserService bbUserService;
+    private BbUserCachingService bbUserCachingService;
     @Autowired
-    private BbCourseMembershipService bbCourseMembershipService;
+    private BbCourseMembershipCachingService bbCourseMembershipCachingService;
     @Autowired
     private Configuration configuration;
     @Autowired
@@ -54,7 +55,11 @@ public class BbGroupManager implements GroupManager {
 
         Id courseId;
         try {
+            Course course = bbCourseService.getByExternalSystemId(group.getCourseId());
             courseId = bbCourseService.getByExternalSystemId(group.getCourseId()).getId();
+            if(course.isChild()) {
+                courseId = bbCourseService.getParentId(courseId);
+            }
         } catch (PersistenceException e) {
             currentTaskLogger.warning(resourceService.getLocalisationString(
                     "bond.classgroups.warning.cantfindcourse", group.getCourseId()));
@@ -87,7 +92,7 @@ public class BbGroupManager implements GroupManager {
         }
         boolean extDirty = updateFeedLeader(ext, group, courseId);
 
-        String title = groupTitleService.getGroupTitle(group, ext);
+        String title = groupTitleService.getGroupTitle(group.getTitle(), ext);
         Status status = Status.UNCHANGED;
         // If no Bb group exists (no extension data, or extension data references a deleted group), create one.
         if(bbGroup == null) {
@@ -182,7 +187,7 @@ public class BbGroupManager implements GroupManager {
 
         if(group.getLeaderId() != null) {
             try {
-                user = bbUserService.getByExternalSystemId(group.getLeaderId(), courseId);
+                user = bbUserCachingService.getByExternalSystemId(group.getLeaderId(), courseId);
             } catch (KeyNotFoundException e) {
                 currentTaskLogger.warning(resourceService.getLocalisationString(
                         "bond.classgroups.warning.cantfindleader",
@@ -197,7 +202,7 @@ public class BbGroupManager implements GroupManager {
 
             if(user != null) {
                 try {
-                    courseMembership = bbCourseMembershipService.getByCourseIdAndUserId(courseId, user.getId());
+                    courseMembership = bbCourseMembershipCachingService.getByCourseIdAndUserId(courseId, user.getId());
                 } catch (KeyNotFoundException e) {
                     currentTaskLogger.warning(resourceService.getLocalisationString(
                             "bond.classgroups.warning.cantfindleadermember",
@@ -214,7 +219,7 @@ public class BbGroupManager implements GroupManager {
 
         Id existingFeedId = null;
         if(ext.getLeaderFeedCourseUserId() != null) {
-            existingFeedId = bbCourseMembershipService.getIdFromLong(ext.getLeaderFeedCourseUserId());
+            existingFeedId = Id.toId(CourseMembership.DATA_TYPE, ext.getLeaderFeedCourseUserId());
         }
         Id courseMembershipId = null;
         if(courseMembership != null) {
@@ -229,7 +234,7 @@ public class BbGroupManager implements GroupManager {
         if(courseMembershipId == null) {
             ext.setLeaderFeedCourseUserId(null);
         } else {
-            ext.setLeaderFeedCourseUserId(bbCourseMembershipService.getLongFromId(courseMembership.getId()));
+            ext.setLeaderFeedCourseUserId(((PkId)courseMembership.getId()).getKey());
         }
 
         if(configuration.getLeaderChangedMode() == Configuration.LeaderChangedMode.FEED) {
@@ -326,20 +331,20 @@ public class BbGroupManager implements GroupManager {
         this.bbCourseService = bbCourseService;
     }
 
-    public BbUserService getBbUserService() {
-        return bbUserService;
+    public BbUserCachingService getBbUserCachingService() {
+        return bbUserCachingService;
     }
 
-    public void setBbUserService(BbUserService bbUserService) {
-        this.bbUserService = bbUserService;
+    public void setBbUserCachingService(BbUserCachingService bbUserCachingService) {
+        this.bbUserCachingService = bbUserCachingService;
     }
 
-    public BbCourseMembershipService getBbCourseMembershipService() {
-        return bbCourseMembershipService;
+    public BbCourseMembershipCachingService getBbCourseMembershipCachingService() {
+        return bbCourseMembershipCachingService;
     }
 
-    public void setBbCourseMembershipService(BbCourseMembershipService bbCourseMembershipService) {
-        this.bbCourseMembershipService = bbCourseMembershipService;
+    public void setBbCourseMembershipCachingService(BbCourseMembershipCachingService bbCourseMembershipCachingService) {
+        this.bbCourseMembershipCachingService = bbCourseMembershipCachingService;
     }
 
     public Configuration getConfiguration() {

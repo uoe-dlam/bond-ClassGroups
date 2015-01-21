@@ -4,6 +4,7 @@ import blackboard.data.ValidationException;
 import blackboard.data.course.Course;
 import blackboard.persist.Id;
 import blackboard.persist.PersistenceException;
+import blackboard.persist.course.CourseCourseDbLoader;
 import blackboard.persist.course.CourseDbLoader;
 import blackboard.persist.course.CourseDbPersister;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 public class BbCourseDAO {
 
     CourseDbLoader courseDbLoader;
+    CourseCourseDbLoader courseCourseDbLoader;
 //    CourseDbPersister courseDbPersister;
 
 //    public Course getById(long id) throws PersistenceException {
@@ -23,6 +25,10 @@ public class BbCourseDAO {
 
     public Course getByExternalSystemId(String externalSystemId) throws PersistenceException {
         return getCourseDbLoader().loadByBatchUid(externalSystemId);
+    }
+
+    public Id getParentCourseId(Id childId) throws PersistenceException {
+        return getCourseCourseDbLoader().loadParent(childId).getParentCourseId();
     }
 
 //    public void createOrUpdate(Course course) throws ValidationException, PersistenceException {
@@ -39,6 +45,13 @@ public class BbCourseDAO {
             courseDbLoader = CourseDbLoader.Default.getInstance();
         }
         return courseDbLoader;
+    }
+
+    public CourseCourseDbLoader getCourseCourseDbLoader() throws PersistenceException {
+        if(courseCourseDbLoader == null) {
+            courseCourseDbLoader = CourseCourseDbLoader.Default.getInstance();
+        }
+        return courseCourseDbLoader;
     }
 
 //    public CourseDbPersister getCourseDbPersister() throws PersistenceException {
