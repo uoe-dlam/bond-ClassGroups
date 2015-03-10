@@ -18,13 +18,25 @@ public class BbCourseService {
     private BbCourseDAO bbCourseDAO;
 
     private Map<String, Course> cache = new HashMap<String, Course>();
+    private Map<Id, Course> idCache = new HashMap<Id, Course>();
     private Map<Id, Id> parentIdCache = new HashMap<Id, Id>();
+
+    public Course getById(Id id) throws PersistenceException {
+        Course course = idCache.get(id);
+        if(course == null) {
+            course = bbCourseDAO.getById(id);
+            idCache.put(id, course);
+            cache.put(course.getBatchUid(), course);
+        }
+        return course;
+    }
 
     public Course getByExternalSystemId(String externalSystemId) throws PersistenceException {
         Course course = cache.get(externalSystemId);
         if(course == null) {
             course = bbCourseDAO.getByExternalSystemId(externalSystemId);
             cache.put(externalSystemId, course);
+            idCache.put(course.getId(), course);
         }
         return course;
     }

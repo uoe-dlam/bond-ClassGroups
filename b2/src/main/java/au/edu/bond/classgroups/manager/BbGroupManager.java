@@ -59,6 +59,12 @@ public class BbGroupManager implements GroupManager {
             courseId = bbCourseService.getByExternalSystemId(group.getCourseId()).getId();
             if(course.isChild()) {
                 courseId = bbCourseService.getParentId(courseId);
+                Course parent = bbCourseService.getById(courseId);
+
+                String newTitle = resourceService.getLocalisationString(
+                        "bond.classgroups.pattern.childgrouppattern",
+                        group.getTitle(), parent.getCourseId());
+                group.setTitle(newTitle);
             }
         } catch (PersistenceException e) {
             currentTaskLogger.warning(resourceService.getLocalisationString(

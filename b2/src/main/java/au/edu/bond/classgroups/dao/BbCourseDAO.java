@@ -18,10 +18,9 @@ public class BbCourseDAO {
     CourseCourseDbLoader courseCourseDbLoader;
 //    CourseDbPersister courseDbPersister;
 
-//    public Course getById(long id) throws PersistenceException {
-//        Id bbId = Id.toId(Course.DATA_TYPE, id);
-//        return getCourseDbLoader().loadById(bbId);
-//    }
+    public Course getById(Id id) throws PersistenceException {
+        return getCourseDbLoader().loadById(id);
+    }
 
     public Course getByExternalSystemId(String externalSystemId) throws PersistenceException {
         return getCourseDbLoader().loadByBatchUid(externalSystemId);
