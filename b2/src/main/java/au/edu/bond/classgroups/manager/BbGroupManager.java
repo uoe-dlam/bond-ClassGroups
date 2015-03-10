@@ -116,12 +116,12 @@ public class BbGroupManager implements GroupManager {
             status = Status.CREATED;
 
             currentTaskLogger.info(resourceService.getLocalisationString(
-                    "bond.classgroups.info.creatinggroup", group.getGroupId()));
+                    "bond.classgroups.info.creatinggroup", group.getGroupId(), group.getTitle()));
         } else {
             // Force load the group tools, otherwise the API removes them when persisting.
             bbGroup.getAvailableTools(true);
             currentTaskLogger.info(resourceService.getLocalisationString(
-                    "bond.classgroups.info.updatinggroup", group.getGroupId()));
+                    "bond.classgroups.info.updatinggroup", group.getGroupId(), group.getTitle()));
 
             if(!title.equals(bbGroup.getTitle())) {
                 bbGroup.setTitle(title);

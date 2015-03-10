@@ -84,14 +84,14 @@ public class BbMemberManager implements MemberManager {
                 } catch (PersistenceException e) {
                     currentTaskLogger.warning(resourceService.getLocalisationString(
                             "bond.classgroups.warning.couldnotloaduser",
-                            member.getUserId(), group.getGroupId()), e);
+                            member.getUserId(), group.getGroupId(), group.getCourseId(), group.getTitle()), e);
                     continue;
                 }
 
                 if (user == null) {
                     currentTaskLogger.warning(resourceService.getLocalisationString(
                             "bond.classgroups.warning.couldnotloaduser",
-                            member.getUserId(), group.getGroupId()));
+                            member.getUserId(), group.getGroupId(), group.getCourseId(), group.getTitle()));
                     continue;
                 }
 
@@ -101,21 +101,21 @@ public class BbMemberManager implements MemberManager {
                 } catch (PersistenceException e) {
                     currentTaskLogger.warning(resourceService.getLocalisationString(
                             "bond.classgroups.warning.couldnotloadcousemember",
-                            group.getCourseId(), member.getUserId()), e);
+                            group.getCourseId(), member.getUserId(), group.getGroupId(), group.getTitle()), e);
                     continue;
                 }
 
                 if (courseMembership == null) {
                     currentTaskLogger.warning(resourceService.getLocalisationString(
                             "bond.classgroups.warning.couldnotloadcousemember",
-                            group.getCourseId(), member.getUserId()));
+                            group.getCourseId(), member.getUserId(), group.getGroupId(), group.getTitle()));
                     continue;
                 }
 
                 if (courseMembership.getId().equals(leaderCourseMembershipId)) {
                     currentTaskLogger.info(resourceService.getLocalisationString(
                             "bond.classgroups.warning.skippingmemberwhoisleader",
-                            member.getUserId(), group.getGroupId()));
+                            member.getUserId(), group.getGroupId(), group.getTitle()));
                     continue;
                 }
 
@@ -152,7 +152,7 @@ public class BbMemberManager implements MemberManager {
         if(deleteMembers.size() > 0) {
             currentTaskLogger.info(resourceService.getLocalisationString(
                     "bond.classgroups.info.deletingmembers",
-                    deleteMembers.size(), group.getGroupId()));
+                    deleteMembers.size(), group.getGroupId(), group.getTitle()));
         }
         for(GroupMembership deleteMember : deleteMembers) {
             try {
@@ -167,7 +167,7 @@ public class BbMemberManager implements MemberManager {
         if(createMembers.size() > 0) {
             currentTaskLogger.info(resourceService.getLocalisationString(
                     "bond.classgroups.info.addingmembers",
-                    createMembers.size(), group.getGroupId()));
+                    createMembers.size(), group.getGroupId(), group.getTitle()));
         }
         for(GroupMembership createMember : createMembers.keySet()) {
             try {
@@ -216,7 +216,7 @@ public class BbMemberManager implements MemberManager {
 
             currentTaskLogger.info(resourceService.getLocalisationString(
                     "bond.classgroups.info.addingleader",
-                    leader.getBatchUid(), group.getGroupId()));
+                    leader.getBatchUid(), group.getGroupId(), group.getTitle()));
             GroupMembership leaderMembership = new GroupMembership();
             leaderMembership.setCourseMembershipId(leaderCourseMembershipId);
             leaderMembership.setGroupId(groupId);

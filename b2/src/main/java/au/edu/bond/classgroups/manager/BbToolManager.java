@@ -93,7 +93,7 @@ public class BbToolManager implements ToolManager {
             if(createTools.size() > 0) {
                 currentTaskLogger.info(resourceService.getLocalisationString(
                         "bond.classgroups.info.addingtools",
-                        createTools.size(), group.getGroupId()));
+                        createTools.size(), group.getGroupId(), group.getTitle()));
             }
             for(AvailableGroupTool createTool : createTools.keySet()) {
                 try {
@@ -111,7 +111,7 @@ public class BbToolManager implements ToolManager {
             if (deleteTools.size() > 0) {
                 currentTaskLogger.info(resourceService.getLocalisationString(
                         "bond.classgroups.info.deletingtools",
-                        deleteTools.size(), group.getGroupId()));
+                        deleteTools.size(), group.getGroupId(), group.getTitle()));
             }
             for (AvailableGroupTool deleteTool : deleteTools) {
                 try {
