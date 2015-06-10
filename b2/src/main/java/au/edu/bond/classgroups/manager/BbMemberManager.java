@@ -199,7 +199,7 @@ public class BbMemberManager implements MemberManager {
             }
 
             if(courseMembership == null) {
-                if(configuration.isEnrolStaffIfMissing()) {
+                if(!configuration.isEnrolStaffIfMissing()) {
                     currentTaskLogger.warning(resourceService.getLocalisationString(
                             "bond.classgroups.warning.couldnotfindleadersmembership",
                             group.getGroupId()));

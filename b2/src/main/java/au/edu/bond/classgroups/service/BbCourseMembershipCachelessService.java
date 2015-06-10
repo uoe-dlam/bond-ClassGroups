@@ -1,6 +1,7 @@
 package au.edu.bond.classgroups.service;
 
 import au.edu.bond.classgroups.dao.BbCourseMembershipDAO;
+import blackboard.data.ValidationException;
 import blackboard.data.course.CourseMembership;
 import blackboard.persist.Id;
 import blackboard.persist.PersistenceException;
@@ -46,6 +47,11 @@ public class BbCourseMembershipCachelessService implements BbCourseMembershipSer
             }
         }
         return null;
+    }
+
+    @Override
+    public void persistCourseMembership(CourseMembership courseMembership) throws ValidationException, PersistenceException {
+        bbCourseMembershipDAO.persist(courseMembership);
     }
 
     public BbCourseMembershipDAO getBbCourseMembershipDAO() {
