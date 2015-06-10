@@ -1,6 +1,7 @@
 package au.edu.bond.classgroups.service;
 
 import au.edu.bond.classgroups.dao.BbCourseMembershipDAO;
+import blackboard.data.ValidationException;
 import blackboard.data.course.CourseMembership;
 import blackboard.persist.Id;
 import blackboard.persist.PersistenceException;
@@ -68,6 +69,12 @@ public class BbCourseMembershipCachingService implements BbCourseMembershipServi
             }
         }
         return membership;
+    }
+
+    @Override
+    public void persistCourseMembership(CourseMembership courseMembership) throws ValidationException, PersistenceException {
+        bbCourseMembershipDAO.persist(courseMembership);
+        cache(courseMembership);
     }
 
     private void cache(CourseMembership membership) {

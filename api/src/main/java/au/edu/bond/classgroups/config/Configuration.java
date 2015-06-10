@@ -38,6 +38,7 @@ public class Configuration {
     private int cleanUpDaysToKeep;
     private boolean schedulesEnabled;
     private List<Schedule> schedules;
+    private boolean enrolStaffIfMissing;
 
     public String getDefaultFeedDeserialiserBean() {
         return defaultFeedDeserialiserBean;
@@ -141,5 +142,13 @@ public class Configuration {
 
     public void setSchedules(List<Schedule> schedules) {
         this.schedules = schedules;
+    }
+
+    public boolean isEnrolStaffIfMissing() {
+        return enrolStaffIfMissing;
+    }
+
+    public void setEnrolStaffIfMissing(boolean enrolStaffIfMissing) {
+        this.enrolStaffIfMissing = enrolStaffIfMissing;
     }
 }

@@ -1,5 +1,6 @@
 package au.edu.bond.classgroups.manager;
 
+import au.edu.bond.classgroups.config.Configuration;
 import au.edu.bond.classgroups.groupext.GroupExtension;
 import au.edu.bond.classgroups.groupext.GroupExtensionService;
 import au.edu.bond.classgroups.logging.TaskLogger;
@@ -40,6 +41,8 @@ public class BbMemberManager implements MemberManager {
     private BbCourseMembershipCachingService bbCourseMembershipCachingService;
     @Autowired
     private ResourceService resourceService;
+    @Autowired
+    private Configuration configuration;
 
     public void syncMembers(Group group) {
         GroupExtension ext = groupExtensionService.getGroupExtensionByExternalId(group.getGroupId());
@@ -187,16 +190,38 @@ public class BbMemberManager implements MemberManager {
             CourseMembership courseMembership = null;
             try {
                 courseMembership = bbCourseMembershipCachingService.getById(leaderCourseMembershipId);
-            } catch(KeyNotFoundException e) {
-                currentTaskLogger.warning(resourceService.getLocalisationString(
-                        "bond.classgroups.warning.couldnotfindleadersmembership",
-                        group.getGroupId()), e);
-                return;
+            } catch(KeyNotFoundException ignored) {
             } catch (PersistenceException e) {
                 currentTaskLogger.warning(resourceService.getLocalisationString(
                         "bond.classgroups.warning.couldnotfindleadersmembershipbberrors",
                         group.getGroupId()), e);
                 return;
+            }
+
+            if(courseMembership == null) {
+                if(configuration.isEnrolStaffIfMissing()) {
+                    currentTaskLogger.warning(resourceService.getLocalisationString(
+                            "bond.classgroups.warning.couldnotfindleadersmembership",
+                            group.getGroupId()));
+                    return;
+                } else {
+                    courseMembership = new CourseMembership();
+                    courseMembership.setCourseId(courseId);
+                    courseMembership.setUserId(leaderCourseMembershipId);
+                    try {
+                        bbCourseMembershipCachingService.persistCourseMembership(courseMembership);
+                    } catch (ValidationException e) {
+                        currentTaskLogger.warning(resourceService.getLocalisationString(
+                                "bond.classgroups.warning.couldnotpersistleadercoursemembershipvalidationerrors",
+                                leaderCourseMembershipId.getExternalString(), group.getGroupId()), e);
+                        return;
+                    } catch (PersistenceException e) {
+                        currentTaskLogger.warning(resourceService.getLocalisationString(
+                                "bond.classgroups.warning.couldnotpersistleadercoursemembershipbberrors",
+                                leaderCourseMembershipId.getExternalString(), group.getGroupId()), e);
+                        return;
+                    }
+                }
             }
 
             User leader = null;
@@ -297,5 +322,13 @@ public class BbMemberManager implements MemberManager {
 
     public void setResourceService(ResourceService resourceService) {
         this.resourceService = resourceService;
+    }
+
+    public Configuration getConfiguration() {
+        return configuration;
+    }
+
+    public void setConfiguration(Configuration configuration) {
+        this.configuration = configuration;
     }
 }

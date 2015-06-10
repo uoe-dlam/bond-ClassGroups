@@ -1,11 +1,13 @@
 package au.edu.bond.classgroups.dao;
 
+import blackboard.data.ValidationException;
 import blackboard.data.course.Course;
 import blackboard.data.course.CourseMembership;
 import blackboard.data.user.User;
 import blackboard.persist.Id;
 import blackboard.persist.PersistenceException;
 import blackboard.persist.course.CourseMembershipDbLoader;
+import blackboard.persist.course.CourseMembershipDbPersister;
 import blackboard.persist.user.UserDbLoader;
 
 import java.util.Collection;
@@ -16,6 +18,7 @@ import java.util.Collection;
 public class BbCourseMembershipDAO {
 
     CourseMembershipDbLoader courseMembershipDbLoader;
+    CourseMembershipDbPersister courseMembershipDbPersister;
 
 
     public CourseMembership getById(Id id) throws PersistenceException {
@@ -40,11 +43,22 @@ public class BbCourseMembershipDAO {
         return getCourseMembershipDbLoader().loadByCourseAndUserId(courseId, userId);
     }
 
+    public void persist(CourseMembership courseMembership) throws ValidationException, PersistenceException {
+        courseMembershipDbPersister.persist(courseMembership);
+    }
+
     public CourseMembershipDbLoader getCourseMembershipDbLoader() throws PersistenceException {
         if(courseMembershipDbLoader == null) {
             courseMembershipDbLoader = CourseMembershipDbLoader.Default.getInstance();
         }
         return courseMembershipDbLoader;
+    }
+
+    public CourseMembershipDbPersister getCourseMembershipDbPersister() throws PersistenceException {
+        if(courseMembershipDbPersister == null) {
+            courseMembershipDbPersister = CourseMembershipDbPersister.Default.getInstance();
+        }
+        return courseMembershipDbPersister;
     }
 
 }
