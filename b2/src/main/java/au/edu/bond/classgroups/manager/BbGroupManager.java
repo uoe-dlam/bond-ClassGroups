@@ -18,6 +18,8 @@ import blackboard.persist.PersistenceException;
 import blackboard.persist.PkId;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.concurrent.ExecutionException;
+
 /**
  * Created by Shane Argo on 4/06/2014.
  */
@@ -80,13 +82,9 @@ public class BbGroupManager implements GroupManager {
             } else {
                 try {
                     bbGroup = bbGroupService.getById(ext.getInternalGroupId(), courseId);
-                } catch (KeyNotFoundException e) {
+                } catch (ExecutionException e) {
                     currentTaskLogger.info(resourceService.getLocalisationString(
                             "bond.classgroups.info.existinggroupmissing", group.getGroupId()), e);
-                } catch (PersistenceException e) {
-                    currentTaskLogger.warning(resourceService.getLocalisationString(
-                            "bond.classgroups.warning.couldnotload", group.getGroupId()), e);
-                    return Status.ERROR;
                 }
             }
         } else {
@@ -156,6 +154,10 @@ public class BbGroupManager implements GroupManager {
                 } catch (PersistenceException e) {
                     currentTaskLogger.warning(resourceService.getLocalisationString(
                             "bond.classgroups.warning.groupbberrors", group.getGroupId()), e);
+                    return Status.ERROR;
+                } catch (ExecutionException e) {
+                    currentTaskLogger.warning(resourceService.getLocalisationString(
+                            "bond.classgroups.warning.groupexecution", group.getGroupId()), e);
                     return Status.ERROR;
                 }
             }
@@ -271,7 +273,7 @@ public class BbGroupManager implements GroupManager {
         blackboard.data.course.Group bbGroupSet = null;
         try {
             bbGroupSet = bbGroupService.getByTitleAndCourseId(title, courseId);
-        } catch (PersistenceException ignored) {
+        } catch (ExecutionException ignored) {
         }
 
         if(bbGroupSet == null) {
@@ -296,6 +298,10 @@ public class BbGroupManager implements GroupManager {
             } catch (PersistenceException e) {
                 currentTaskLogger.error(resourceService.getLocalisationString(
                         "bond.classgroups.error.groupsetbberror", title, courseId), e);
+                return null;
+            } catch (ExecutionException e) {
+                currentTaskLogger.error(resourceService.getLocalisationString(
+                        "bond.classgroups.error.groupsetexecution", title, courseId), e);
                 return null;
             }
         }

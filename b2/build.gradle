@@ -22,7 +22,8 @@ repositories {
 dependencies {
     providedCompile 'blackboard.platform:bb-platform:9.1.140152.0',
                     'blackboard.platform:bb-taglibs:9.1.140152.0',
-                    'javax.servlet:servlet-api:2.5'
+                    'javax.servlet:servlet-api:2.5',
+                    'com.google.guava:guava:16.0'
 
     compile 'javax.inject:javax.inject:1',
             'org.springframework:spring-orm:4.0.5.RELEASE',

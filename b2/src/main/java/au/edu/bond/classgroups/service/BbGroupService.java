@@ -5,11 +5,18 @@ import blackboard.data.ValidationException;
 import blackboard.data.course.Group;
 import blackboard.persist.Id;
 import blackboard.persist.PersistenceException;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.net.IDN;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Created by Shane Argo on 16/06/2014.
@@ -19,112 +26,90 @@ public class BbGroupService {
     @Autowired
     private BbGroupDAO bbGroupDAO;
 
-    private Map<Id, Group> idCache = new HashMap<Id, Group>();
-    private Map<Id, Map<String, Group>> titleCache = new HashMap<Id, Map<String, Group>>();
+    private LoadingCache<Id, ConcurrentMap<String, Group>> titleCache;
+    private LoadingCache<Id, ConcurrentMap<Id, Group>> groupCache;
 
-    public Group getById(long id) throws PersistenceException {
-        return getById(getIdFromLong(id));
+    public BbGroupService() {
+        this(10);
     }
 
-    public Group getById(long id, Id courseId) throws PersistenceException {
+    public BbGroupService(int cacheSize) {
+        groupCache = CacheBuilder.newBuilder().maximumSize(cacheSize).build(new CacheLoader<Id, ConcurrentMap<Id, Group>>() {
+            @Override
+            public ConcurrentMap<Id, Group> load(Id courseId) throws Exception {
+                Collection<Group> classGroups = bbGroupDAO.getByCourseId(courseId);
+                ConcurrentHashMap<Id, Group> groupMap = new ConcurrentHashMap<Id, Group>();
+                for (Group group : classGroups) {
+                    groupMap.put(group.getId(), group);
+                }
+                return groupMap;
+            }
+        });
+
+        titleCache = CacheBuilder.newBuilder().maximumSize(cacheSize).build(new CacheLoader<Id, ConcurrentMap<String, Group>>() {
+            @Override
+            public ConcurrentMap<String, Group> load(Id courseId) throws Exception {
+                Map<Id, Group> groupMap = groupCache.get(courseId);
+                ConcurrentHashMap<String, Group> titleMap = new ConcurrentHashMap<String, Group>();
+                for (Group group : groupMap.values()) {
+                    titleMap.put(group.getTitle(), group);
+                }
+                return titleMap;
+            }
+        });
+    }
+
+    public Group getById(long id, Id courseId) throws ExecutionException {
         return getById(getIdFromLong(id), courseId);
     }
 
-    public Group getById(Id id) throws PersistenceException {
-        Group group = idCache.get(id);
-        if(group == null) {
-            group = bbGroupDAO.getById(id);
-            cache(group);
-        }
-        return group;
+    public Group getById(Id groupId, Id courseId) throws ExecutionException {
+        return groupCache.get(courseId).get(groupId);
     }
 
-    public Group getById(Id groupId, Id courseId) throws PersistenceException {
-        Group group = idCache.get(groupId);
-        if(group == null) {
-            Collection<Group> classGroups = bbGroupDAO.getByCourseId(courseId);
-            for(Group classGroup : classGroups) {
-                cache(classGroup);
-                if(classGroup.getId().equals(groupId)){
-                    group = classGroup;
-                }
-            }
-        }
-        return group;
+    public Collection<Group> getByCourseId(Id courseId) throws ExecutionException {
+        return groupCache.get(courseId).values();
     }
 
-    public Collection<Group> getByCourseId(Id courseId) throws PersistenceException {
-        Map<String, Group> courseTitleCache = titleCache.get(courseId);
-        if(courseTitleCache != null) {
-            return courseTitleCache.values();
-        }
-
-        Collection<Group> classGroups = bbGroupDAO.getByCourseId(courseId);
-        for(Group classGroup : classGroups) {
-            cache(classGroup);
-        }
-        return classGroups;
+    public Group getByTitleAndCourseId(String title, Id courseId) throws ExecutionException {
+        return titleCache.get(courseId).get(title);
     }
 
-    public Group getByTitleAndCourseId(String title, Id courseId) throws PersistenceException {
-        Group group = null;
-        Map<String, Group> courseTitleCache = titleCache.get(courseId);
-        if(courseTitleCache != null) {
-            group = courseTitleCache.get(title);
-        }
-        if(group != null) {
-            return group;
-        }
-
-        Collection<Group> classGroups = bbGroupDAO.getByCourseId(courseId);
-        for(Group classGroup : classGroups) {
-            cache(classGroup);
-            if(classGroup.getTitle().equals(title)){
-                group = classGroup;
-            }
-        }
-        return group;
-    }
-
-    public void createOrUpdate(Group group) throws ValidationException, PersistenceException {
+    public synchronized void createOrUpdate(Group group) throws ValidationException, PersistenceException, ExecutionException {
         bbGroupDAO.createOrUpdate(group);
-        cache(group);
+        Id courseId = group.getCourseId();
+        Map<Id, Group> groupMap = groupCache.get(courseId);
+        Map<String, Group> titleMap = titleCache.get(courseId);
+
+        groupMap.put(group.getId(), group);
+        titleMap.put(group.getTitle(), group);
     }
 
-    public void delete(Long id) throws PersistenceException {
-        delete(getIdFromLong(id));
+    public void delete(Long groupId, Id courseId) throws PersistenceException, ExecutionException {
+        delete(getIdFromLong(groupId), courseId);
     }
 
-    public void delete(Id id) throws PersistenceException {
-        bbGroupDAO.delete(id);
-        Group group = idCache.get(id);
-        if(group != null) {
-            uncache(group);
-        }
+    public synchronized void delete(Id groupId, Id courseId) throws PersistenceException, ExecutionException {
+        Group group = groupCache.get(courseId).get(groupId);
+        bbGroupDAO.delete(groupId);
+
+        Map<Id, Group> groupMap = groupCache.get(courseId);
+        Map<String, Group> titleMap = titleCache.get(courseId);
+
+        groupMap.remove(groupId);
+        titleMap.remove(group.getTitle());
     }
 
     public Id getIdFromLong(Long id) {
         return Id.toId(Group.DATA_TYPE, id);
     }
 
-    private void cache(Group group) {
-        idCache.put(group.getId(), group);
+    public synchronized void clearCaches() {
+        titleCache.invalidateAll();
+        titleCache.cleanUp();
 
-        Map<String, Group> courseTitleCache = titleCache.get(group.getCourseId());
-        if(courseTitleCache == null) {
-            courseTitleCache = new HashMap<String, Group>();
-            titleCache.put(group.getCourseId(), courseTitleCache);
-        }
-        courseTitleCache.put(group.getTitle(), group);
-    }
-
-    private void uncache(Group group) {
-        idCache.remove(group.getId());
-
-        Map<String, Group> courseTitleCache = titleCache.get(group.getCourseId());
-        if(courseTitleCache != null) {
-            courseTitleCache.remove(group.getTitle());
-        }
+        groupCache.invalidateAll();
+        titleCache.cleanUp();
     }
 
     public BbGroupDAO getBbGroupDAO() {
