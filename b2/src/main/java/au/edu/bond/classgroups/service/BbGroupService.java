@@ -28,6 +28,7 @@ public class BbGroupService {
 
     private LoadingCache</*Course Id*/Id, ConcurrentMap</*Group Title*/String, Group>> titleCache;
     private LoadingCache</*Course Id*/Id, ConcurrentMap</*Group Id*/Id, Group>> groupCache;
+    private LoadingCache</*Group Id*/Id, /*Course Id*/Id> courseIdCache;
 
     public BbGroupService() {
         this(10);
@@ -57,6 +58,13 @@ public class BbGroupService {
                 return titleMap;
             }
         });
+
+        courseIdCache = CacheBuilder.newBuilder().maximumSize(cacheSize).build(new CacheLoader<Id, Id>() {
+            @Override
+            public Id load(Id groupId) throws Exception {
+                return bbGroupDAO.getById(groupId).getCourseId();
+            }
+        });
     }
 
     public Group getById(long id, Id courseId) throws ExecutionException {
@@ -73,6 +81,14 @@ public class BbGroupService {
 
     public Group getByTitleAndCourseId(String title, Id courseId) throws ExecutionException {
         return titleCache.get(courseId).get(title);
+    }
+
+    public Id getCourseIdForGroupId(Id groupId) throws ExecutionException {
+        return courseIdCache.get(groupId);
+    }
+
+    public Id getCourseIdForGroupId(long groupId) throws ExecutionException {
+        return courseIdCache.get(getIdFromLong(groupId));
     }
 
     public synchronized void createOrUpdate(Group group) throws ValidationException, PersistenceException, ExecutionException {

@@ -5,8 +5,11 @@ import au.edu.bond.classgroups.dao.BbUserDAO;
 import au.edu.bond.classgroups.groupext.GroupExtension;
 import blackboard.data.course.CourseMembership;
 import blackboard.data.user.User;
+import blackboard.persist.Id;
 import blackboard.persist.PersistenceException;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.concurrent.ExecutionException;
 
 /**
  * Created by Shane Argo on 20/06/2014.
@@ -14,13 +17,23 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class LeaderGroupTitleService implements GroupTitleService {
 
     @Autowired
-    private BbCourseMembershipDAO bbCourseMembershipDAO;
+    private BbCourseMembershipService bbCourseMembershipService;
     @Autowired
-    private BbUserDAO bbUserDAO;
+    private BbUserService bbUserService;
+    @Autowired
+    private BbGroupService bbGroupService;
     @Autowired
     private ResourceService resourceService;
 
     public String getGroupTitle(String baseTitle, GroupExtension extension) {
+
+        Id courseId;
+        try {
+            courseId = bbGroupService.getCourseIdForGroupId(extension.getInternalGroupId());
+        } catch (ExecutionException e) {
+            return baseTitle;
+        }
+
         Long leaderCourseMembershipId = extension.calculateLeaderCourseUserId();
         if(leaderCourseMembershipId == null) {
             return baseTitle;
@@ -28,14 +41,14 @@ public class LeaderGroupTitleService implements GroupTitleService {
 
         CourseMembership courseMembership = null;
         try {
-            courseMembership = bbCourseMembershipDAO.getById(leaderCourseMembershipId);
-        } catch (PersistenceException e) {
+            courseMembership = bbCourseMembershipService.getById(leaderCourseMembershipId, courseId);
+        } catch (ExecutionException e) {
             return baseTitle;
         }
 
         User user = null;
         try {
-            user = bbUserDAO.getById(courseMembership.getUserId());
+            user = bbUserService.getById(courseMembership.getUserId());
         } catch (PersistenceException e) {
             return baseTitle;
         }
@@ -43,20 +56,28 @@ public class LeaderGroupTitleService implements GroupTitleService {
         return resourceService.getLocalisationString("bond.classgroups.pattern.group", baseTitle, user.getGivenName(), user.getFamilyName());
     }
 
-    public BbCourseMembershipDAO getBbCourseMembershipDAO() {
-        return bbCourseMembershipDAO;
+    public BbCourseMembershipService getBbCourseMembershipService() {
+        return bbCourseMembershipService;
     }
 
-    public void setBbCourseMembershipDAO(BbCourseMembershipDAO bbCourseMembershipDAO) {
-        this.bbCourseMembershipDAO = bbCourseMembershipDAO;
+    public void setBbCourseMembershipService(BbCourseMembershipService bbCourseMembershipService) {
+        this.bbCourseMembershipService = bbCourseMembershipService;
     }
 
-    public BbUserDAO getBbUserDAO() {
-        return bbUserDAO;
+    public BbUserService getBbUserService() {
+        return bbUserService;
     }
 
-    public void setBbUserDAO(BbUserDAO bbUserDAO) {
-        this.bbUserDAO = bbUserDAO;
+    public void setBbUserService(BbUserService bbUserService) {
+        this.bbUserService = bbUserService;
+    }
+
+    public BbGroupService getBbGroupService() {
+        return bbGroupService;
+    }
+
+    public void setBbGroupService(BbGroupService bbGroupService) {
+        this.bbGroupService = bbGroupService;
     }
 
     public ResourceService getResourceService() {
