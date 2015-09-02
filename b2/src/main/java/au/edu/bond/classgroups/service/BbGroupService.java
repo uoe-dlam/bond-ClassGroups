@@ -76,14 +76,14 @@ public class BbGroupService {
     }
 
     public synchronized void createOrUpdate(Group group) throws ValidationException, PersistenceException, ExecutionException {
+        bbGroupDAO.createOrUpdate(group);
+
         Id courseId = group.getCourseId();
         Map<Id, Group> groupMap = groupCache.get(courseId);
         Map<String, Group> titleMap = titleCache.get(courseId);
 
         groupMap.put(group.getId(), group);
         titleMap.put(group.getTitle(), group);
-
-        bbGroupDAO.createOrUpdate(group);
     }
 
     public void delete(Long groupId, Id courseId) throws PersistenceException, ExecutionException {

@@ -69,14 +69,14 @@ public class BbCourseMembershipService {
     }
 
     public synchronized void persistCourseMembership(CourseMembership courseMembership) throws ValidationException, PersistenceException, ExecutionException {
+        bbCourseMembershipDAO.persist(courseMembership);
+
         final Id courseId = courseMembership.getCourseId();
         final ConcurrentMap<Id, CourseMembership> byIdMap = byIdCache.get(courseId);
         final ConcurrentMap<Id, CourseMembership> byUserIdMap = byUserIdCache.get(courseId);
 
         byIdMap.put(courseMembership.getId(), courseMembership);
         byUserIdMap.put(courseMembership.getUserId(), courseMembership);
-
-        bbCourseMembershipDAO.persist(courseMembership);
     }
 
     public BbCourseMembershipDAO getBbCourseMembershipDAO() {

@@ -5,11 +5,17 @@ import blackboard.persist.Id;
 import blackboard.persist.KeyNotFoundException;
 import blackboard.platform.gradebook2.GradebookCustomView;
 import blackboard.platform.security.authentication.BbSecurityException;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Created by Shane Argo on 19/06/2014.
@@ -19,34 +25,31 @@ public class BbGradebookCustomViewService {
     @Autowired
     private BbGradebookCustomViewDAO bbGradebookCustomViewDAO;
 
-    Map<Id, GradebookCustomView> cache = new HashMap<Id, GradebookCustomView>();
+    private LoadingCache</*Course Id*/Id, ConcurrentMap</*Custom View Id*/Id, GradebookCustomView>> byIdCache;
 
-    public GradebookCustomView getById(Id id) throws KeyNotFoundException {
-        GradebookCustomView gradebookCustomView = cache.get(id);
-        if(gradebookCustomView == null) {
-            gradebookCustomView = bbGradebookCustomViewDAO.getById(id);
-            cache.put(id, gradebookCustomView);
-        }
-        return gradebookCustomView;
-    }
-
-    public GradebookCustomView getById(Id customViewId, Id courseId) throws KeyNotFoundException {
-        GradebookCustomView gradebookCustomView = cache.get(customViewId);
-        if(gradebookCustomView == null) {
-            Collection<GradebookCustomView> courseGradebookCustomViews = bbGradebookCustomViewDAO.getByCourseId(courseId);
-            for(GradebookCustomView courseGradebookCustomView : courseGradebookCustomViews) {
-                cache.put(courseGradebookCustomView.getId(), courseGradebookCustomView);
-                if(courseGradebookCustomView.getId().equals(customViewId)) {
-                    gradebookCustomView = courseGradebookCustomView;
+    public BbGradebookCustomViewService(int cacheSize) {
+        byIdCache = CacheBuilder.newBuilder().maximumSize(cacheSize).build(new CacheLoader<Id, ConcurrentMap<Id, GradebookCustomView>>() {
+            @Override
+            public ConcurrentMap<Id, GradebookCustomView> load(Id courseId) throws Exception {
+                final ConcurrentHashMap<Id, GradebookCustomView> viewMap = new ConcurrentHashMap<Id, GradebookCustomView>();
+                final Collection<GradebookCustomView> views = bbGradebookCustomViewDAO.getByCourseId(courseId);
+                for (GradebookCustomView view : views) {
+                    viewMap.put(view.getId(), view);
                 }
+                return viewMap;
             }
-        }
-        return gradebookCustomView;
+        });
     }
 
-    public void createOrUpdate(GradebookCustomView gradebookCustomView) throws BbSecurityException {
+    public GradebookCustomView getById(Id customViewId, Id courseId) throws ExecutionException {
+        return byIdCache.get(courseId).get(customViewId);
+    }
+
+    public synchronized void createOrUpdate(GradebookCustomView gradebookCustomView) throws BbSecurityException, ExecutionException {
         bbGradebookCustomViewDAO.createOrUpdate(gradebookCustomView);
-        cache.put(gradebookCustomView.getId(), gradebookCustomView);
+
+        final ConcurrentMap<Id, GradebookCustomView> viewMap = byIdCache.get(gradebookCustomView.getCourseId());
+        viewMap.put(gradebookCustomView.getId(), gradebookCustomView);
     }
 
     public Id getIdFromLong(long customViewId) {

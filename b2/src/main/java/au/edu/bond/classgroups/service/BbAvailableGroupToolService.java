@@ -57,6 +57,8 @@ public class BbAvailableGroupToolService {
     }
 
     public synchronized void createOrUpdate(AvailableGroupTool availableGroupTool, Id courseId) throws PersistenceException, ExecutionException {
+        bbAvailableGroupToolDAO.createOrUpdate(availableGroupTool);
+
         final ConcurrentMap<Id, Collection<AvailableGroupTool>> toolMap = toolCache.get(courseId);
 
         final Id groupId = availableGroupTool.getGroupId();
@@ -66,9 +68,9 @@ public class BbAvailableGroupToolService {
             toolMap.put(groupId, toolsList);
         }
 
-        toolsList.add(availableGroupTool);
-
-        bbAvailableGroupToolDAO.createOrUpdate(availableGroupTool);
+        if(!toolsList.contains(availableGroupTool)) {
+            toolsList.add(availableGroupTool);
+        }
     }
 
     public void delete(long toolId, Id groupId, Id courseId) throws PersistenceException, ExecutionException {
@@ -76,6 +78,8 @@ public class BbAvailableGroupToolService {
     }
 
     public synchronized void delete(Id toolId, Id groupId, Id courseId) throws PersistenceException, ExecutionException {
+        bbAvailableGroupToolDAO.delete(toolId);
+
         final ConcurrentMap<Id, Collection<AvailableGroupTool>> toolMap = toolCache.get(courseId);
 
         final Collection<AvailableGroupTool> toolsList = toolMap.get(groupId);
@@ -85,8 +89,6 @@ public class BbAvailableGroupToolService {
                 break;
             }
         }
-
-        bbAvailableGroupToolDAO.delete(toolId);
     }
 
     public Id getIdFromLong(long id) {

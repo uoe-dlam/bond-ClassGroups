@@ -59,8 +59,8 @@ public class BbSmartViewManager implements SmartViewManager {
         if(ext.getCustomViewId() != null) {
             Id customViewId = bbGradebookCustomViewService.getIdFromLong(ext.getCustomViewId());
             try {
-                gradebookCustomView = bbGradebookCustomViewService.getById(customViewId);
-            } catch (KeyNotFoundException e) {
+                gradebookCustomView = bbGradebookCustomViewService.getById(customViewId, courseId);
+            } catch (ExecutionException e) {
                 currentTaskLogger.warning(resourceService.getLocalisationString(
                         "bond.classgroups.warning.couldnotfindsmartview",
                         group.getGroupId()));
@@ -106,6 +106,10 @@ public class BbSmartViewManager implements SmartViewManager {
         } catch (BbSecurityException e) {
             currentTaskLogger.error(resourceService.getLocalisationString(
                     "bond.classgroups.error.failedtocreatesmartview", group.getGroupId()), e);
+            return;
+        } catch (ExecutionException e) {
+            currentTaskLogger.error(resourceService.getLocalisationString(
+                    "bond.classgroups.error.failedtocreatesmartviewexecution", group.getGroupId()), e);
             return;
         }
 
