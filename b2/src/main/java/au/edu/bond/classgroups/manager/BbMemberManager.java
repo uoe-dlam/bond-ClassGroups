@@ -61,12 +61,7 @@ public class BbMemberManager implements MemberManager {
         Collection<GroupMembership> deleteMembers;
         try {
             deleteMembers = bbGroupMembershipService.getByGroupId(groupId, courseId);
-        } catch (KeyNotFoundException e) {
-            currentTaskLogger.warning(resourceService.getLocalisationString(
-                    "bond.classgroups.warning.cantlocateexistingmembers",
-                    ext.getExternalSystemId()), e);
-            return;
-        } catch (PersistenceException e) {
+        } catch (ExecutionException e) {
             currentTaskLogger.warning(resourceService.getLocalisationString(
                     "bond.classgroups.warning.couldnotloadmembers",
                     group.getCourseId()), e);
@@ -160,10 +155,14 @@ public class BbMemberManager implements MemberManager {
         }
         for(GroupMembership deleteMember : deleteMembers) {
             try {
-                bbGroupMembershipService.delete(deleteMember.getId());
+                bbGroupMembershipService.delete(deleteMember.getId(), groupId, courseId);
             } catch (PersistenceException e) {
                 currentTaskLogger.warning(resourceService.getLocalisationString(
                         "bond.classgroups.warning.couldnotdeletemember",
+                        deleteMember.getId(), group.getGroupId()), e);
+            } catch (ExecutionException e) {
+                currentTaskLogger.warning(resourceService.getLocalisationString(
+                        "bond.classgroups.warning.couldnotdeletememberexecution",
                         deleteMember.getId(), group.getGroupId()), e);
             }
         }
@@ -175,7 +174,7 @@ public class BbMemberManager implements MemberManager {
         }
         for(GroupMembership createMember : createMembers.keySet()) {
             try {
-                bbGroupMembershipService.createOrUpdate(createMember);
+                bbGroupMembershipService.createOrUpdate(createMember, courseId);
             } catch (ValidationException e) {
                 currentTaskLogger.warning(resourceService.getLocalisationString(
                         "bond.classgroups.warning.couldnotpersistgroupuservalidationerrors",
@@ -183,6 +182,10 @@ public class BbMemberManager implements MemberManager {
             } catch (PersistenceException e) {
                 currentTaskLogger.warning(resourceService.getLocalisationString(
                         "bond.classgroups.warning.couldnotpersistgroupuserbberrors",
+                        createMembers.get(createMember).getUserId(), group.getGroupId()), e);
+            } catch (ExecutionException e) {
+                currentTaskLogger.warning(resourceService.getLocalisationString(
+                        "bond.classgroups.warning.couldnotpersistgroupuserexecution",
                         createMembers.get(createMember).getUserId(), group.getGroupId()), e);
             }
         }
@@ -251,7 +254,7 @@ public class BbMemberManager implements MemberManager {
             leaderMembership.setCourseMembershipId(leaderCourseMembershipId);
             leaderMembership.setGroupId(groupId);
             try {
-                bbGroupMembershipService.createOrUpdate(leaderMembership);
+                bbGroupMembershipService.createOrUpdate(leaderMembership, courseId);
             } catch (ValidationException e) {
                 currentTaskLogger.warning(resourceService.getLocalisationString(
                         "bond.classgroups.warning.couldnotaddleadervalidationerrors",
@@ -259,6 +262,10 @@ public class BbMemberManager implements MemberManager {
             } catch (PersistenceException e) {
                 currentTaskLogger.warning(resourceService.getLocalisationString(
                         "bond.classgroups.warning.couldnotaddleaderbberrors",
+                        leader.getBatchUid(), group.getGroupId()), e);
+            } catch (ExecutionException e) {
+                currentTaskLogger.warning(resourceService.getLocalisationString(
+                        "bond.classgroups.warning.couldnotaddleaderexecution",
                         leader.getBatchUid(), group.getGroupId()), e);
             }
         }

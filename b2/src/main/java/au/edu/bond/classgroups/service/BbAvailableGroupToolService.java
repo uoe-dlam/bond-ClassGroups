@@ -26,51 +26,48 @@ public class BbAvailableGroupToolService {
     @Autowired
     private BbAvailableGroupToolDAO bbAvailableGroupToolDAO;
 
-    private LoadingCache</*Course Id*/Id, ConcurrentMap</*Group Id*/Id, Collection<AvailableGroupTool>>> toolCache;
+    private LoadingCache</*Course Id*/Id, ConcurrentMap</*Group Id*/Id, ConcurrentMap</*Avail Group Tool Id*/Id, AvailableGroupTool>>> toolCache;
 
     public BbAvailableGroupToolService() {
         this(10);
     }
 
     public BbAvailableGroupToolService(int cacheSize) {
-        toolCache = CacheBuilder.newBuilder().maximumSize(cacheSize).build(new CacheLoader<Id, ConcurrentMap<Id, Collection<AvailableGroupTool>>>() {
+        toolCache = CacheBuilder.newBuilder().maximumSize(cacheSize).build(new CacheLoader<Id, ConcurrentMap<Id, ConcurrentMap<Id, AvailableGroupTool>>>() {
             @Override
-            public ConcurrentMap<Id, Collection<AvailableGroupTool>> load(Id courseId) throws Exception {
-                ConcurrentHashMap<Id, Collection<AvailableGroupTool>> toolMap = new ConcurrentHashMap<Id, Collection<AvailableGroupTool>>();
+            public ConcurrentMap<Id, ConcurrentMap<Id, AvailableGroupTool>> load(Id courseId) throws Exception {
+                ConcurrentHashMap<Id, ConcurrentMap<Id, AvailableGroupTool>> groupMap = new ConcurrentHashMap<Id, ConcurrentMap<Id, AvailableGroupTool>>();
                 Collection<AvailableGroupTool> groupTools = bbAvailableGroupToolDAO.getByCourseId(courseId);
                 for (AvailableGroupTool groupTool : groupTools) {
                     Id groupId = groupTool.getGroupId();
-                    Collection<AvailableGroupTool> toolsList = toolMap.get(groupId);
-                    if (toolsList == null) {
-                        toolsList = Collections.synchronizedCollection(new ArrayList<AvailableGroupTool>());
-                        toolMap.put(groupId, toolsList);
+                    ConcurrentMap<Id, AvailableGroupTool> toolsMap = groupMap.get(groupId);
+                    if (toolsMap == null) {
+                        toolsMap = new ConcurrentHashMap<Id, AvailableGroupTool>();
+                        groupMap.put(groupId, toolsMap);
                     }
-                    toolsList.add(groupTool);
+                    toolsMap.put(groupTool.getId(), groupTool);
                 }
-                return toolMap;
+                return groupMap;
             }
         });
     }
 
     public Collection<AvailableGroupTool> getByGroupId(Id groupId, Id courseId) throws ExecutionException {
-        return toolCache.get(courseId).get(groupId);
+        return toolCache.get(courseId).get(groupId).values();
     }
 
     public synchronized void createOrUpdate(AvailableGroupTool availableGroupTool, Id courseId) throws PersistenceException, ExecutionException {
         bbAvailableGroupToolDAO.createOrUpdate(availableGroupTool);
 
-        final ConcurrentMap<Id, Collection<AvailableGroupTool>> toolMap = toolCache.get(courseId);
+        final ConcurrentMap<Id, ConcurrentMap<Id, AvailableGroupTool>> groupMap = toolCache.get(courseId);
 
         final Id groupId = availableGroupTool.getGroupId();
-        Collection<AvailableGroupTool> toolsList = toolMap.get(groupId);
-        if (toolsList == null) {
-            toolsList = Collections.synchronizedCollection(new ArrayList<AvailableGroupTool>());
-            toolMap.put(groupId, toolsList);
+        ConcurrentMap<Id, AvailableGroupTool> toolsMap = groupMap.get(groupId);
+        if (toolsMap == null) {
+            toolsMap = new ConcurrentHashMap<Id, AvailableGroupTool>();
+            groupMap.put(groupId, toolsMap);
         }
-
-        if(!toolsList.contains(availableGroupTool)) {
-            toolsList.add(availableGroupTool);
-        }
+        toolsMap.put(availableGroupTool.getId(), availableGroupTool);
     }
 
     public void delete(long toolId, Id groupId, Id courseId) throws PersistenceException, ExecutionException {
@@ -80,14 +77,9 @@ public class BbAvailableGroupToolService {
     public synchronized void delete(Id toolId, Id groupId, Id courseId) throws PersistenceException, ExecutionException {
         bbAvailableGroupToolDAO.delete(toolId);
 
-        final ConcurrentMap<Id, Collection<AvailableGroupTool>> toolMap = toolCache.get(courseId);
-
-        final Collection<AvailableGroupTool> toolsList = toolMap.get(groupId);
-        for (AvailableGroupTool availableGroupTool : toolsList) {
-            if(availableGroupTool.getGroupId().equals(toolId)) {
-                toolsList.remove(availableGroupTool);
-                break;
-            }
+        final ConcurrentMap<Id, AvailableGroupTool> toolsMap = toolCache.get(courseId).get(groupId);
+        if(toolsMap != null) {
+            toolsMap.remove(toolId);
         }
     }
 
