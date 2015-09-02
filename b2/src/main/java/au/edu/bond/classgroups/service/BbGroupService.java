@@ -76,13 +76,14 @@ public class BbGroupService {
     }
 
     public synchronized void createOrUpdate(Group group) throws ValidationException, PersistenceException, ExecutionException {
-        bbGroupDAO.createOrUpdate(group);
         Id courseId = group.getCourseId();
         Map<Id, Group> groupMap = groupCache.get(courseId);
         Map<String, Group> titleMap = titleCache.get(courseId);
 
         groupMap.put(group.getId(), group);
         titleMap.put(group.getTitle(), group);
+
+        bbGroupDAO.createOrUpdate(group);
     }
 
     public void delete(Long groupId, Id courseId) throws PersistenceException, ExecutionException {
@@ -91,13 +92,14 @@ public class BbGroupService {
 
     public synchronized void delete(Id groupId, Id courseId) throws PersistenceException, ExecutionException {
         Group group = groupCache.get(courseId).get(groupId);
-        bbGroupDAO.delete(groupId);
 
         Map<Id, Group> groupMap = groupCache.get(courseId);
         Map<String, Group> titleMap = titleCache.get(courseId);
 
         groupMap.remove(groupId);
         titleMap.remove(group.getTitle());
+
+        bbGroupDAO.delete(groupId);
     }
 
     public Id getIdFromLong(Long id) {

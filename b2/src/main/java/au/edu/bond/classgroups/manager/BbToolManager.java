@@ -16,6 +16,7 @@ import blackboard.persist.PersistenceException;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Created by Shane Argo on 17/06/2014.
@@ -55,14 +56,9 @@ public class BbToolManager implements ToolManager {
         Collection<AvailableGroupTool> deleteTools;
         try {
             deleteTools = bbAvailableGroupToolService.getByGroupId(groupId, courseId);
-        } catch (KeyNotFoundException e) {
+        } catch (ExecutionException e) {
             currentTaskLogger.warning(resourceService.getLocalisationString(
-                    "bond.classgroups.warning.couldnotfindexistingtools",
-                    ext.getExternalSystemId()), e);
-            return;
-        } catch (PersistenceException e) {
-            currentTaskLogger.warning(resourceService.getLocalisationString(
-                    "bond.classgroups.warning.couldnotfindexistingtoolsbberrors",
+                    "bond.classgroups.warning.couldnotfindexistingtoolsexecution",
                     ext.getExternalSystemId()), e);
             return;
         }
@@ -97,10 +93,15 @@ public class BbToolManager implements ToolManager {
             }
             for(AvailableGroupTool createTool : createTools.keySet()) {
                 try {
-                    bbAvailableGroupToolService.createOrUpdate(createTool);
+                    bbAvailableGroupToolService.createOrUpdate(createTool, courseId);
                 } catch (PersistenceException e) {
                     currentTaskLogger.warning(resourceService.getLocalisationString(
                             "bond.classgroups.warning.couldnotpersistgrouptool",
+                            createTools.get(createTool), group.getGroupId()), e);
+                    return;
+                } catch (ExecutionException e) {
+                    currentTaskLogger.warning(resourceService.getLocalisationString(
+                            "bond.classgroups.warning.couldnotpersistgrouptoolexecution",
                             createTools.get(createTool), group.getGroupId()), e);
                     return;
                 }
@@ -115,10 +116,14 @@ public class BbToolManager implements ToolManager {
             }
             for (AvailableGroupTool deleteTool : deleteTools) {
                 try {
-                    bbAvailableGroupToolService.delete(deleteTool.getId());
+                    bbAvailableGroupToolService.delete(deleteTool.getId(), groupId, courseId);
                 } catch (PersistenceException e) {
                     currentTaskLogger.warning(resourceService.getLocalisationString(
                             "bond.classgroups.warning.couldnotremovegrouptool",
+                            deleteTool.getId(), group.getGroupId()), e);
+                } catch (ExecutionException e) {
+                    currentTaskLogger.warning(resourceService.getLocalisationString(
+                            "bond.classgroups.warning.couldnotremovegrouptoolexecution",
                             deleteTool.getId(), group.getGroupId()), e);
                 }
             }
