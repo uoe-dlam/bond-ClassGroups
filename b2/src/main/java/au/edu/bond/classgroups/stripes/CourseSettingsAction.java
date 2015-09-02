@@ -40,7 +40,7 @@ public class CourseSettingsAction implements ActionBean {
     private BbUserDAO bbUserDAO;
     private BbCourseMembershipDAO bbCourseMembershipDAO;
     private BbGroupMembershipDAO bbGroupMembershipDAO;
-    private GroupTitleService groupTitleCachelessService;
+    private GroupTitleService groupTitleService;
 
     private List<GroupData> groupDataList;
 
@@ -101,7 +101,7 @@ public class CourseSettingsAction implements ActionBean {
                 final CourseMembership newBbCourseMembership = bbCourseMembershipDAO.getById(newBbCourseUserId);
                 final User user = bbUserDAO.getById(newBbCourseMembership.getUserId());
 
-                String title = groupTitleCachelessService.getGroupTitle(groupExtension.getTitle(), groupExtension);
+                String title = groupTitleService.getGroupTitle(groupExtension.getTitle(), groupExtension);
                 bbGroup.setTitle(title);
 
                 GroupMembership newGroupMembership = new GroupMembership();
@@ -248,13 +248,13 @@ public class CourseSettingsAction implements ActionBean {
         this.bbGroupMembershipDAO = bbGroupMembershipDAO;
     }
 
-    public GroupTitleService getGroupTitleCachelessService() {
-        return groupTitleCachelessService;
+    public GroupTitleService getGroupTitleService() {
+        return groupTitleService;
     }
 
     @SpringBean
-    public void setGroupTitleCachelessService(GroupTitleService groupTitleCachelessService) {
-        this.groupTitleCachelessService = groupTitleCachelessService;
+    public void setGroupTitleService(GroupTitleService groupTitleService) {
+        this.groupTitleService = groupTitleService;
     }
 
     public GroupExtension getGroupExtension() {

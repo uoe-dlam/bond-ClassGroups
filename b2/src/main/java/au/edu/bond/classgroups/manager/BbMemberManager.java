@@ -35,11 +35,11 @@ public class BbMemberManager implements MemberManager {
     @Autowired
     private BbCourseService bbCourseService;
     @Autowired
-    private BbUserCachingService bbUserCachingService;
+    private BbUserService bbUserService;
     @Autowired
     private BbGroupService bbGroupService;
     @Autowired
-    private BbCourseMembershipCachingService bbCourseMembershipCachingService;
+    private BbCourseMembershipService bbCourseMembershipService;
     @Autowired
     private ResourceService resourceService;
     @Autowired
@@ -84,7 +84,7 @@ public class BbMemberManager implements MemberManager {
 
                 User user;
                 try {
-                    user = bbUserCachingService.getByExternalSystemId(member.getUserId(), courseId);
+                    user = bbUserService.getByExternalSystemId(member.getUserId(), courseId);
                 } catch (PersistenceException e) {
                     currentTaskLogger.warning(resourceService.getLocalisationString(
                             "bond.classgroups.warning.couldnotloaduser",
@@ -101,7 +101,7 @@ public class BbMemberManager implements MemberManager {
 
                 CourseMembership courseMembership;
                 try {
-                    courseMembership = bbCourseMembershipCachingService.getByCourseIdAndUserId(courseId, user.getId());
+                    courseMembership = bbCourseMembershipService.getByCourseIdAndUserId(courseId, user.getId());
                 } catch (ExecutionException e) {
                     currentTaskLogger.warning(resourceService.getLocalisationString(
                             "bond.classgroups.warning.couldnotloadcousemember",
@@ -190,7 +190,7 @@ public class BbMemberManager implements MemberManager {
         if(!leaderFound && leaderCourseMembershipId != null) {
             CourseMembership courseMembership = null;
             try {
-                courseMembership = bbCourseMembershipCachingService.getById(leaderCourseMembershipId, courseId);
+                courseMembership = bbCourseMembershipService.getById(leaderCourseMembershipId, courseId);
             } catch (ExecutionException e) {
                 currentTaskLogger.warning(resourceService.getLocalisationString(
                         "bond.classgroups.warning.couldnotfindleadersmembershipbberrors",
@@ -209,7 +209,7 @@ public class BbMemberManager implements MemberManager {
                     courseMembership.setCourseId(courseId);
                     courseMembership.setUserId(leaderCourseMembershipId);
                     try {
-                        bbCourseMembershipCachingService.persistCourseMembership(courseMembership);
+                        bbCourseMembershipService.persistCourseMembership(courseMembership);
                     } catch (ValidationException e) {
                         currentTaskLogger.warning(resourceService.getLocalisationString(
                                 "bond.classgroups.warning.couldnotpersistleadercoursemembershipvalidationerrors",
@@ -231,7 +231,7 @@ public class BbMemberManager implements MemberManager {
 
             User leader = null;
             try {
-                leader = bbUserCachingService.getById(courseMembership.getUserId());
+                leader = bbUserService.getById(courseMembership.getUserId());
             } catch(KeyNotFoundException e) {
                 currentTaskLogger.warning(resourceService.getLocalisationString(
                         "bond.classgroups.warning.couldnotaddleadernotfound",
@@ -297,20 +297,20 @@ public class BbMemberManager implements MemberManager {
         this.bbCourseService = bbCourseService;
     }
 
-    public BbUserCachingService getBbUserCachingService() {
-        return bbUserCachingService;
+    public BbUserService getBbUserService() {
+        return bbUserService;
     }
 
-    public void setBbUserCachingService(BbUserCachingService bbUserCachingService) {
-        this.bbUserCachingService = bbUserCachingService;
+    public void setBbUserService(BbUserService bbUserService) {
+        this.bbUserService = bbUserService;
     }
 
-    public BbCourseMembershipCachingService getBbCourseMembershipCachingService() {
-        return bbCourseMembershipCachingService;
+    public BbCourseMembershipService getBbCourseMembershipService() {
+        return bbCourseMembershipService;
     }
 
-    public void setBbCourseMembershipCachingService(BbCourseMembershipCachingService bbCourseMembershipCachingService) {
-        this.bbCourseMembershipCachingService = bbCourseMembershipCachingService;
+    public void setBbCourseMembershipService(BbCourseMembershipService bbCourseMembershipService) {
+        this.bbCourseMembershipService = bbCourseMembershipService;
     }
 
     public BbGroupService getBbGroupService() {

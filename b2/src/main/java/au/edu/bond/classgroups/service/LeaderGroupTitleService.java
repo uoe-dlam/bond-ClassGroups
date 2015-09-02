@@ -1,5 +1,7 @@
 package au.edu.bond.classgroups.service;
 
+import au.edu.bond.classgroups.dao.BbCourseMembershipDAO;
+import au.edu.bond.classgroups.dao.BbUserDAO;
 import au.edu.bond.classgroups.groupext.GroupExtension;
 import blackboard.data.course.CourseMembership;
 import blackboard.data.user.User;
@@ -11,8 +13,10 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class LeaderGroupTitleService implements GroupTitleService {
 
-    private BbCourseMembershipService bbCourseMembershipService;
-    private BbUserService bbUserService;
+    @Autowired
+    private BbCourseMembershipDAO bbCourseMembershipDAO;
+    @Autowired
+    private BbUserDAO bbUserDAO;
     @Autowired
     private ResourceService resourceService;
 
@@ -22,18 +26,16 @@ public class LeaderGroupTitleService implements GroupTitleService {
             return baseTitle;
         }
 
-        
-
         CourseMembership courseMembership = null;
         try {
-            courseMembership = bbCourseMembershipService.getById(leaderCourseMembershipId);
+            courseMembership = bbCourseMembershipDAO.getById(leaderCourseMembershipId);
         } catch (PersistenceException e) {
             return baseTitle;
         }
 
         User user = null;
         try {
-            user = bbUserService.getById(courseMembership.getUserId());
+            user = bbUserDAO.getById(courseMembership.getUserId());
         } catch (PersistenceException e) {
             return baseTitle;
         }
@@ -41,20 +43,20 @@ public class LeaderGroupTitleService implements GroupTitleService {
         return resourceService.getLocalisationString("bond.classgroups.pattern.group", baseTitle, user.getGivenName(), user.getFamilyName());
     }
 
-    public BbCourseMembershipService getBbCourseMembershipService() {
-        return bbCourseMembershipService;
+    public BbCourseMembershipDAO getBbCourseMembershipDAO() {
+        return bbCourseMembershipDAO;
     }
 
-    public void setBbCourseMembershipService(BbCourseMembershipService bbCourseMembershipService) {
-        this.bbCourseMembershipService = bbCourseMembershipService;
+    public void setBbCourseMembershipDAO(BbCourseMembershipDAO bbCourseMembershipDAO) {
+        this.bbCourseMembershipDAO = bbCourseMembershipDAO;
     }
 
-    public BbUserService getBbUserService() {
-        return bbUserService;
+    public BbUserDAO getBbUserDAO() {
+        return bbUserDAO;
     }
 
-    public void setBbUserService(BbUserService bbUserService) {
-        this.bbUserService = bbUserService;
+    public void setBbUserDAO(BbUserDAO bbUserDAO) {
+        this.bbUserDAO = bbUserDAO;
     }
 
     public ResourceService getResourceService() {
