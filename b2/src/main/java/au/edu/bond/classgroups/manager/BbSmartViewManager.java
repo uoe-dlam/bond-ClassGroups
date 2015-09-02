@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Created by Shane Argo on 19/06/2014.
@@ -47,7 +48,7 @@ public class BbSmartViewManager implements SmartViewManager {
         Id courseId;
         try {
             courseId = bbCourseService.getByExternalSystemId(group.getCourseId()).getId();
-        } catch (PersistenceException e) {
+        } catch (ExecutionException e) {
             currentTaskLogger.warning(resourceService.getLocalisationString(
                     "bond.classgroups.warning.cantfindcourse",
                     group.getCourseId()));

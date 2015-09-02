@@ -66,7 +66,7 @@ public class BbGroupManager implements GroupManager {
                         group.getTitle(), course.getCourseId());
                 group.setTitle(newTitle);
             }
-        } catch (PersistenceException e) {
+        } catch (ExecutionException e) {
             currentTaskLogger.warning(resourceService.getLocalisationString(
                     "bond.classgroups.warning.cantfindcourse", group.getCourseId()));
             return Status.ERROR;

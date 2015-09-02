@@ -52,7 +52,7 @@ public class BbMemberManager implements MemberManager {
         Id courseId;
         try {
             courseId = bbCourseService.getByExternalSystemId(group.getCourseId()).getId();
-        } catch (PersistenceException e) {
+        } catch (ExecutionException e) {
             currentTaskLogger.warning(resourceService.getLocalisationString(
                     "bond.classgroups.warning.cantfindcourse", group.getCourseId()));
             return;
