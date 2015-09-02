@@ -5,12 +5,17 @@ import blackboard.data.ValidationException;
 import blackboard.data.course.CourseMembership;
 import blackboard.persist.Id;
 import blackboard.persist.PersistenceException;
-import blackboard.persist.PkId;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Created by Shane Argo on 16/06/2014.
@@ -20,78 +25,64 @@ public class BbCourseMembershipCachingService implements BbCourseMembershipServi
     @Autowired
     private BbCourseMembershipDAO bbCourseMembershipDAO;
 
-    Map<Id, CourseMembership> idCache = new HashMap<Id, CourseMembership>();
+    private LoadingCache</*Course Id*/Id, ConcurrentMap</*User Id*/Id, CourseMembership>> byUserIdCache;
+    private LoadingCache</*Course Id*/Id, ConcurrentMap</*CourseMembership Id*/Id, CourseMembership>> byIdCache;
 
-    Map</* CourseId */Id, Map</* UserId */Id, CourseMembership>> courseCache = new HashMap<Id, Map<Id, CourseMembership>>();
-
-    @Override
-    public CourseMembership getById(long id) throws PersistenceException {
-        return getById(Id.toId(CourseMembership.DATA_TYPE, id));
+    public BbCourseMembershipCachingService() {
+        this(10);
     }
 
-    @Override
-    public CourseMembership getById(Id id) throws PersistenceException {
-        CourseMembership membership = idCache.get(id);
-        if(membership == null) {
-            membership = bbCourseMembershipDAO.getById(id);
-            idCache.put(membership.getId(), membership);
-        }
-        return membership;
-    }
-
-    @Override
-    public CourseMembership getById(Id courseMembershipId, Id courseId) throws PersistenceException {
-        CourseMembership membership = idCache.get(courseMembershipId);
-        if(membership == null) {
-            Collection<CourseMembership> courseMemberships = bbCourseMembershipDAO.getByCourseId(courseId);
-            for(CourseMembership courseMembership : courseMemberships) {
-                cache(courseMembership);
-                if(courseMembership.getId().equals(courseMembershipId)) {
-                    membership = courseMembership;
-                    break;
+    public BbCourseMembershipCachingService(int cacheSize) {
+        byIdCache = CacheBuilder.newBuilder().maximumSize(10).build(new CacheLoader<Id, ConcurrentMap<Id, CourseMembership>>() {
+            @Override
+            public ConcurrentMap<Id, CourseMembership> load(Id courseId) throws Exception {
+                final Collection<CourseMembership> memberships = bbCourseMembershipDAO.getByCourseId(courseId);
+                final ConcurrentHashMap<Id, CourseMembership> memberMap = new ConcurrentHashMap<Id, CourseMembership>();
+                for (CourseMembership membership : memberships) {
+                    memberMap.put(membership.getId(), membership);
                 }
+                return memberMap;
             }
-        }
-        return membership;
-    }
+        });
 
-    @Override
-    public CourseMembership getByCourseIdAndUserId(Id courseId, Id userId) throws PersistenceException {
-        CourseMembership membership = getFromCache(courseId, userId);
-        if(membership == null) {
-            Collection<CourseMembership> courseMemberships = bbCourseMembershipDAO.getByCourseId(courseId);
-            for(CourseMembership courseMembership : courseMemberships) {
-                cache(courseMembership);
-                if(courseMembership.getUserId().equals(userId)) {
-                    membership = courseMembership;
-                    break;
+        byUserIdCache = CacheBuilder.newBuilder().maximumSize(cacheSize).build(new CacheLoader<Id, ConcurrentMap<Id, CourseMembership>>() {
+            @Override
+            public ConcurrentMap<Id, CourseMembership> load(Id courseId) throws Exception {
+                final Collection<CourseMembership> memberships = byIdCache.get(courseId).values();
+                final ConcurrentHashMap<Id, CourseMembership> memberMap = new ConcurrentHashMap<Id, CourseMembership>();
+                for (CourseMembership membership : memberships) {
+                    memberMap.put(membership.getUserId(), membership);
                 }
+                return memberMap;
             }
-        }
-        return membership;
+        });
     }
 
     @Override
-    public void persistCourseMembership(CourseMembership courseMembership) throws ValidationException, PersistenceException {
+    public CourseMembership getById(long id, Id courseId) throws ExecutionException {
+        return getById(Id.toId(CourseMembership.DATA_TYPE, id), courseId);
+    }
+
+    @Override
+    public CourseMembership getById(Id membershipId, Id courseId) throws ExecutionException {
+        return byIdCache.get(courseId).get(membershipId);
+    }
+
+    @Override
+    public CourseMembership getByCourseIdAndUserId(Id courseId, Id userId) throws ExecutionException {
+        return byUserIdCache.get(courseId).get(userId);
+    }
+
+    @Override
+    public synchronized void persistCourseMembership(CourseMembership courseMembership) throws ValidationException, PersistenceException, ExecutionException {
+        final Id courseId = courseMembership.getCourseId();
+        final ConcurrentMap<Id, CourseMembership> byIdMap = byIdCache.get(courseId);
+        final ConcurrentMap<Id, CourseMembership> byUserIdMap = byUserIdCache.get(courseId);
+
+        byIdMap.put(courseMembership.getId(), courseMembership);
+        byUserIdMap.put(courseMembership.getUserId(), courseMembership);
+
         bbCourseMembershipDAO.persist(courseMembership);
-        cache(courseMembership);
-    }
-
-    private void cache(CourseMembership membership) {
-        idCache.put(membership.getId(), membership);
-        Map<Id, CourseMembership> cache = courseCache.get(membership.getCourseId());
-        if(cache == null) {
-            cache = new HashMap<Id, CourseMembership>();
-        }
-        cache.put(membership.getUserId(), membership);
-    }
-
-    private CourseMembership getFromCache(Id courseId, Id userId) {
-        Map<Id, CourseMembership> courseMap = courseCache.get(courseId);
-        if(courseMap == null) {
-            return null;
-        }
-        return courseMap.get(userId);
     }
 
     public BbCourseMembershipDAO getBbCourseMembershipDAO() {

@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Created by Shane Argo on 4/06/2014.
@@ -101,7 +102,7 @@ public class BbMemberManager implements MemberManager {
                 CourseMembership courseMembership;
                 try {
                     courseMembership = bbCourseMembershipCachingService.getByCourseIdAndUserId(courseId, user.getId());
-                } catch (PersistenceException e) {
+                } catch (ExecutionException e) {
                     currentTaskLogger.warning(resourceService.getLocalisationString(
                             "bond.classgroups.warning.couldnotloadcousemember",
                             group.getCourseId(), member.getUserId(), group.getGroupId(), group.getTitle()), e);
@@ -189,9 +190,8 @@ public class BbMemberManager implements MemberManager {
         if(!leaderFound && leaderCourseMembershipId != null) {
             CourseMembership courseMembership = null;
             try {
-                courseMembership = bbCourseMembershipCachingService.getById(leaderCourseMembershipId);
-            } catch(KeyNotFoundException ignored) {
-            } catch (PersistenceException e) {
+                courseMembership = bbCourseMembershipCachingService.getById(leaderCourseMembershipId, courseId);
+            } catch (ExecutionException e) {
                 currentTaskLogger.warning(resourceService.getLocalisationString(
                         "bond.classgroups.warning.couldnotfindleadersmembershipbberrors",
                         group.getGroupId()), e);
@@ -218,6 +218,11 @@ public class BbMemberManager implements MemberManager {
                     } catch (PersistenceException e) {
                         currentTaskLogger.warning(resourceService.getLocalisationString(
                                 "bond.classgroups.warning.couldnotpersistleadercoursemembershipbberrors",
+                                leaderCourseMembershipId.getExternalString(), group.getGroupId()), e);
+                        return;
+                    } catch (ExecutionException e) {
+                        currentTaskLogger.warning(resourceService.getLocalisationString(
+                                "bond.classgroups.warning.couldnotpersistleadercoursemembershipexecution",
                                 leaderCourseMembershipId.getExternalString(), group.getGroupId()), e);
                         return;
                     }

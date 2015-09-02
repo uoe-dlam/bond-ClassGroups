@@ -5,19 +5,19 @@ import blackboard.data.course.CourseMembership;
 import blackboard.persist.Id;
 import blackboard.persist.PersistenceException;
 
+import java.util.concurrent.ExecutionException;
+
 /**
  * Created by shane on 20/01/15.
  */
 public interface BbCourseMembershipService {
 
-    public CourseMembership getById(long id) throws PersistenceException;
+    CourseMembership getById(long id, Id courseId) throws PersistenceException, ExecutionException;
 
-    public CourseMembership getById(Id id) throws PersistenceException;
+    CourseMembership getById(Id id, Id courseId) throws PersistenceException, ExecutionException;
 
-    public CourseMembership getById(Id courseMembershipId, Id courseId) throws PersistenceException;
+    CourseMembership getByCourseIdAndUserId(Id courseId, Id userId) throws PersistenceException, ExecutionException;
 
-    public CourseMembership getByCourseIdAndUserId(Id courseId, Id userId) throws PersistenceException;
-
-    public void persistCourseMembership(CourseMembership courseMembership) throws ValidationException, PersistenceException;
+    void persistCourseMembership(CourseMembership courseMembership) throws ValidationException, PersistenceException, ExecutionException;
 
 }

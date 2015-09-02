@@ -22,6 +22,8 @@ public class LeaderGroupTitleService implements GroupTitleService {
             return baseTitle;
         }
 
+        
+
         CourseMembership courseMembership = null;
         try {
             courseMembership = bbCourseMembershipService.getById(leaderCourseMembershipId);

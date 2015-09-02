@@ -26,8 +26,8 @@ public class BbGroupService {
     @Autowired
     private BbGroupDAO bbGroupDAO;
 
-    private LoadingCache<Id, ConcurrentMap<String, Group>> titleCache;
-    private LoadingCache<Id, ConcurrentMap<Id, Group>> groupCache;
+    private LoadingCache</*Course Id*/Id, ConcurrentMap</*Group Title*/String, Group>> titleCache;
+    private LoadingCache</*Course Id*/Id, ConcurrentMap</*Group Id*/Id, Group>> groupCache;
 
     public BbGroupService() {
         this(10);

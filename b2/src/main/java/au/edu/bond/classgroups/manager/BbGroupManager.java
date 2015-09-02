@@ -209,14 +209,9 @@ public class BbGroupManager implements GroupManager {
             if(user != null) {
                 try {
                     courseMembership = bbCourseMembershipCachingService.getByCourseIdAndUserId(courseId, user.getId());
-                } catch (KeyNotFoundException e) {
-                    currentTaskLogger.warning(resourceService.getLocalisationString(
-                            "bond.classgroups.warning.cantfindleadermember",
-                            group.getLeaderId(), group.getGroupId()), e);
-                    return false;
-                } catch (PersistenceException e) {
+                } catch (ExecutionException e) {
                     currentTaskLogger.error(resourceService.getLocalisationString(
-                            "bond.classgroups.error.cantfindleadermemberbberror",
+                            "bond.classgroups.error.cantfindleadermemberexecution",
                             group.getLeaderId(), group.getGroupId()), e);
                     return false;
                 }
