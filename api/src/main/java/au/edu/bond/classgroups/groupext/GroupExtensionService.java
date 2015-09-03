@@ -1,5 +1,6 @@
 package au.edu.bond.classgroups.groupext;
 
+import au.edu.bond.classgroups.service.Cleanable;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -15,7 +16,7 @@ import java.util.concurrent.ExecutionException;
 /**
  * Created by Shane Argo on 16/06/2014.
  */
-public class GroupExtensionService {
+public class GroupExtensionService implements Cleanable {
 
     @Autowired
     private GroupExtensionDAO groupExtensionDAO;
@@ -59,5 +60,18 @@ public class GroupExtensionService {
 
         ConcurrentMap<String, GroupExtension> idMap = byIdCache.get(courseId);
         idMap.remove(groupExtension.getExternalSystemId());
+    }
+
+    public synchronized void clearCaches() {
+        byIdCache.invalidateAll();
+        byIdCache.cleanUp();
+    }
+
+    public GroupExtensionDAO getGroupExtensionDAO() {
+        return groupExtensionDAO;
+    }
+
+    public void setGroupExtensionDAO(GroupExtensionDAO groupExtensionDAO) {
+        this.groupExtensionDAO = groupExtensionDAO;
     }
 }

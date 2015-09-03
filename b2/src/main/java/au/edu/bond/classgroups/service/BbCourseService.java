@@ -16,7 +16,7 @@ import java.util.concurrent.ExecutionException;
 /**
  * Created by Shane Argo on 16/06/2014.
  */
-public class BbCourseService {
+public class BbCourseService implements Cleanable {
 
     @Autowired
     private BbCourseDAO bbCourseDAO;
@@ -48,4 +48,18 @@ public class BbCourseService {
         return parentIdCache.get(childId);
     }
 
+    public synchronized void clearCaches() {
+        byEsidCache.invalidateAll();
+        byEsidCache.cleanUp();
+        parentIdCache.invalidateAll();
+        parentIdCache.cleanUp();
+    }
+
+    public BbCourseDAO getBbCourseDAO() {
+        return bbCourseDAO;
+    }
+
+    public void setBbCourseDAO(BbCourseDAO bbCourseDAO) {
+        this.bbCourseDAO = bbCourseDAO;
+    }
 }

@@ -19,7 +19,7 @@ import java.util.concurrent.ExecutionException;
 /**
  * Created by Shane Argo on 16/06/2014.
  */
-public class BbUserService {
+public class BbUserService implements Cleanable {
 
     @Autowired
     private BbUserDAO bbUserDAO;
@@ -59,6 +59,13 @@ public class BbUserService {
 
     public User getByExternalSystemId(String externalSystemId, Id courseId) throws ExecutionException {
         return byEsidCache.get(courseId).get(externalSystemId);
+    }
+
+    public synchronized void clearCaches() {
+        byEsidCache.invalidateAll();
+        byEsidCache.cleanUp();
+        byIdCache.invalidateAll();
+        byIdCache.cleanUp();
     }
 
     public BbUserDAO getBbUserDAO() {

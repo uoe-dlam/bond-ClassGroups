@@ -22,7 +22,7 @@ import java.util.concurrent.ExecutionException;
 /**
  * Created by Shane Argo on 16/06/2014.
  */
-public class BbGroupMembershipService {
+public class BbGroupMembershipService implements Cleanable {
 
     @Autowired
     private BbGroupMembershipDAO bbGroupMembershipDAO;
@@ -77,6 +77,11 @@ public class BbGroupMembershipService {
 
     public Id getIdFromLong(long id) {
         return Id.toId(GroupMembership.DATA_TYPE, id);
+    }
+
+    public synchronized void clearCaches() {
+        byIdCache.invalidateAll();
+        byIdCache.cleanUp();
     }
 
     public BbGroupMembershipDAO getBbGroupMembershipDAO() {

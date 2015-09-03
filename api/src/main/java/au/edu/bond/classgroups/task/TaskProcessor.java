@@ -12,6 +12,7 @@ import au.edu.bond.classgroups.manager.SmartViewManager;
 import au.edu.bond.classgroups.manager.ToolManager;
 import au.edu.bond.classgroups.model.Group;
 import au.edu.bond.classgroups.model.Task;
+import au.edu.bond.classgroups.service.CacheCleaningService;
 import au.edu.bond.classgroups.service.ResourceService;
 import au.edu.bond.classgroups.service.TaskService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +44,8 @@ public class TaskProcessor implements Runnable {
     private Configuration configuration;
     @Autowired
     private ResourceService resourceService;
+    @Autowired
+    private CacheCleaningService cacheCleaningService;
 
     private FeedDeserialiser feedDeserialiser;
     private Runnable cleanupRunnable;
@@ -126,6 +129,8 @@ public class TaskProcessor implements Runnable {
             } catch (InvalidTaskStateException e1) {
                 e1.printStackTrace();
             }
+        } finally {
+            cacheCleaningService.clearCaches();
         }
     }
 

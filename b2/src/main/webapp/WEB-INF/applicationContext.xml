@@ -95,6 +95,21 @@
         <constructor-arg name="byIdCacheSpec" ref="courseLevelCacheSpec" />
     </bean>
 
+    <bean name="cacheCleaningService" class="au.edu.bond.classgroups.service.CacheCleaningService">
+        <constructor-arg name="services">
+            <list>
+                <ref bean="bbAvailableGroupToolService" />
+                <ref bean="bbCourseMembershipService" />
+                <ref bean="bbCourseService" />
+                <ref bean="bbGradebookCustomViewService" />
+                <ref bean="bbGroupMembershipService" />
+                <ref bean="bbGroupService" />
+                <ref bean="bbUserService" />
+                <ref bean="groupExtensionService" />
+            </list>
+        </constructor-arg>
+    </bean>
+
     <bean id="groupTitleService" class="au.edu.bond.classgroups.service.EscapingGroupTitleService">
         <constructor-arg>
             <bean class="au.edu.bond.classgroups.service.LeaderGroupTitleService" />

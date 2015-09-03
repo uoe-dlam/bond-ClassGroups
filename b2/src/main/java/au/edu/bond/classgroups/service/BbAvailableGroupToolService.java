@@ -18,7 +18,7 @@ import java.util.concurrent.ExecutionException;
 /**
  * Created by Shane Argo on 17/06/2014.
  */
-public class BbAvailableGroupToolService {
+public class BbAvailableGroupToolService implements Cleanable {
 
     @Autowired
     private BbAvailableGroupToolDAO bbAvailableGroupToolDAO;
@@ -78,6 +78,11 @@ public class BbAvailableGroupToolService {
 
     public Id getIdFromLong(long id) {
         return Id.toId(GroupMembership.DATA_TYPE, id);
+    }
+
+    public synchronized void clearCaches() {
+        byIdCache.invalidateAll();
+        byIdCache.cleanUp();
     }
 
     public BbAvailableGroupToolDAO getBbAvailableGroupToolDAO() {

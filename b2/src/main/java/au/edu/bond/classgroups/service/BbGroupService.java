@@ -19,7 +19,7 @@ import java.util.concurrent.ExecutionException;
 /**
  * Created by Shane Argo on 16/06/2014.
  */
-public class BbGroupService {
+public class BbGroupService implements Cleanable {
 
     @Autowired
     private BbGroupDAO bbGroupDAO;
@@ -119,9 +119,8 @@ public class BbGroupService {
     public synchronized void clearCaches() {
         byTitleCache.invalidateAll();
         byTitleCache.cleanUp();
-
         byIdCache.invalidateAll();
-        byTitleCache.cleanUp();
+        byIdCache.cleanUp();
     }
 
     public BbGroupDAO getBbGroupDAO() {

@@ -20,7 +20,7 @@ import java.util.concurrent.ExecutionException;
 /**
  * Created by Shane Argo on 19/06/2014.
  */
-public class BbGradebookCustomViewService {
+public class BbGradebookCustomViewService implements Cleanable {
 
     @Autowired
     private BbGradebookCustomViewDAO bbGradebookCustomViewDAO;
@@ -54,6 +54,11 @@ public class BbGradebookCustomViewService {
 
     public Id getIdFromLong(long customViewId) {
         return Id.toId(GradebookCustomView.DATA_TYPE, customViewId);
+    }
+
+    public synchronized void clearCaches() {
+        byIdCache.invalidateAll();
+        byIdCache.cleanUp();
     }
 
     public BbGradebookCustomViewDAO getBbGradebookCustomViewDAO() {
