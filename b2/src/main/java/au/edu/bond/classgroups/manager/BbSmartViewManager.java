@@ -42,9 +42,6 @@ public class BbSmartViewManager implements SmartViewManager {
 
     @Override
     public void syncSmartView(Group group) {
-        GroupExtension ext = groupExtensionService.getGroupExtensionByExternalId(group.getGroupId());
-        Id groupId = bbGroupService.getIdFromLong(ext.getInternalGroupId());
-
         Id courseId;
         try {
             courseId = bbCourseService.getByExternalSystemId(group.getCourseId()).getId();
@@ -54,6 +51,19 @@ public class BbSmartViewManager implements SmartViewManager {
                     group.getCourseId()));
             return;
         }
+
+        GroupExtension ext = null;
+        try {
+            ext = groupExtensionService.getGroupExtensionByExternalId(group.getGroupId(), ((PkId)courseId).getKey());
+        } catch (ExecutionException e) {
+            currentTaskLogger.warning(resourceService.getLocalisationString(
+                    "bond.classgroups.warning.cantloadextension", group.getCourseId()));
+            return;
+        }
+
+
+
+        Id groupId = bbGroupService.getIdFromLong(ext.getInternalGroupId());
 
         GradebookCustomView gradebookCustomView = null;
         if(ext.getCustomViewId() != null) {
@@ -115,7 +125,13 @@ public class BbSmartViewManager implements SmartViewManager {
 
         long gradebookCustomViewId = ((PkId)gradebookCustomView.getId()).getKey();
         ext.setCustomViewId(gradebookCustomViewId);
-        groupExtensionService.update(ext);
+        try {
+            groupExtensionService.update(ext, ((PkId) courseId).getKey());
+        } catch (ExecutionException e) {
+            currentTaskLogger.warning(resourceService.getLocalisationString(
+                    "bond.classgroups.warning.failedextupdate", group.getGroupId(), courseId), e);
+            return;
+        }
 
     }
 

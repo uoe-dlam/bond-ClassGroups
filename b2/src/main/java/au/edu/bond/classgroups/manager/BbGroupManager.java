@@ -46,19 +46,10 @@ public class BbGroupManager implements GroupManager {
 
     @Override
     public Status syncGroup(Group group) {
-        GroupExtension ext = groupExtensionService.getGroupExtensionByExternalId(group.getGroupId());
-
-        if(ext != null && !ext.isSynced()) {
-            currentTaskLogger.info(resourceService.getLocalisationString(
-                    "bond.classgroups.info.skippingunsyncedgroup",
-                    group.getGroupId()));
-            return Status.NOSYNC;
-        }
-
         Id courseId;
         try {
             Course course = bbCourseService.getByExternalSystemId(group.getCourseId());
-            courseId = bbCourseService.getByExternalSystemId(group.getCourseId()).getId();
+            courseId = course.getId();
             if(course.isChild()) {
                 courseId = bbCourseService.getParentId(courseId);
                 String newTitle = resourceService.getLocalisationString(
@@ -70,6 +61,22 @@ public class BbGroupManager implements GroupManager {
             currentTaskLogger.warning(resourceService.getLocalisationString(
                     "bond.classgroups.warning.cantfindcourse", group.getCourseId()));
             return Status.ERROR;
+        }
+
+        GroupExtension ext;
+        try {
+            ext = groupExtensionService.getGroupExtensionByExternalId(group.getGroupId(), ((PkId) courseId).getKey());
+        } catch (ExecutionException e) {
+            currentTaskLogger.warning(resourceService.getLocalisationString(
+                    "bond.classgroups.warning.cantloadextension", group.getGroupId(), group.getCourseId()));
+            return Status.ERROR;
+        }
+
+        if(ext != null && !ext.isSynced()) {
+            currentTaskLogger.info(resourceService.getLocalisationString(
+                    "bond.classgroups.info.skippingunsyncedgroup",
+                    group.getGroupId()));
+            return Status.NOSYNC;
         }
 
         boolean extNew = false;
@@ -173,10 +180,22 @@ public class BbGroupManager implements GroupManager {
             extDirty = true;
         }
 
-        if(extNew) {
-            groupExtensionService.create(ext);
+        if (extNew) {
+            try {
+                groupExtensionService.create(ext, ((PkId) courseId).getKey());
+            } catch (ExecutionException e) {
+                currentTaskLogger.warning(resourceService.getLocalisationString(
+                        "bond.classgroups.warning.failedextcreate", group.getGroupId(), courseId), e);
+                return Status.ERROR;
+            }
         } else if (extDirty) {
-            groupExtensionService.update(ext);
+            try {
+                groupExtensionService.update(ext, ((PkId) courseId).getKey());
+            } catch (ExecutionException e) {
+                currentTaskLogger.warning(resourceService.getLocalisationString(
+                        "bond.classgroups.warning.failedextupdate", group.getGroupId(), courseId), e);
+                return Status.ERROR;
+            }
         }
 
         return status;

@@ -1,9 +1,16 @@
 package au.edu.bond.classgroups.groupext;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Created by Shane Argo on 16/06/2014.
@@ -13,59 +20,44 @@ public class GroupExtensionService {
     @Autowired
     private GroupExtensionDAO groupExtensionDAO;
 
-    Map<String, GroupExtension> externalExtMap;
-    Map<Long, GroupExtension> internalExtMap;
+    LoadingCache</*Course Id*/Long, ConcurrentMap</*External Id*/String, GroupExtension>> byIdCache;
 
-    public GroupExtension getGroupExtensionByExternalId(String externalId) {
-        if(externalExtMap == null) {
-            populateCaches();
-        }
-        return externalExtMap.get(externalId);
+    public GroupExtensionService(String byIdCacheSpec) {
+        byIdCache = CacheBuilder.from(byIdCacheSpec).build(new CacheLoader<Long, ConcurrentMap<String, GroupExtension>>() {
+            @Override
+            public ConcurrentMap<String, GroupExtension> load(Long courseId) throws Exception {
+                ConcurrentHashMap<String, GroupExtension> idMap = new ConcurrentHashMap<String, GroupExtension>();
+                Collection<GroupExtension> groupExts = groupExtensionDAO.getByCourseId(courseId);
+                for (GroupExtension ext : groupExts) {
+                    idMap.put(ext.getExternalSystemId(), ext);
+                }
+                return idMap;
+            }
+        });
     }
 
-    public GroupExtension getGroupExtensionByInternalId(Long internalId) {
-        if(internalExtMap == null) {
-            populateCaches();
-        }
-        return internalExtMap.get(internalId);
+    public GroupExtension getGroupExtensionByExternalId(String externalId, long courseId) throws ExecutionException {
+        return byIdCache.get(courseId).get(externalId);
     }
 
-    public void create(GroupExtension groupExtension) {
+    public void create(GroupExtension groupExtension, long courseId) throws ExecutionException {
         groupExtensionDAO.create(groupExtension);
-        cache(groupExtension);
+
+        ConcurrentMap<String, GroupExtension> idMap = byIdCache.get(courseId);
+        idMap.putIfAbsent(groupExtension.getExternalSystemId(), groupExtension);
     }
 
-    public void update(GroupExtension groupExtension) {
+    public void update(GroupExtension groupExtension, long courseId) throws ExecutionException {
         groupExtensionDAO.update(groupExtension);
-        cache(groupExtension);
+
+        ConcurrentMap<String, GroupExtension> idMap = byIdCache.get(courseId);
+        idMap.put(groupExtension.getExternalSystemId(), groupExtension);
     }
 
-    public void delete(GroupExtension groupExtension) {
+    public void delete(GroupExtension groupExtension, long courseId) throws ExecutionException {
         groupExtensionDAO.delete(groupExtension);
-        uncache(groupExtension);
-    }
 
-    private void populateCaches() {
-        externalExtMap = new HashMap<String, GroupExtension>();
-        internalExtMap = new HashMap<Long, GroupExtension>();
-        for(GroupExtension ext : groupExtensionDAO.getAll()) {
-            externalExtMap.put(ext.getExternalSystemId(), ext);
-            internalExtMap.put(ext.getInternalGroupId(), ext);
-        }
-    }
-
-    private void cache(GroupExtension ext) {
-        if(externalExtMap == null || internalExtMap == null) {
-            populateCaches();
-        }
-        externalExtMap.put(ext.getExternalSystemId(), ext);
-        internalExtMap.put(ext.getInternalGroupId(), ext);
-    }
-
-    private void uncache(GroupExtension ext) {
-        if(externalExtMap != null && internalExtMap != null) {
-            internalExtMap.remove(ext.getInternalGroupId());
-            externalExtMap.remove(ext.getExternalSystemId());
-        }
+        ConcurrentMap<String, GroupExtension> idMap = byIdCache.get(courseId);
+        idMap.remove(groupExtension.getExternalSystemId());
     }
 }

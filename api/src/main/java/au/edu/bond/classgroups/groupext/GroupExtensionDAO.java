@@ -13,7 +13,7 @@ import java.util.List;
 /**
  * Created by Shane Argo on 5/06/2014.
  */
-public class GroupExtensionDAO implements Closeable {
+public class GroupExtensionDAO implements AutoCloseable {
 
     private EntityManagerFactory entityManagerFactory;
 
@@ -23,106 +23,164 @@ public class GroupExtensionDAO implements Closeable {
     }
 
     public GroupExtension getByExternalSystemId(String externalSystemId) {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-        TypedQuery<GroupExtension> query = entityManager.createQuery("FROM GroupExtension WHERE externalSystemId = :externalSystemId", GroupExtension.class);
-        query.setParameter("externalSystemId", externalSystemId);
-        final GroupExtension groupExtension = query.getSingleResult();
-        entityManager.close();
-        return groupExtension;
+        EntityManager entityManager = null;
+        try {
+            entityManager = entityManagerFactory.createEntityManager();
+            TypedQuery<GroupExtension> query = entityManager.createQuery("FROM GroupExtension WHERE externalSystemId = :externalSystemId", GroupExtension.class);
+            query.setParameter("externalSystemId", externalSystemId);
+            return query.getSingleResult();
+        } finally {
+            if (entityManager != null) {
+                entityManager.close();
+            }
+        }
+    }
+
+    public Collection<GroupExtension> getByCourseId(long courseId) {
+        EntityManager entityManager = null;
+        try {
+            entityManager = entityManagerFactory.createEntityManager();
+            TypedQuery<GroupExtension> query = entityManager.createQuery("FROM GroupExtension WHERE courseId = :courseId", GroupExtension.class);
+            query.setParameter("courseId", courseId);
+            return query.getResultList();
+        } finally {
+            if (entityManager != null) {
+                entityManager.close();
+            }
+        }
     }
 
     public Collection<GroupExtension> getAll() {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-        TypedQuery<GroupExtension> query = entityManager.createQuery("FROM GroupExtension", GroupExtension.class);
-        final List<GroupExtension> groupExtensions = query.getResultList();
-        entityManager.close();
-        return groupExtensions;
+        EntityManager entityManager = null;
+        try {
+            entityManager = entityManagerFactory.createEntityManager();
+            TypedQuery<GroupExtension> query = entityManager.createQuery("FROM GroupExtension", GroupExtension.class);
+            return query.getResultList();
+        } finally {
+            if (entityManager != null) {
+                entityManager.close();
+            }
+        }
     }
 
     public GroupExtension get(long id) {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-        final GroupExtension groupExtension = entityManager.find(GroupExtension.class, id);
-        entityManager.close();
-        return groupExtension;
+        EntityManager entityManager = null;
+        try {
+            entityManager = entityManagerFactory.createEntityManager();
+            return entityManager.find(GroupExtension.class, id);
+        } finally {
+            if (entityManager != null) {
+                entityManager.close();
+            }
+        }
     }
 
     public Collection<GroupExtension> getByGroupIds(Collection<Long> groupIds) {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-        TypedQuery<GroupExtension> query = entityManager.createQuery("FROM GroupExtension WHERE internalGroupId IN :ids", GroupExtension.class);
-        query.setParameter("ids", groupIds);
-        final List<GroupExtension> groupExtensions = query.getResultList();
-        entityManager.close();
-        return groupExtensions;
+        EntityManager entityManager = null;
+        try {
+            entityManager = entityManagerFactory.createEntityManager();
+            TypedQuery<GroupExtension> query = entityManager.createQuery("FROM GroupExtension WHERE internalGroupId IN :ids", GroupExtension.class);
+            query.setParameter("ids", groupIds);
+            return query.getResultList();
+        } finally {
+            if (entityManager != null) {
+                entityManager.close();
+            }
+        }
     }
 
     public void create(GroupExtension ext) {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-        EntityTransaction entityTransaction = entityManager.getTransaction();
-
-        entityTransaction.begin();
+        EntityManager entityManager = null;
+        EntityTransaction entityTransaction = null;
         try {
+            entityManager = entityManagerFactory.createEntityManager();
+            entityTransaction = entityManager.getTransaction();
+
+            entityTransaction.begin();
             entityManager.persist(ext);
             entityTransaction.commit();
-        } catch(RuntimeException e) {
-            entityTransaction.rollback();
+        } catch (RuntimeException e) {
+            if(entityTransaction != null) {
+                entityTransaction.rollback();
+            }
             throw e;
         } finally {
-            entityManager.close();
+            if(entityManager != null) {
+                entityManager.close();
+            }
         }
     }
 
     public void update(GroupExtension ext) {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-        EntityTransaction entityTransaction = entityManager.getTransaction();
-
-        entityTransaction.begin();
+        EntityManager entityManager = null;
+        EntityTransaction entityTransaction = null;
         try {
+            entityManager = entityManagerFactory.createEntityManager();
+            entityTransaction = entityManager.getTransaction();
+
+            entityTransaction.begin();
             entityManager.merge(ext);
             entityTransaction.commit();
-        } catch(RuntimeException e) {
-            entityTransaction.rollback();
+        } catch (RuntimeException e) {
+            if(entityTransaction != null) {
+                entityTransaction.rollback();
+            }
             throw e;
         } finally {
-            entityManager.close();
+            if(entityManager != null) {
+                entityManager.close();
+            }
         }
     }
 
     public void delete(GroupExtension ext) {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-        EntityTransaction entityTransaction = entityManager.getTransaction();
-
-        entityTransaction.begin();
+        EntityManager entityManager = null;
+        EntityTransaction entityTransaction = null;
         try {
+            entityManager = entityManagerFactory.createEntityManager();
+            entityTransaction = entityManager.getTransaction();
+
+            entityTransaction.begin();
             entityManager.remove(ext);
             entityTransaction.commit();
-        } catch(RuntimeException e) {
-            entityTransaction.rollback();
+        } catch (RuntimeException e) {
+            if(entityTransaction != null) {
+                entityTransaction.rollback();
+            }
             throw e;
         } finally {
-            entityManager.close();
+            if(entityManager != null) {
+                entityManager.close();
+            }
         }
     }
 
 
     public void delete(long id) {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-        EntityTransaction entityTransaction = entityManager.getTransaction();
-
-        entityTransaction.begin();
+        EntityManager entityManager = null;
+        EntityTransaction entityTransaction = null;
         try {
+            entityManager = entityManagerFactory.createEntityManager();
+            entityTransaction = entityManager.getTransaction();
+
+            entityTransaction.begin();
             entityManager.remove(get(id));
             entityTransaction.commit();
-        } catch(RuntimeException e) {
-            entityTransaction.rollback();
+        } catch (RuntimeException e) {
+            if(entityTransaction != null) {
+                entityTransaction.rollback();
+            }
             throw e;
         } finally {
-            entityManager.close();
+            if(entityManager != null) {
+                entityManager.close();
+            }
         }
     }
 
     @Override
     public void close() {
-        if(entityManagerFactory != null) {
+        if (entityManagerFactory != null) {
             entityManagerFactory.close();
         }
     }

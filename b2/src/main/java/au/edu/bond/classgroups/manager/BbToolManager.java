@@ -13,6 +13,7 @@ import blackboard.data.course.AvailableGroupTool;
 import blackboard.persist.Id;
 import blackboard.persist.KeyNotFoundException;
 import blackboard.persist.PersistenceException;
+import blackboard.persist.PkId;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.*;
@@ -40,9 +41,6 @@ public class BbToolManager implements ToolManager {
 
     @Override
     public void syncGroupTools(Group group) {
-        GroupExtension ext = groupExtensionService.getGroupExtensionByExternalId(group.getGroupId());
-        Id groupId = bbGroupService.getIdFromLong(ext.getInternalGroupId());
-
         Id courseId;
         try {
             courseId = bbCourseService.getByExternalSystemId(group.getCourseId()).getId();
@@ -52,6 +50,16 @@ public class BbToolManager implements ToolManager {
                     group.getCourseId()));
             return;
         }
+
+        GroupExtension ext;
+        try {
+            ext = groupExtensionService.getGroupExtensionByExternalId(group.getGroupId(), ((PkId)courseId).getKey());
+        } catch (ExecutionException e) {
+            currentTaskLogger.warning(resourceService.getLocalisationString(
+                    "bond.classgroups.warning.cantloadextension", group.getCourseId()));
+            return;
+        }
+        Id groupId = bbGroupService.getIdFromLong(ext.getInternalGroupId());
 
         Collection<AvailableGroupTool> deleteTools;
         try {

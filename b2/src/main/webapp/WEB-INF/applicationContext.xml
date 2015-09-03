@@ -58,14 +58,35 @@
     <bean id="bbGroupMembershipDAO" class="au.edu.bond.classgroups.dao.BbGroupMembershipDAO" />
     <bean id="bbUserDAO" class="au.edu.bond.classgroups.dao.BbUserDAO" />
 
-    <bean id="bbAvailableGroupToolService" class="au.edu.bond.classgroups.service.BbAvailableGroupToolService" />
-    <bean id="bbCourseMembershipService" class="au.edu.bond.classgroups.service.BbCourseMembershipService" />
-    <bean id="bbGradebookCustomViewService" class="au.edu.bond.classgroups.service.BbGradebookCustomViewService" />
-    <bean id="bbGroupMembershipService" class="au.edu.bond.classgroups.service.BbGroupMembershipService" />
-    <bean id="bbCourseService" class="au.edu.bond.classgroups.service.BbCourseService" />
-    <bean id="bbGroupService" class="au.edu.bond.classgroups.service.BbGroupService" />
-    <bean id="bbUserService" class="au.edu.bond.classgroups.service.BbUserService" />
-    <bean id="groupExtensionService" class="au.edu.bond.classgroups.groupext.GroupExtensionService" />
+    <bean id="bbAvailableGroupToolService" class="au.edu.bond.classgroups.service.BbAvailableGroupToolService">
+        <constructor-arg name="byIdCacheSpec" value="" />
+    </bean>
+    <bean id="bbCourseMembershipService" class="au.edu.bond.classgroups.service.BbCourseMembershipService">
+        <constructor-arg name="byIdCacheSpec" value="" />
+        <constructor-arg name="byUserIdCacheSpec" value="" />
+    </bean>
+    <bean id="bbGradebookCustomViewService" class="au.edu.bond.classgroups.service.BbGradebookCustomViewService">
+        <constructor-arg name="byIdCacheSpec" value="" />
+    </bean>
+    <bean id="bbGroupMembershipService" class="au.edu.bond.classgroups.service.BbGroupMembershipService">
+        <constructor-arg name="byIdCacheSpec" value="" />
+    </bean>
+    <bean id="bbCourseService" class="au.edu.bond.classgroups.service.BbCourseService">
+        <constructor-arg name="byEsidCacheSpec" value="" />
+        <constructor-arg name="parentIdCacheSpec" value="" />
+    </bean>
+    <bean id="bbGroupService" class="au.edu.bond.classgroups.service.BbGroupService">
+        <constructor-arg name="byIdCacheSpec" value="" />
+        <constructor-arg name="byTitleCacheSpec" value="" />
+        <constructor-arg name="courseIdCacheSpec" value="" />
+    </bean>
+    <bean id="bbUserService" class="au.edu.bond.classgroups.service.BbUserService">
+        <constructor-arg name="byIdCacheSpec" value="" />
+        <constructor-arg name="byEsidCacheSpec" value="" />
+    </bean>
+    <bean id="groupExtensionService" class="au.edu.bond.classgroups.groupext.GroupExtensionService">
+        <constructor-arg name="byIdCacheSpec" value="" />
+    </bean>
 
     <bean id="groupTitleService" class="au.edu.bond.classgroups.service.EscapingGroupTitleService">
         <constructor-arg>
@@ -157,8 +178,8 @@
     <bean id="configurationDirectoryFactory" class="au.edu.bond.classgroups.config.BbDirectoryFactory" />
     <bean id="configurationDirectory" factory-bean="configurationDirectoryFactory" factory-method="getConfigurationDirectory" />
     <bean id="configurationXMLFile" class="java.io.File">
-        <constructor-arg value="config.xml" />
         <constructor-arg ref="configurationDirectory" />
+        <constructor-arg value="config.xml" />
     </bean>
 
     <bean id="configurationService" class="au.edu.bond.classgroups.config.ClassGroupsConfigurationService">
