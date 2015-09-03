@@ -26,12 +26,8 @@ public class BbCourseMembershipService {
     private LoadingCache</*Course Id*/Id, ConcurrentMap</*User Id*/Id, CourseMembership>> byUserIdCache;
     private LoadingCache</*Course Id*/Id, ConcurrentMap</*CourseMembership Id*/Id, CourseMembership>> byIdCache;
 
-    public BbCourseMembershipService() {
-        this(10);
-    }
-
-    public BbCourseMembershipService(int cacheSize) {
-        byIdCache = CacheBuilder.newBuilder().maximumSize(10).build(new CacheLoader<Id, ConcurrentMap<Id, CourseMembership>>() {
+    public BbCourseMembershipService(String byIdCacheSpec, String byUserIdCacheSpec) {
+        byIdCache = CacheBuilder.from(byIdCacheSpec).build(new CacheLoader<Id, ConcurrentMap<Id, CourseMembership>>() {
             @Override
             public ConcurrentMap<Id, CourseMembership> load(Id courseId) throws Exception {
                 final Collection<CourseMembership> memberships = bbCourseMembershipDAO.getByCourseId(courseId);
@@ -43,7 +39,7 @@ public class BbCourseMembershipService {
             }
         });
 
-        byUserIdCache = CacheBuilder.newBuilder().maximumSize(cacheSize).build(new CacheLoader<Id, ConcurrentMap<Id, CourseMembership>>() {
+        byUserIdCache = CacheBuilder.from(byUserIdCacheSpec).build(new CacheLoader<Id, ConcurrentMap<Id, CourseMembership>>() {
             @Override
             public ConcurrentMap<Id, CourseMembership> load(Id courseId) throws Exception {
                 final Collection<CourseMembership> memberships = byIdCache.get(courseId).values();

@@ -27,8 +27,8 @@ public class BbGradebookCustomViewService {
 
     private LoadingCache</*Course Id*/Id, ConcurrentMap</*Custom View Id*/Id, GradebookCustomView>> byIdCache;
 
-    public BbGradebookCustomViewService(int cacheSize) {
-        byIdCache = CacheBuilder.newBuilder().maximumSize(cacheSize).build(new CacheLoader<Id, ConcurrentMap<Id, GradebookCustomView>>() {
+    public BbGradebookCustomViewService(String byIdCacheSpec) {
+        byIdCache = CacheBuilder.from(byIdCacheSpec).build(new CacheLoader<Id, ConcurrentMap<Id, GradebookCustomView>>() {
             @Override
             public ConcurrentMap<Id, GradebookCustomView> load(Id courseId) throws Exception {
                 final ConcurrentHashMap<Id, GradebookCustomView> viewMap = new ConcurrentHashMap<Id, GradebookCustomView>();

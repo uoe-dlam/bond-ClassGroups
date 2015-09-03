@@ -29,8 +29,8 @@ public class BbGroupMembershipService {
 
     private LoadingCache</*Course Id*/Id, ConcurrentMap</*Group Id*/Id, ConcurrentMap</*Group Membership Id*/Id, GroupMembership>>> byIdCache;
 
-    public BbGroupMembershipService(int cacheSize) {
-        byIdCache = CacheBuilder.newBuilder().maximumSize(cacheSize).build(new CacheLoader<Id, ConcurrentMap<Id, ConcurrentMap<Id, GroupMembership>>>() {
+    public BbGroupMembershipService(String byIdCacheSpec) {
+        byIdCache = CacheBuilder.from(byIdCacheSpec).build(new CacheLoader<Id, ConcurrentMap<Id, ConcurrentMap<Id, GroupMembership>>>() {
             @Override
             public ConcurrentMap<Id, ConcurrentMap<Id, GroupMembership>> load(Id courseId) throws Exception {
                 final ConcurrentMap<Id, ConcurrentMap<Id, GroupMembership>> groupMap = new ConcurrentHashMap<Id, ConcurrentMap<Id, GroupMembership>>();

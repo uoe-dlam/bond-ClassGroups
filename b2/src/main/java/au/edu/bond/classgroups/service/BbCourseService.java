@@ -24,15 +24,15 @@ public class BbCourseService {
     private LoadingCache<String, Course> byEsidCache;
     private LoadingCache<Id, Id> parentIdCache;
 
-    public BbCourseService(int cacheSize) {
-        byEsidCache = CacheBuilder.newBuilder().maximumSize(cacheSize).build(new CacheLoader<String, Course>() {
+    public BbCourseService(String byEsidCacheSpec, String parentIdCacheSpec) {
+        byEsidCache = CacheBuilder.from(byEsidCacheSpec).build(new CacheLoader<String, Course>() {
             @Override
             public Course load(String externalSystemId) throws Exception {
                 return bbCourseDAO.getByExternalSystemId(externalSystemId);
             }
         });
 
-        parentIdCache = CacheBuilder.newBuilder().maximumSize(cacheSize).build(new CacheLoader<Id, Id>() {
+        parentIdCache = CacheBuilder.from(parentIdCacheSpec).build(new CacheLoader<Id, Id>() {
             @Override
             public Id load(Id childCourseId) throws Exception {
                 return bbCourseDAO.getParentCourseId(childCourseId);

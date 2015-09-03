@@ -1,12 +1,9 @@
 package au.edu.bond.classgroups.service;
 
 import au.edu.bond.classgroups.dao.BbAvailableGroupToolDAO;
-import blackboard.data.ValidationException;
 import blackboard.data.course.AvailableGroupTool;
 import blackboard.data.course.GroupMembership;
-import blackboard.data.navigation.NavigationApplication;
 import blackboard.persist.Id;
-import blackboard.persist.KeyNotFoundException;
 import blackboard.persist.PersistenceException;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -26,14 +23,10 @@ public class BbAvailableGroupToolService {
     @Autowired
     private BbAvailableGroupToolDAO bbAvailableGroupToolDAO;
 
-    private LoadingCache</*Course Id*/Id, ConcurrentMap</*Group Id*/Id, ConcurrentMap</*Avail Group Tool Id*/Id, AvailableGroupTool>>> toolCache;
+    private LoadingCache</*Course Id*/Id, ConcurrentMap</*Group Id*/Id, ConcurrentMap</*Avail Group Tool Id*/Id, AvailableGroupTool>>> byIdCache;
 
-    public BbAvailableGroupToolService() {
-        this(10);
-    }
-
-    public BbAvailableGroupToolService(int cacheSize) {
-        toolCache = CacheBuilder.newBuilder().maximumSize(cacheSize).build(new CacheLoader<Id, ConcurrentMap<Id, ConcurrentMap<Id, AvailableGroupTool>>>() {
+    public BbAvailableGroupToolService(String byIdCacheSpec) {
+        byIdCache = CacheBuilder.from(byIdCacheSpec).build(new CacheLoader<Id, ConcurrentMap<Id, ConcurrentMap<Id, AvailableGroupTool>>>() {
             @Override
             public ConcurrentMap<Id, ConcurrentMap<Id, AvailableGroupTool>> load(Id courseId) throws Exception {
                 ConcurrentHashMap<Id, ConcurrentMap<Id, AvailableGroupTool>> groupMap = new ConcurrentHashMap<Id, ConcurrentMap<Id, AvailableGroupTool>>();
@@ -53,13 +46,13 @@ public class BbAvailableGroupToolService {
     }
 
     public Collection<AvailableGroupTool> getByGroupId(Id groupId, Id courseId) throws ExecutionException {
-        return toolCache.get(courseId).get(groupId).values();
+        return byIdCache.get(courseId).get(groupId).values();
     }
 
     public synchronized void createOrUpdate(AvailableGroupTool availableGroupTool, Id courseId) throws PersistenceException, ExecutionException {
         bbAvailableGroupToolDAO.createOrUpdate(availableGroupTool);
 
-        final ConcurrentMap<Id, ConcurrentMap<Id, AvailableGroupTool>> groupMap = toolCache.get(courseId);
+        final ConcurrentMap<Id, ConcurrentMap<Id, AvailableGroupTool>> groupMap = byIdCache.get(courseId);
 
         final Id groupId = availableGroupTool.getGroupId();
         ConcurrentMap<Id, AvailableGroupTool> toolsMap = groupMap.get(groupId);
@@ -77,7 +70,7 @@ public class BbAvailableGroupToolService {
     public synchronized void delete(Id toolId, Id groupId, Id courseId) throws PersistenceException, ExecutionException {
         bbAvailableGroupToolDAO.delete(toolId);
 
-        final ConcurrentMap<Id, AvailableGroupTool> toolsMap = toolCache.get(courseId).get(groupId);
+        final ConcurrentMap<Id, AvailableGroupTool> toolsMap = byIdCache.get(courseId).get(groupId);
         if(toolsMap != null) {
             toolsMap.remove(toolId);
         }

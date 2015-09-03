@@ -27,8 +27,8 @@ public class BbUserService {
     private LoadingCache</*Course Id*/Id, ConcurrentMap</*User Id*/Id, User>> byIdCache;
     private LoadingCache</*Course Id*/Id, ConcurrentMap</*External System Id*/String, User>> byEsidCache;
 
-    public BbUserService(int cacheSize) {
-        byIdCache = CacheBuilder.newBuilder().maximumSize(cacheSize).build(new CacheLoader<Id, ConcurrentMap<Id, User>>() {
+    public BbUserService(String byIdCacheSpec, String byEsidCacheSpec) {
+        byIdCache = CacheBuilder.from(byIdCacheSpec).build(new CacheLoader<Id, ConcurrentMap<Id, User>>() {
             @Override
             public ConcurrentMap<Id, User> load(Id courseId) throws Exception {
                 ConcurrentHashMap<Id, User> idMap = new ConcurrentHashMap<Id, User>();
@@ -40,7 +40,7 @@ public class BbUserService {
             }
         });
 
-        byEsidCache = CacheBuilder.newBuilder().maximumSize(cacheSize).build(new CacheLoader<Id, ConcurrentMap<String, User>>() {
+        byEsidCache = CacheBuilder.from(byEsidCacheSpec).build(new CacheLoader<Id, ConcurrentMap<String, User>>() {
             @Override
             public ConcurrentMap<String, User> load(Id courseId) throws Exception {
                 ConcurrentHashMap<String, User> esidMap = new ConcurrentHashMap<String, User>();
