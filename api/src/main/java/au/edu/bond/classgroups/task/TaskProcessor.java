@@ -16,7 +16,7 @@ import au.edu.bond.classgroups.service.ResourceService;
 import au.edu.bond.classgroups.service.TaskService;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.Collection;
+import java.util.*;
 
 /**
  * Created by Shane Argo on 10/06/2014.
@@ -69,13 +69,20 @@ public class TaskProcessor implements Runnable {
             }
 
             currentTaskLogger.info("bond.classgroups.info.consumingfeed");
-            Collection<Group> groups = null;
+            List<Group> groups = null;
             try {
-                groups = feedDeserialiser.getGroups();
+                groups = new ArrayList<Group>(feedDeserialiser.getGroups());
             } catch (FeedDeserialisationException e) {
                 currentTaskLogger.error("bond.classgroups.error.faileddeserialise", e);
                 throw e;
             }
+
+            Collections.sort(groups, new Comparator<Group>() {
+                @Override
+                public int compare(Group left, Group right) {
+                    return left.getCourseId().compareTo(right.getCourseId());
+                }
+            });
 
             int total = groups.size();
             int count = 0;
