@@ -58,34 +58,41 @@
     <bean id="bbGroupMembershipDAO" class="au.edu.bond.classgroups.dao.BbGroupMembershipDAO" />
     <bean id="bbUserDAO" class="au.edu.bond.classgroups.dao.BbUserDAO" />
 
+    <bean id="courseLevelCacheSpec" class="java.lang.String">
+        <constructor-arg value="maximumSize=10,expireAfterWrite=2m" />
+    </bean>
+    <bean id="idMapCacheSpec" class="java.lang.String">
+        <constructor-arg value="maximumSize=250,expireAfterWrite=2m" />
+    </bean>
+
     <bean id="bbAvailableGroupToolService" class="au.edu.bond.classgroups.service.BbAvailableGroupToolService">
-        <constructor-arg name="byIdCacheSpec" value="" />
+        <constructor-arg name="byIdCacheSpec" ref="courseLevelCacheSpec" />
     </bean>
     <bean id="bbCourseMembershipService" class="au.edu.bond.classgroups.service.BbCourseMembershipService">
-        <constructor-arg name="byIdCacheSpec" value="" />
-        <constructor-arg name="byUserIdCacheSpec" value="" />
+        <constructor-arg name="byIdCacheSpec" ref="courseLevelCacheSpec" />
+        <constructor-arg name="byUserIdCacheSpec" ref="courseLevelCacheSpec" />
     </bean>
     <bean id="bbGradebookCustomViewService" class="au.edu.bond.classgroups.service.BbGradebookCustomViewService">
-        <constructor-arg name="byIdCacheSpec" value="" />
+        <constructor-arg name="byIdCacheSpec" ref="courseLevelCacheSpec" />
     </bean>
     <bean id="bbGroupMembershipService" class="au.edu.bond.classgroups.service.BbGroupMembershipService">
-        <constructor-arg name="byIdCacheSpec" value="" />
+        <constructor-arg name="byIdCacheSpec" ref="courseLevelCacheSpec" />
     </bean>
     <bean id="bbCourseService" class="au.edu.bond.classgroups.service.BbCourseService">
-        <constructor-arg name="byEsidCacheSpec" value="" />
-        <constructor-arg name="parentIdCacheSpec" value="" />
+        <constructor-arg name="byEsidCacheSpec" ref="courseLevelCacheSpec" />
+        <constructor-arg name="parentIdCacheSpec" ref="idMapCacheSpec" />
     </bean>
     <bean id="bbGroupService" class="au.edu.bond.classgroups.service.BbGroupService">
-        <constructor-arg name="byIdCacheSpec" value="" />
-        <constructor-arg name="byTitleCacheSpec" value="" />
-        <constructor-arg name="courseIdCacheSpec" value="" />
+        <constructor-arg name="byIdCacheSpec" ref="courseLevelCacheSpec" />
+        <constructor-arg name="byTitleCacheSpec" ref="courseLevelCacheSpec" />
+        <constructor-arg name="courseIdCacheSpec" ref="idMapCacheSpec" />
     </bean>
     <bean id="bbUserService" class="au.edu.bond.classgroups.service.BbUserService">
-        <constructor-arg name="byIdCacheSpec" value="" />
-        <constructor-arg name="byEsidCacheSpec" value="" />
+        <constructor-arg name="byIdCacheSpec" ref="courseLevelCacheSpec" />
+        <constructor-arg name="byEsidCacheSpec" ref="courseLevelCacheSpec" />
     </bean>
     <bean id="groupExtensionService" class="au.edu.bond.classgroups.groupext.GroupExtensionService">
-        <constructor-arg name="byIdCacheSpec" value="" />
+        <constructor-arg name="byIdCacheSpec" ref="courseLevelCacheSpec" />
     </bean>
 
     <bean id="groupTitleService" class="au.edu.bond.classgroups.service.EscapingGroupTitleService">
