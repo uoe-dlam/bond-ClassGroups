@@ -48,8 +48,8 @@ public class LeaderGroupTitleService implements GroupTitleService {
 
         User user = null;
         try {
-            user = bbUserService.getById(courseMembership.getUserId());
-        } catch (PersistenceException e) {
+            user = bbUserService.getById(courseMembership.getUserId(), courseId);
+        } catch (ExecutionException e) {
             return baseTitle;
         }
 

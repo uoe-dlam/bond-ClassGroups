@@ -194,14 +194,9 @@ public class BbGroupManager implements GroupManager {
         if(group.getLeaderId() != null) {
             try {
                 user = bbUserService.getByExternalSystemId(group.getLeaderId(), courseId);
-            } catch (KeyNotFoundException e) {
+            } catch (ExecutionException e) {
                 currentTaskLogger.warning(resourceService.getLocalisationString(
                         "bond.classgroups.warning.cantfindleader",
-                        group.getLeaderId(), group.getGroupId()), e);
-                return false;
-            } catch (PersistenceException e) {
-                currentTaskLogger.error(resourceService.getLocalisationString(
-                        "bond.classgroups.error.cantfindleaderbberror",
                         group.getLeaderId(), group.getGroupId()), e);
                 return false;
             }

@@ -80,7 +80,7 @@ public class BbMemberManager implements MemberManager {
                 User user;
                 try {
                     user = bbUserService.getByExternalSystemId(member.getUserId(), courseId);
-                } catch (PersistenceException e) {
+                } catch (ExecutionException e) {
                     currentTaskLogger.warning(resourceService.getLocalisationString(
                             "bond.classgroups.warning.couldnotloaduser",
                             member.getUserId(), group.getGroupId(), group.getCourseId(), group.getTitle()), e);
@@ -234,15 +234,10 @@ public class BbMemberManager implements MemberManager {
 
             User leader = null;
             try {
-                leader = bbUserService.getById(courseMembership.getUserId());
-            } catch(KeyNotFoundException e) {
+                leader = bbUserService.getById(courseMembership.getUserId(), courseId);
+            } catch(ExecutionException e) {
                 currentTaskLogger.warning(resourceService.getLocalisationString(
                         "bond.classgroups.warning.couldnotaddleadernotfound",
-                        group.getGroupId()), e);
-                return;
-            } catch (PersistenceException e) {
-                currentTaskLogger.warning(resourceService.getLocalisationString(
-                        "bond.classgroups.warning.couldnotaddleadermembershipbberrors",
                         group.getGroupId()), e);
                 return;
             }

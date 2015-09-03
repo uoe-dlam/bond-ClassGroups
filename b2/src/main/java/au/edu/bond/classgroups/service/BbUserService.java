@@ -4,11 +4,17 @@ import au.edu.bond.classgroups.dao.BbUserDAO;
 import blackboard.data.user.User;
 import blackboard.persist.Id;
 import blackboard.persist.PersistenceException;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Created by Shane Argo on 16/06/2014.
@@ -18,44 +24,41 @@ public class BbUserService {
     @Autowired
     private BbUserDAO bbUserDAO;
 
-    Map<Id, User> idCache = new HashMap<Id, User>();
-    Map<String, User> externalSystemIdCache = new HashMap<String, User>();
+    private LoadingCache</*Course Id*/Id, ConcurrentMap</*User Id*/Id, User>> byIdCache;
+    private LoadingCache</*Course Id*/Id, ConcurrentMap</*External System Id*/String, User>> byEsidCache;
 
-    public User getById(Id id) throws PersistenceException {
-        User user = idCache.get(id);
-        if(user == null) {
-            user = bbUserDAO.getById(id);
-            cache(user);
-        }
-        return user;
-    }
-
-    public User getByExternalSystemId(String externalSystemId) throws PersistenceException {
-        User user = externalSystemIdCache.get(externalSystemId);
-        if(user == null) {
-            user = bbUserDAO.getByExternalSystemId(externalSystemId);
-            cache(user);
-        }
-        return user;
-    }
-
-    public User getByExternalSystemId(String externalSystemId, Id courseId) throws PersistenceException {
-        User user = externalSystemIdCache.get(externalSystemId);
-        if(user == null) {
-            Collection<User> courseUsers = bbUserDAO.getByCourseId(courseId);
-            for(User courseUser : courseUsers) {
-                cache(courseUser);
-                if(courseUser.getBatchUid().equals(externalSystemId)){
-                    user = courseUser;
+    public BbUserService(int cacheSize) {
+        byIdCache = CacheBuilder.newBuilder().maximumSize(cacheSize).build(new CacheLoader<Id, ConcurrentMap<Id, User>>() {
+            @Override
+            public ConcurrentMap<Id, User> load(Id courseId) throws Exception {
+                ConcurrentHashMap<Id, User> idMap = new ConcurrentHashMap<Id, User>();
+                Collection<User> users = bbUserDAO.getByCourseId(courseId);
+                for (User user : users) {
+                    idMap.put(user.getId(), user);
                 }
+                return idMap;
             }
-        }
-        return user;
+        });
+
+        byEsidCache = CacheBuilder.newBuilder().maximumSize(cacheSize).build(new CacheLoader<Id, ConcurrentMap<String, User>>() {
+            @Override
+            public ConcurrentMap<String, User> load(Id courseId) throws Exception {
+                ConcurrentHashMap<String, User> esidMap = new ConcurrentHashMap<String, User>();
+                Collection<User> users = byIdCache.get(courseId).values();
+                for (User user : users) {
+                    esidMap.put(user.getBatchUid(), user);
+                }
+                return esidMap;
+            }
+        });
     }
 
-    private void cache(User user) {
-        idCache.put(user.getId(), user);
-        externalSystemIdCache.put(user.getBatchUid(), user);
+    public User getById(Id userId, Id courseId) throws ExecutionException {
+        return byIdCache.get(courseId).get(userId);
+    }
+
+    public User getByExternalSystemId(String externalSystemId, Id courseId) throws ExecutionException {
+        return byEsidCache.get(courseId).get(externalSystemId);
     }
 
     public BbUserDAO getBbUserDAO() {

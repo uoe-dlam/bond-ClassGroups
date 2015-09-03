@@ -21,18 +21,10 @@ public class BbCourseService {
     @Autowired
     private BbCourseDAO bbCourseDAO;
 
-    private LoadingCache<Id, Course> byIdCache;
     private LoadingCache<String, Course> byEsidCache;
     private LoadingCache<Id, Id> parentIdCache;
 
     public BbCourseService(int cacheSize) {
-        byIdCache = CacheBuilder.newBuilder().maximumSize(cacheSize).build(new CacheLoader<Id, Course>() {
-            @Override
-            public Course load(Id courseId) throws Exception {
-                return bbCourseDAO.getById(courseId);
-            }
-        });
-
         byEsidCache = CacheBuilder.newBuilder().maximumSize(cacheSize).build(new CacheLoader<String, Course>() {
             @Override
             public Course load(String externalSystemId) throws Exception {
@@ -46,10 +38,6 @@ public class BbCourseService {
                 return bbCourseDAO.getParentCourseId(childCourseId);
             }
         });
-    }
-
-    public Course getById(Id id) throws ExecutionException {
-        return byIdCache.get(id);
     }
 
     public Course getByExternalSystemId(String externalSystemId) throws ExecutionException {
