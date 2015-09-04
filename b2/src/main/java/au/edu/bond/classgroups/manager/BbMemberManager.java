@@ -58,7 +58,7 @@ public class BbMemberManager implements MemberManager {
 
         GroupExtension ext;
         try {
-            ext = groupExtensionService.getGroupExtensionByExternalId(group.getGroupId(), ((PkId)courseId).getKey());
+            ext = groupExtensionService.getGroupExtensionByExternalId(group.getGroupId());
         } catch (ExecutionException e) {
             currentTaskLogger.warning(resourceService.getLocalisationString(
                     "bond.classgroups.warning.cantloadextension", group.getCourseId()));
@@ -77,12 +77,12 @@ public class BbMemberManager implements MemberManager {
         }
 
         Id leaderCourseMembershipId = null;
-        if(ext.calculateLeaderCourseUserId() != null) {
+        if (ext.calculateLeaderCourseUserId() != null) {
             leaderCourseMembershipId = Id.toId(CourseMembership.DATA_TYPE, ext.calculateLeaderCourseUserId());
         }
 
         Map<GroupMembership, Member> createMembers = new HashMap<GroupMembership, Member>();
-        if(group.getMembers() != null) {
+        if (group.getMembers() != null) {
             for (Member member : group.getMembers()) {
 
                 User user;
@@ -127,10 +127,12 @@ public class BbMemberManager implements MemberManager {
                 }
 
                 GroupMembership existingMember = null;
-                for (GroupMembership deleteMember : deleteMembers) {
-                    if (deleteMember.getCourseMembershipId().equals(courseMembership.getId())) {
-                        existingMember = deleteMember;
-                        break;
+                if (deleteMembers != null) {
+                    for (GroupMembership deleteMember : deleteMembers) {
+                        if (deleteMember.getCourseMembershipId().equals(courseMembership.getId())) {
+                            existingMember = deleteMember;
+                            break;
+                        }
                     }
                 }
 
@@ -146,7 +148,7 @@ public class BbMemberManager implements MemberManager {
         }
 
         boolean leaderFound = false;
-        if(leaderCourseMembershipId != null) {
+        if (leaderCourseMembershipId != null && deleteMembers != null) {
             for (GroupMembership member : deleteMembers) {
                 if (member.getCourseMembershipId().equals(leaderCourseMembershipId)) {
                     leaderFound = true;
@@ -156,31 +158,31 @@ public class BbMemberManager implements MemberManager {
             }
         }
 
-        if(deleteMembers.size() > 0) {
+        if (deleteMembers != null && deleteMembers.size() > 0) {
             currentTaskLogger.info(resourceService.getLocalisationString(
                     "bond.classgroups.info.deletingmembers",
                     deleteMembers.size(), group.getGroupId(), group.getTitle()));
-        }
-        for(GroupMembership deleteMember : deleteMembers) {
-            try {
-                bbGroupMembershipService.delete(deleteMember.getId(), groupId, courseId);
-            } catch (PersistenceException e) {
-                currentTaskLogger.warning(resourceService.getLocalisationString(
-                        "bond.classgroups.warning.couldnotdeletemember",
-                        deleteMember.getId(), group.getGroupId()), e);
-            } catch (ExecutionException e) {
-                currentTaskLogger.warning(resourceService.getLocalisationString(
-                        "bond.classgroups.warning.couldnotdeletememberexecution",
-                        deleteMember.getId(), group.getGroupId()), e);
+            for (GroupMembership deleteMember : deleteMembers) {
+                try {
+                    bbGroupMembershipService.delete(deleteMember.getId(), groupId, courseId);
+                } catch (PersistenceException e) {
+                    currentTaskLogger.warning(resourceService.getLocalisationString(
+                            "bond.classgroups.warning.couldnotdeletemember",
+                            deleteMember.getId(), group.getGroupId()), e);
+                } catch (ExecutionException e) {
+                    currentTaskLogger.warning(resourceService.getLocalisationString(
+                            "bond.classgroups.warning.couldnotdeletememberexecution",
+                            deleteMember.getId(), group.getGroupId()), e);
+                }
             }
         }
 
-        if(createMembers.size() > 0) {
+        if (createMembers.size() > 0) {
             currentTaskLogger.info(resourceService.getLocalisationString(
                     "bond.classgroups.info.addingmembers",
                     createMembers.size(), group.getGroupId(), group.getTitle()));
         }
-        for(GroupMembership createMember : createMembers.keySet()) {
+        for (GroupMembership createMember : createMembers.keySet()) {
             try {
                 bbGroupMembershipService.createOrUpdate(createMember, courseId);
             } catch (ValidationException e) {
@@ -198,7 +200,7 @@ public class BbMemberManager implements MemberManager {
             }
         }
 
-        if(!leaderFound && leaderCourseMembershipId != null) {
+        if (!leaderFound && leaderCourseMembershipId != null) {
             CourseMembership courseMembership = null;
             try {
                 courseMembership = bbCourseMembershipService.getById(leaderCourseMembershipId, courseId);
@@ -209,8 +211,8 @@ public class BbMemberManager implements MemberManager {
                 return;
             }
 
-            if(courseMembership == null) {
-                if(!configuration.isEnrolStaffIfMissing()) {
+            if (courseMembership == null) {
+                if (!configuration.isEnrolStaffIfMissing()) {
                     currentTaskLogger.warning(resourceService.getLocalisationString(
                             "bond.classgroups.warning.couldnotfindleadersmembership",
                             group.getGroupId()));
@@ -243,7 +245,7 @@ public class BbMemberManager implements MemberManager {
             User leader = null;
             try {
                 leader = bbUserService.getById(courseMembership.getUserId(), courseId);
-            } catch(ExecutionException e) {
+            } catch (ExecutionException e) {
                 currentTaskLogger.warning(resourceService.getLocalisationString(
                         "bond.classgroups.warning.couldnotaddleadernotfound",
                         group.getGroupId()), e);

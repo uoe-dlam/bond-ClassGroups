@@ -50,7 +50,11 @@ public class BbGroupMembershipService implements Cleanable {
     }
 
     public Collection<GroupMembership> getByGroupId(Id groupId, Id courseId) throws ExecutionException {
-        return byIdCache.get(courseId).get(groupId).values();
+        final ConcurrentMap<Id, GroupMembership> memberMap = byIdCache.get(courseId).get(groupId);
+        if(memberMap == null) {
+            return null;
+        }
+        return memberMap.values();
     }
 
     public void createOrUpdate(GroupMembership groupMembership, Id courseId) throws ValidationException, PersistenceException, ExecutionException {

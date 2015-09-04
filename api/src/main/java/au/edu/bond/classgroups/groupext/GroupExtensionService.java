@@ -21,45 +21,34 @@ public class GroupExtensionService implements Cleanable {
     @Autowired
     private GroupExtensionDAO groupExtensionDAO;
 
-    LoadingCache</*Course Id*/Long, ConcurrentMap</*External Id*/String, GroupExtension>> byIdCache;
+    private LoadingCache<String, GroupExtension> byIdCache;
 
     public GroupExtensionService(String byIdCacheSpec) {
-        byIdCache = CacheBuilder.from(byIdCacheSpec).build(new CacheLoader<Long, ConcurrentMap<String, GroupExtension>>() {
+        byIdCache = CacheBuilder.from(byIdCacheSpec).build(new CacheLoader<String, GroupExtension>() {
             @Override
-            public ConcurrentMap<String, GroupExtension> load(Long courseId) throws Exception {
-                ConcurrentHashMap<String, GroupExtension> idMap = new ConcurrentHashMap<String, GroupExtension>();
-                Collection<GroupExtension> groupExts = groupExtensionDAO.getByCourseId(courseId);
-                for (GroupExtension ext : groupExts) {
-                    idMap.put(ext.getExternalSystemId(), ext);
-                }
-                return idMap;
+            public GroupExtension load(String key) throws Exception {
+                return groupExtensionDAO.getByExternalSystemId(key);
             }
         });
     }
 
-    public GroupExtension getGroupExtensionByExternalId(String externalId, long courseId) throws ExecutionException {
-        return byIdCache.get(courseId).get(externalId);
+    public GroupExtension getGroupExtensionByExternalId(String externalId) throws ExecutionException {
+        return byIdCache.get(externalId);
     }
 
-    public void create(GroupExtension groupExtension, long courseId) throws ExecutionException {
+    public void create(GroupExtension groupExtension) throws ExecutionException {
         groupExtensionDAO.create(groupExtension);
-
-        ConcurrentMap<String, GroupExtension> idMap = byIdCache.get(courseId);
-        idMap.putIfAbsent(groupExtension.getExternalSystemId(), groupExtension);
+        byIdCache.put(groupExtension.getExternalSystemId(), groupExtension);
     }
 
     public void update(GroupExtension groupExtension, long courseId) throws ExecutionException {
         groupExtensionDAO.update(groupExtension);
-
-        ConcurrentMap<String, GroupExtension> idMap = byIdCache.get(courseId);
-        idMap.put(groupExtension.getExternalSystemId(), groupExtension);
+        byIdCache.put(groupExtension.getExternalSystemId(), groupExtension);
     }
 
     public void delete(GroupExtension groupExtension, long courseId) throws ExecutionException {
         groupExtensionDAO.delete(groupExtension);
-
-        ConcurrentMap<String, GroupExtension> idMap = byIdCache.get(courseId);
-        idMap.remove(groupExtension.getExternalSystemId());
+        byIdCache.invalidate(groupExtension.getExternalSystemId());
     }
 
     public synchronized void clearCaches() {

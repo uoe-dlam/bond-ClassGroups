@@ -92,7 +92,7 @@
         <constructor-arg name="byEsidCacheSpec" ref="courseLevelCacheSpec" />
     </bean>
     <bean id="groupExtensionService" class="au.edu.bond.classgroups.groupext.GroupExtensionService">
-        <constructor-arg name="byIdCacheSpec" ref="courseLevelCacheSpec" />
+        <constructor-arg name="byIdCacheSpec" value="maximumSize=500,expireAfterWrite=2m" />
     </bean>
 
     <bean name="cacheCleaningService" class="au.edu.bond.classgroups.service.CacheCleaningService">

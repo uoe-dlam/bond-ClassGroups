@@ -55,6 +55,10 @@ public class BbCourseService implements Cleanable {
         parentIdCache.cleanUp();
     }
 
+    public Id getIdFromLong(Long id) {
+        return Id.toId(Course.DATA_TYPE, id);
+    }
+
     public BbCourseDAO getBbCourseDAO() {
         return bbCourseDAO;
     }

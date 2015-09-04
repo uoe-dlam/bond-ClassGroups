@@ -36,20 +36,6 @@ public class GroupExtensionDAO implements AutoCloseable {
         }
     }
 
-    public Collection<GroupExtension> getByCourseId(long courseId) {
-        EntityManager entityManager = null;
-        try {
-            entityManager = entityManagerFactory.createEntityManager();
-            TypedQuery<GroupExtension> query = entityManager.createQuery("FROM GroupExtension WHERE courseId = :courseId", GroupExtension.class);
-            query.setParameter("courseId", courseId);
-            return query.getResultList();
-        } finally {
-            if (entityManager != null) {
-                entityManager.close();
-            }
-        }
-    }
-
     public Collection<GroupExtension> getAll() {
         EntityManager entityManager = null;
         try {

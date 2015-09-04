@@ -24,31 +24,28 @@ public class LeaderGroupTitleService implements GroupTitleService {
     private BbGroupService bbGroupService;
     @Autowired
     private ResourceService resourceService;
+    @Autowired
+    private BbCourseService bbCourseService;
 
-    public String getGroupTitle(String baseTitle, GroupExtension extension) {
-
-        Id courseId;
-        try {
-            courseId = bbGroupService.getCourseIdForGroupId(extension.getInternalGroupId());
-        } catch (ExecutionException e) {
-            return baseTitle;
-        }
+    public String getGroupTitle(String baseTitle, GroupExtension extension, long courseId) {
 
         Long leaderCourseMembershipId = extension.calculateLeaderCourseUserId();
         if(leaderCourseMembershipId == null) {
             return baseTitle;
         }
 
+        final Id courseIdObj = bbCourseService.getIdFromLong(courseId);
+
         CourseMembership courseMembership = null;
         try {
-            courseMembership = bbCourseMembershipService.getById(leaderCourseMembershipId, courseId);
+            courseMembership = bbCourseMembershipService.getById(leaderCourseMembershipId, courseIdObj);
         } catch (ExecutionException e) {
             return baseTitle;
         }
 
         User user = null;
         try {
-            user = bbUserService.getById(courseMembership.getUserId(), courseId);
+            user = bbUserService.getById(courseMembership.getUserId(), courseIdObj);
         } catch (ExecutionException e) {
             return baseTitle;
         }

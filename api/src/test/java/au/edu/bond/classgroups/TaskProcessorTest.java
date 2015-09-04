@@ -10,6 +10,7 @@ import au.edu.bond.classgroups.manager.SmartViewManager;
 import au.edu.bond.classgroups.manager.ToolManager;
 import au.edu.bond.classgroups.model.Group;
 import au.edu.bond.classgroups.model.Task;
+import au.edu.bond.classgroups.service.CacheCleaningService;
 import au.edu.bond.classgroups.service.ResourceService;
 import au.edu.bond.classgroups.task.TaskProcessor;
 import au.edu.bond.classgroups.service.TaskService;
@@ -34,6 +35,7 @@ public class TaskProcessorTest {
     SmartViewManager smartViewManager;
     Configuration configuration;
     ResourceService resourceService;
+    CacheCleaningService cacheCleaningService;
 
     FeedDeserialiser feedDeserialiser;
     TaskProcessor taskProcessor;
@@ -56,6 +58,8 @@ public class TaskProcessorTest {
         resourceService = mock(ResourceService.class);
         when(resourceService.getLocalisationString(anyString(), anyCollection())).thenReturn("blahblah");
 
+        cacheCleaningService = mock(CacheCleaningService.class);
+
         currentTasklogger = mock(TaskLogger.class);
         groupManager = mock(GroupManager.class);
         memberManager = mock(MemberManager.class);
@@ -73,6 +77,7 @@ public class TaskProcessorTest {
         taskProcessor.setSmartViewManager(smartViewManager);
         taskProcessor.setConfiguration(configuration);
         taskProcessor.setResourceService(resourceService);
+        taskProcessor.setCacheCleaningService(cacheCleaningService);
     }
 
     @After

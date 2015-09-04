@@ -54,7 +54,7 @@ public class BbSmartViewManager implements SmartViewManager {
 
         GroupExtension ext = null;
         try {
-            ext = groupExtensionService.getGroupExtensionByExternalId(group.getGroupId(), ((PkId)courseId).getKey());
+            ext = groupExtensionService.getGroupExtensionByExternalId(group.getGroupId());
         } catch (ExecutionException e) {
             currentTaskLogger.warning(resourceService.getLocalisationString(
                     "bond.classgroups.warning.cantloadextension", group.getCourseId()));
@@ -98,7 +98,7 @@ public class BbSmartViewManager implements SmartViewManager {
         }
 
         String title = resourceService.getLocalisationString("bond.classgroups.pattern.smartview",
-                groupTitleService.getGroupTitle(group.getTitle(), ext));
+                groupTitleService.getGroupTitle(group.getTitle(), ext, ((PkId)courseId).getKey()));
         if(title.length() > CUSTOM_VIEW_TITLE_MAX_LENGTH) {
             title = title.substring(0, CUSTOM_VIEW_TITLE_MAX_LENGTH);
         }

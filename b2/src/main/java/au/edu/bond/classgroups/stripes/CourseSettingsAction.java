@@ -101,7 +101,7 @@ public class CourseSettingsAction implements ActionBean {
                 final CourseMembership newBbCourseMembership = bbCourseMembershipDAO.getById(newBbCourseUserId);
                 final User user = bbUserDAO.getById(newBbCourseMembership.getUserId());
 
-                String title = groupTitleService.getGroupTitle(groupExtension.getTitle(), groupExtension);
+                String title = groupTitleService.getGroupTitle(groupExtension.getTitle(), groupExtension, ((PkId)bbCourseId).getKey());
                 bbGroup.setTitle(title);
 
                 GroupMembership newGroupMembership = new GroupMembership();

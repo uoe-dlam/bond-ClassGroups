@@ -16,8 +16,10 @@ import blackboard.persist.Id;
 import blackboard.persist.KeyNotFoundException;
 import blackboard.persist.PersistenceException;
 import blackboard.persist.PkId;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import javax.persistence.NoResultException;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -63,9 +65,13 @@ public class BbGroupManager implements GroupManager {
             return Status.ERROR;
         }
 
-        GroupExtension ext;
+        GroupExtension ext = null;
         try {
-            ext = groupExtensionService.getGroupExtensionByExternalId(group.getGroupId(), ((PkId) courseId).getKey());
+            ext = groupExtensionService.getGroupExtensionByExternalId(group.getGroupId());
+        } catch (UncheckedExecutionException e) {
+            if(!(e.getCause() instanceof NoResultException)) {
+                throw e;
+            }
         } catch (ExecutionException e) {
             currentTaskLogger.warning(resourceService.getLocalisationString(
                     "bond.classgroups.warning.cantloadextension", group.getGroupId(), group.getCourseId()));
@@ -101,7 +107,7 @@ public class BbGroupManager implements GroupManager {
         }
         boolean extDirty = updateFeedLeader(ext, group, courseId);
 
-        String title = groupTitleService.getGroupTitle(group.getTitle(), ext);
+        String title = groupTitleService.getGroupTitle(group.getTitle(), ext, ((PkId)courseId).getKey());
         Status status = Status.UNCHANGED;
         // If no Bb group exists (no extension data, or extension data references a deleted group), create one.
         if(bbGroup == null) {
@@ -182,7 +188,7 @@ public class BbGroupManager implements GroupManager {
 
         if (extNew) {
             try {
-                groupExtensionService.create(ext, ((PkId) courseId).getKey());
+                groupExtensionService.create(ext);
             } catch (ExecutionException e) {
                 currentTaskLogger.warning(resourceService.getLocalisationString(
                         "bond.classgroups.warning.failedextcreate", group.getGroupId(), courseId), e);

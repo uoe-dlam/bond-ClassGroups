@@ -53,7 +53,7 @@ public class BbToolManager implements ToolManager {
 
         GroupExtension ext;
         try {
-            ext = groupExtensionService.getGroupExtensionByExternalId(group.getGroupId(), ((PkId)courseId).getKey());
+            ext = groupExtensionService.getGroupExtensionByExternalId(group.getGroupId());
         } catch (ExecutionException e) {
             currentTaskLogger.warning(resourceService.getLocalisationString(
                     "bond.classgroups.warning.cantloadextension", group.getCourseId()));

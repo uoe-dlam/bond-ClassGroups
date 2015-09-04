@@ -244,4 +244,12 @@ public class TaskProcessor implements Runnable {
     public void setResourceService(ResourceService resourceService) {
         this.resourceService = resourceService;
     }
+
+    public CacheCleaningService getCacheCleaningService() {
+        return cacheCleaningService;
+    }
+
+    public void setCacheCleaningService(CacheCleaningService cacheCleaningService) {
+        this.cacheCleaningService = cacheCleaningService;
+    }
 }

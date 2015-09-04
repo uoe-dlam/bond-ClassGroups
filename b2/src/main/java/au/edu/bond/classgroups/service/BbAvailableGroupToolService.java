@@ -46,7 +46,11 @@ public class BbAvailableGroupToolService implements Cleanable {
     }
 
     public Collection<AvailableGroupTool> getByGroupId(Id groupId, Id courseId) throws ExecutionException {
-        return byIdCache.get(courseId).get(groupId).values();
+        final ConcurrentMap<Id, AvailableGroupTool> toolMap = byIdCache.get(courseId).get(groupId);
+        if(toolMap == null) {
+            return null;
+        }
+        return toolMap.values();
     }
 
     public synchronized void createOrUpdate(AvailableGroupTool availableGroupTool, Id courseId) throws PersistenceException, ExecutionException {
