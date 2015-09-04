@@ -2,6 +2,7 @@ package au.edu.bond.classgroups.stripes;
 
 import au.edu.bond.classgroups.config.PushCsvFeedDeserialiserConfig;
 import au.edu.bond.classgroups.exception.InvalidPasskeyException;
+import au.edu.bond.classgroups.exception.InvalidRunIdException;
 import au.edu.bond.classgroups.exception.InvalidTaskStateException;
 import au.edu.bond.classgroups.service.ResourceService;
 import au.edu.bond.classgroups.task.TaskExecutor;
@@ -32,6 +33,7 @@ public class PushCsvAction implements ActionBean {
 
     private ActionBeanContext context;
     private static Pattern runIdPattern;
+
     static {
         runIdPattern = Pattern.compile("[a-zA-Z0-9]+");
     }
@@ -55,16 +57,28 @@ public class PushCsvAction implements ActionBean {
 
     @Before
     private void verifyPasskey() throws InvalidPasskeyException {
-        if(pushCsvFeedDeserialiserConfig == null || pushCsvFeedDeserialiserConfig.getPasskey() == null) {
+        if (pushCsvFeedDeserialiserConfig == null || pushCsvFeedDeserialiserConfig.getPasskey() == null) {
             throw new InvalidPasskeyException(resourceService.getLocalisationString("bond.classgroups.exception.nopasskeyset"));
         }
 
-        if(passkey == null) {
+        if (passkey == null) {
             throw new InvalidPasskeyException(resourceService.getLocalisationString("bond.classgroups.exception.nopasskeysent"));
         }
 
-        if(!passkey.equals(pushCsvFeedDeserialiserConfig.getPasskey())) {
+        if (!passkey.equals(pushCsvFeedDeserialiserConfig.getPasskey())) {
             throw new InvalidPasskeyException(resourceService.getLocalisationString("bond.classgroups.exception.nopasskeyinvalid"));
+        }
+    }
+
+    @Before
+    private void verifyRunId() throws InvalidRunIdException {
+        if(runId == null) {
+            throw new InvalidRunIdException(resourceService.getLocalisationString("bond.classgroups.exception.runidrequired"));
+        }
+
+        Matcher matcher = runIdPattern.matcher(runId);
+        if (!matcher.matches()) {
+            throw new InvalidRunIdException(resourceService.getLocalisationString("bond.classgroups.exception.runidalphanumeric"));
         }
     }
 
@@ -89,16 +103,18 @@ public class PushCsvAction implements ActionBean {
     }
 
     public Resolution execute() throws IOException, InvalidPasskeyException, InvalidTaskStateException {
-        Task task = taskService.createTask();
-        nonCurrentTaskLogger.setTask(task);
-        nonCurrentTaskLogger.info(resourceService.getLocalisationString("bond.classgroups.info.initiatedpostcsv", runId));
-
-        if(task.getStatus() == Task.Status.SKIPPED) {
-            nonCurrentTaskLogger.info("bond.classgroups.info.skipping");
-            return null;
-        }
+        Task task = null;
 
         try {
+            task = taskService.createTask();
+            nonCurrentTaskLogger.setTask(task);
+            nonCurrentTaskLogger.info(resourceService.getLocalisationString("bond.classgroups.info.initiatedpostcsv", runId));
+
+            if (task.getStatus() == Task.Status.SKIPPED) {
+                nonCurrentTaskLogger.info("bond.classgroups.info.skipping");
+                return null;
+            }
+
             FileCsvFeedDeserialiser fileCsvFeedDeserialiser = feedDeserialiserFactory.getHttpPushCsvFeedDeserialiser();
             fileCsvFeedDeserialiser.setGroupsFile(getGroupsFile());
             fileCsvFeedDeserialiser.setMembersFile(getMembersFile());
@@ -110,28 +126,30 @@ public class PushCsvAction implements ActionBean {
             taskExecutor.executeTaskProcessor(taskProcessor);
         } catch (Exception e) {
             nonCurrentTaskLogger.error("bond.classgroups.error.failedpushcsv", e);
-            taskService.failTask(task);
+            if(task != null) {
+                taskService.failTask(task);
+            }
         }
 
         return null;
     }
 
     private File getPushDir() {
-        if(pushDir == null) {
+        if (pushDir == null) {
             pushDir = directoryFactory.getHttpPushDir(runId);
         }
         return pushDir;
     }
 
     private File getGroupsFile() {
-        if(groupsFile == null) {
+        if (groupsFile == null) {
             groupsFile = new File(getPushDir(), "groups.csv");
         }
         return groupsFile;
     }
 
     private File getMembersFile() {
-        if(membersFile == null) {
+        if (membersFile == null) {
             membersFile = new File(getPushDir(), "members.csv");
         }
         return membersFile;
@@ -224,10 +242,6 @@ public class PushCsvAction implements ActionBean {
     }
 
     public void setRunId(String runId) {
-        Matcher matcher = runIdPattern.matcher(runId);
-        if(!matcher.matches()) {
-            throw new RuntimeException(resourceService.getLocalisationString("bond.classgroups.exception.runidalphanumeric"));
-        }
         this.runId = runId;
     }
 
