@@ -17,6 +17,11 @@
 <fmt:message var="defaultAvailbilityAvailableDesc" key="bond.classgroups.config.groupavailability.defaultavailability.availabledescription" />
 <fmt:message var="defaultAvailbilityUnavailable" key="bond.classgroups.config.groupavailability.defaultavailability.unavailable" />
 <fmt:message var="defaultAvailbilityUnavailableDesc" key="bond.classgroups.config.groupavailability.defaultavailability.unavailabledescription" />
+<fmt:message var="groupSetAvailability" key="bond.classgroups.config.groupavailability.groupsetavailability" />
+<fmt:message var="groupSetAvailabilityAvailable" key="bond.classgroups.config.groupavailability.groupsetavailability.availabile" />
+<fmt:message var="groupSetAvailabilityAvailableDesc" key="bond.classgroups.config.groupavailability.groupsetavailability.availabiledescription" />
+<fmt:message var="groupSetAvailabilityUnavailable" key="bond.classgroups.config.groupavailability.groupsetavailability.unavailabile" />
+<fmt:message var="groupSetAvailabilityUnavailableDesc" key="bond.classgroups.config.groupavailability.groupsetavailability.unavailabiledescription" />
 
 <fmt:message var="groupTools" key="bond.classgroups.config.grouptools" />
 <fmt:message var="groupToolsInstructions" key="bond.classgroups.config.grouptools.instructions" />
@@ -127,6 +132,12 @@
                     <ul>
                         <li><label><input type="radio" name="configuration.availabilityMode" value="CREATE" ${actionBean.configuration.availabilityMode.toString().equals("CREATE")?"checked=checked":""} /> <strong>${availabilityModeCreate}</strong>: ${availabilityModeCreateDesc}</label></li>
                         <li><label><input type="radio" name="configuration.availabilityMode" value="UPDATE" ${actionBean.configuration.availabilityMode.toString().equals("UPDATE")?"checked=checked":""} /> <strong>${availabilityModeUpdate}</strong>: ${availabilityModeUpdateDesc}</label></li>
+                    </ul>
+                </bbNG:dataElement>
+                <bbNG:dataElement label="${groupSetAvailability}" isRequired="true">
+                    <ul>
+                        <li><label><input type="radio" name="configuration.groupSetAvailability" value="AVAILABLE" ${actionBean.configuration.groupSetAvailability.toString().equals("AVAILABLE")?"checked=checked":""} /> <strong>${groupSetAvailabilityAvailable}</strong>: ${groupSetAvailabilityAvailableDesc}</label></li>
+                        <li><label><input type="radio" name="configuration.groupSetAvailability" value="UNAVAILABLE" ${actionBean.configuration.groupSetAvailability.toString().equals("UNAVILABLE")?"checked=checked":""} /> <strong>${groupSetAvailabilityUnavailable}</strong>: ${groupSetAvailabilityUnavailableDesc}</label></li>
                     </ul>
                 </bbNG:dataElement>
             </bbNG:step>

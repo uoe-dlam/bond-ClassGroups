@@ -41,6 +41,7 @@ public class Configuration {
     private boolean enrolStaffIfMissing;
     private int processingThreads;
     private FeedHeaderConfig feedHeaderConfig;
+    private GroupAvailability groupSetAvailability;
 
     public String getDefaultFeedDeserialiserBean() {
         return defaultFeedDeserialiserBean;
@@ -169,4 +170,13 @@ public class Configuration {
     public void setFeedHeaderConfig(FeedHeaderConfig feedHeaderConfig) {
         this.feedHeaderConfig = feedHeaderConfig;
     }
+
+    public GroupAvailability getGroupSetAvailability() {
+        return groupSetAvailability;
+    }
+
+    public void setGroupSetAvailability(GroupAvailability groupSetAvailability) {
+        this.groupSetAvailability = groupSetAvailability;
+    }
+
 }

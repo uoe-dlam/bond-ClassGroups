@@ -300,7 +300,7 @@ public class BbGroupManager implements GroupManager {
             FormattedText desc = FormattedText.toFormattedText("");
             bbGroupSet.setDescription(desc);
 
-            bbGroupSet.setIsAvailable(false);
+            bbGroupSet.setIsAvailable(configuration.getGroupSetAvailability() == Configuration.GroupAvailability.AVAILABLE);
             bbGroupSet.setAllowEditToGroup(false);
             bbGroupSet.setSelfEnrolledAllowed(false);
 
