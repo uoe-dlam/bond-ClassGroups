@@ -84,6 +84,10 @@ public class ConfigAction implements ActionBean {
             if (schedules != null) {
                 schedules.clear();
             }
+            final List<String> defaultTools = configuration.getDefaultTools();
+            if(defaultTools != null) {
+                defaultTools.clear();
+            }
         }
     }
 
