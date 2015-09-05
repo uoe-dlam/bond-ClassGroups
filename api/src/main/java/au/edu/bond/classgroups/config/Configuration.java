@@ -10,7 +10,7 @@ import java.util.List;
 public class Configuration {
 
     public static enum ToolsMode {
-        CREATE, READD, SYNC
+        CREATE, READ, SYNC
     }
 
     public static enum LeaderChangedMode {
@@ -40,6 +40,7 @@ public class Configuration {
     private List<Schedule> schedules;
     private boolean enrolStaffIfMissing;
     private int processingThreads;
+    private FeedHeaderConfig feedHeaderConfig;
 
     public String getDefaultFeedDeserialiserBean() {
         return defaultFeedDeserialiserBean;
@@ -159,5 +160,13 @@ public class Configuration {
 
     public void setProcessingThreads(int processingThreads) {
         this.processingThreads = processingThreads;
+    }
+
+    public FeedHeaderConfig getFeedHeaderConfig() {
+        return feedHeaderConfig;
+    }
+
+    public void setFeedHeaderConfig(FeedHeaderConfig feedHeaderConfig) {
+        this.feedHeaderConfig = feedHeaderConfig;
     }
 }

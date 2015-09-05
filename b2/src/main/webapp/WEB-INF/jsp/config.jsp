@@ -58,6 +58,17 @@
 <fmt:message var="httpPushCsvInstructions" key="bond.classgroups.config.deserialiser.httppushcsv.instructions" />
 <fmt:message var="httpPushCsvPasskey" key="bond.classgroups.config.deserialiser.httppushcsv.passkey" />
 
+<fmt:message var="headers" key="bond.classgroups.config.headers" />
+<fmt:message var="headersInstructions" key="bond.classgroups.config.headers.instructions" />
+<fmt:message var="headersCourseId" key="bond.classgroups.config.headers.courseid" />
+<fmt:message var="headersGroupId" key="bond.classgroups.config.headers.groupid" />
+<fmt:message var="headersTitle" key="bond.classgroups.config.headers.title" />
+<fmt:message var="headersLeader" key="bond.classgroups.config.headers.leader" />
+<fmt:message var="headersGroupSet" key="bond.classgroups.config.headers.groupset" />
+<fmt:message var="headersAvailable" key="bond.classgroups.config.headers.available" />
+<fmt:message var="headersTools" key="bond.classgroups.config.headers.tools" />
+<fmt:message var="headersUserId" key="bond.classgroups.config.headers.userid" />
+
 <fmt:message var="autoCleanUp" key="bond.classgroups.config.autocleanup" />
 <fmt:message var="autoCleanUpInstructions" key="bond.classgroups.config.autocleanup.instructions" />
 <fmt:message var="autoCleanUpCleanUp" key="bond.classgroups.config.autocleanup.cleanup" />
@@ -187,6 +198,33 @@
                         <input type="text" name="configuration.pushCsvFeedDeserialiser.passkey" value="${actionBean.configuration.pushCsvFeedDeserialiser.passkey}" />
                     </bbNG:dataElement>
                 </div>
+            </bbNG:step>
+
+            <bbNG:step title="${headers}" instructions="${headersInstructions}">
+                <bbNG:dataElement label="${headersCourseId}" isRequired="true">
+                    <input type="text" name="configuration.feedHeaderConfig.courseIdHeader" value="${actionBean.configuration.feedHeaderConfig.courseIdHeader}" />
+                </bbNG:dataElement>
+                <bbNG:dataElement label="${headersGroupId}" isRequired="true">
+                    <input type="text" name="configuration.feedHeaderConfig.groupIdHeader" value="${actionBean.configuration.feedHeaderConfig.groupIdHeader}" />
+                </bbNG:dataElement>
+                <bbNG:dataElement label="${headersTitle}" isRequired="true">
+                    <input type="text" name="configuration.feedHeaderConfig.titleHeader" value="${actionBean.configuration.feedHeaderConfig.titleHeader}" />
+                </bbNG:dataElement>
+                <bbNG:dataElement label="${headersLeader}" isRequired="true">
+                    <input type="text" name="configuration.feedHeaderConfig.leaderHeader" value="${actionBean.configuration.feedHeaderConfig.leaderHeader}" />
+                </bbNG:dataElement>
+                <bbNG:dataElement label="${headersGroupSet}" isRequired="true">
+                    <input type="text" name="configuration.feedHeaderConfig.groupSetHeader" value="${actionBean.configuration.feedHeaderConfig.groupSetHeader}" />
+                </bbNG:dataElement>
+                <bbNG:dataElement label="${headersAvailable}" isRequired="true">
+                    <input type="text" name="configuration.feedHeaderConfig.availableHeader" value="${actionBean.configuration.feedHeaderConfig.availableHeader}" />
+                </bbNG:dataElement>
+                <bbNG:dataElement label="${headersTools}" isRequired="true">
+                    <input type="text" name="configuration.feedHeaderConfig.toolsHeader" value="${actionBean.configuration.feedHeaderConfig.toolsHeader}" />
+                </bbNG:dataElement>
+                <bbNG:dataElement label="${headersUserId}" isRequired="true">
+                    <input type="text" name="configuration.feedHeaderConfig.userIdHeader" value="${actionBean.configuration.feedHeaderConfig.userIdHeader}" />
+                </bbNG:dataElement>
             </bbNG:step>
 
             <bbNG:step title="${autoCleanUp}" instructions="${autoCleanUpInstructions}">

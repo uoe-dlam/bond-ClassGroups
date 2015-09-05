@@ -1,5 +1,7 @@
 package au.edu.bond.classgroups.feed;
 
+import au.edu.bond.classgroups.config.Configuration;
+import au.edu.bond.classgroups.config.FeedHeaderConfig;
 import au.edu.bond.classgroups.feed.csv.CsvFeedDeserialiser;
 import au.edu.bond.classgroups.logging.TaskLogger;
 import au.edu.bond.classgroups.model.Group;
@@ -23,6 +25,18 @@ public class CsvFeedDeserialiserTest {
 
     @Before
     public void setUp() throws Exception {
+        final Configuration config = new Configuration();
+        final FeedHeaderConfig feedHeaderConfig = new FeedHeaderConfig();
+        feedHeaderConfig.setCourseIdHeader("courseId");
+        feedHeaderConfig.setGroupIdHeader("groupId");
+        feedHeaderConfig.setTitleHeader("title");
+        feedHeaderConfig.setLeaderHeader("leader");
+        feedHeaderConfig.setGroupSetHeader("groupSet");
+        feedHeaderConfig.setAvailableHeader("available");
+        feedHeaderConfig.setToolsHeader("tools");
+        feedHeaderConfig.setUserIdHeader("userId");
+        config.setFeedHeaderConfig(feedHeaderConfig);
+
         logger = mock(TaskLogger.class);
         resourceService = mock(ResourceService.class);
 
@@ -31,6 +45,7 @@ public class CsvFeedDeserialiserTest {
         csvFeedDeserialiser = new CsvFeedDeserialiser();
         csvFeedDeserialiser.setCurrentTaskLogger(logger);
         csvFeedDeserialiser.setResourceService(resourceService);
+        csvFeedDeserialiser.setConfiguration(config);
     }
 
     @After
@@ -55,20 +70,20 @@ public class CsvFeedDeserialiserTest {
 
     @Test
     public void testGetGroups_withOnlyHeaders_expectEmptyList() throws Exception {
-        InputStream groupsIS = new ByteArrayInputStream("groupId,courseId,title".getBytes());
-        InputStream membersIS = new ByteArrayInputStream("groupId,userId".getBytes());
+        final InputStream groupsIS = new ByteArrayInputStream("courseId,groupId,title,leader,groupSet,available,tools".getBytes());
+        final InputStream membersIS = new ByteArrayInputStream("groupId,userId".getBytes());
 
         csvFeedDeserialiser.setGroupsInputStream(groupsIS);
         csvFeedDeserialiser.setMembersInputStream(membersIS);
 
-        Collection<Group> result = csvFeedDeserialiser.getGroups();
+        final Collection<Group> result = csvFeedDeserialiser.getGroups();
 
         assertEquals(0, result.size());
     }
 
     @Test
     public void testGetGroups_withOneGroupAndOneMember_expectOneGroup() throws Exception {
-        InputStream groupsIS = new ByteArrayInputStream("groupId,courseId,title\ngroup1,course1,A Group".getBytes());
+        InputStream groupsIS = new ByteArrayInputStream("groupId,courseId,title,leader,groupSet,available,tools\ngroup1,course1,A Group,,,true,".getBytes());
         InputStream membersIS = new ByteArrayInputStream("groupId,userId\ngroup1,user1".getBytes());
 
         csvFeedDeserialiser.setGroupsInputStream(groupsIS);
@@ -81,7 +96,7 @@ public class CsvFeedDeserialiserTest {
 
     @Test
     public void testGetGroups_withOneGroupAndOneMemberAndInvalidMember_expectOneGroupAndWarning() throws Exception {
-        InputStream groupsIS = new ByteArrayInputStream("groupId,courseId,title\ngroup1,course1,A Group".getBytes());
+        InputStream groupsIS = new ByteArrayInputStream("groupId,courseId,title,leader,groupSet,available,tools\ngroup1,course1,A Group,,,true,".getBytes());
         InputStream membersIS = new ByteArrayInputStream("groupId,userId\ngroup1,user1\ngroup2,user1".getBytes());
 
         csvFeedDeserialiser.setGroupsInputStream(groupsIS);
@@ -95,10 +110,10 @@ public class CsvFeedDeserialiserTest {
 
     @Test
     public void testGetGroups_withMultipleGroupAndMembers_expectMultipleGroupsAndMembers() throws Exception {
-        InputStream groupsIS = new ByteArrayInputStream(("groupId,courseId,title\n" +
-                "group1,course1,A Group\n" +
-                "group2,course1,Another Group\n" +
-                "group3,course2,And another\n").getBytes());
+        InputStream groupsIS = new ByteArrayInputStream(("groupId,courseId,title,leader,groupSet,available,tools\n" +
+                "group1,course1,A Group,,,true,\n" +
+                "group2,course1,Another Group,,,true,\n" +
+                "group3,course2,And another,,,true,\n").getBytes());
         InputStream membersIS = new ByteArrayInputStream(("groupId,userId\n" +
                 "group1,user1\n" +
                 "group2,user1\n" +

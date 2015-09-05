@@ -1,6 +1,7 @@
 package au.edu.bond.classgroups.stripes;
 
 import au.edu.bond.classgroups.config.Configuration;
+import au.edu.bond.classgroups.config.FeedHeaderConfig;
 import au.edu.bond.classgroups.dao.BbAvailableGroupToolDAO;
 import au.edu.bond.classgroups.model.Schedule;
 import blackboard.data.navigation.NavigationApplication;
@@ -61,6 +62,18 @@ public class ConfigAction implements ActionBean {
         if (configuration == null) {
             configuration = new Configuration();
             configuration.setProcessingThreads(1);
+        }
+        if(configuration.getFeedHeaderConfig() == null) {
+            final FeedHeaderConfig feedHeaderConfig = new FeedHeaderConfig();
+            feedHeaderConfig.setCourseIdHeader("courseId");
+            feedHeaderConfig.setGroupIdHeader("groupId");
+            feedHeaderConfig.setTitleHeader("title");
+            feedHeaderConfig.setLeaderHeader("leader");
+            feedHeaderConfig.setGroupSetHeader("groupSet");
+            feedHeaderConfig.setAvailableHeader("available");
+            feedHeaderConfig.setToolsHeader("tools");
+            feedHeaderConfig.setUserIdHeader("userId");
+            configuration.setFeedHeaderConfig(feedHeaderConfig);
         }
     }
 

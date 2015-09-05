@@ -1,15 +1,19 @@
 package au.edu.bond.classgroups.feed.csv;
 
+import au.edu.bond.classgroups.config.Configuration;
+import au.edu.bond.classgroups.config.FeedHeaderConfig;
 import au.edu.bond.classgroups.exception.FeedDeserialisationException;
 import au.edu.bond.classgroups.feed.FeedDeserialiser;
 import au.edu.bond.classgroups.logging.TaskLogger;
 import au.edu.bond.classgroups.model.Group;
 import au.edu.bond.classgroups.model.Member;
 import au.edu.bond.classgroups.service.ResourceService;
+import com.google.common.collect.Sets;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.supercsv.cellprocessor.ift.CellProcessor;
-import org.supercsv.io.CsvBeanReader;
-import org.supercsv.prefs.CsvPreference;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,8 +30,8 @@ public class CsvFeedDeserialiser implements FeedDeserialiser {
     private TaskLogger currentTaskLogger;
     @Autowired
     private ResourceService resourceService;
-
-    private CsvPreference csvPreference = CsvPreference.STANDARD_PREFERENCE;
+    @Autowired
+    Configuration configuration;
 
     private InputStream groupsInputStream;
     private InputStream membersInputStream;
@@ -37,52 +41,40 @@ public class CsvFeedDeserialiser implements FeedDeserialiser {
         //Map instead of list/collection so that the groups can be easily found again during member processing.
         Map<String, Group> groups = new HashMap<String, Group>();
 
-        CsvBeanReader groupsBeanReader = null;
-        CsvBeanReader membersBeanReader = null;
-
-        try {
-            groupsBeanReader = new CsvBeanReader(new InputStreamReader(groupsInputStream), csvPreference);
-            membersBeanReader = new CsvBeanReader(new InputStreamReader(membersInputStream), csvPreference);
+        try(final CSVParser groupsParser = CSVFormat.DEFAULT.withHeader().parse(new InputStreamReader(groupsInputStream));
+            final CSVParser membersParser = CSVFormat.DEFAULT.withHeader().parse(new InputStreamReader(membersInputStream))) {
 
             boolean stop = false;
-            final String[] groupsColumnHeaders = getCsvHeaders(groupsBeanReader);
-            if (groupsColumnHeaders == null || groupsColumnHeaders.length == 0) {
+            if (!groupsParser.getHeaderMap().keySet().containsAll(configuration.getFeedHeaderConfig().getGroupsFeedHeaders())) {
                 currentTaskLogger.error("bond.classgroups.error.missingheadergroups");
                 stop = true;
             }
-
-            final String[] membersColumnHeaders = getCsvHeaders(membersBeanReader);
-            if (membersColumnHeaders == null || membersColumnHeaders.length == 0) {
+            if (!membersParser.getHeaderMap().keySet().containsAll(configuration.getFeedHeaderConfig().getMembersFeedHeaders())) {
                 currentTaskLogger.error("bond.classgroups.error.missingheadermembers");
                 stop = true;
             }
-
             if (stop) {
                 return null;
             }
 
-            final CellProcessor[] groupsCellProcessors = CellProcessorUtil.getCellProcessorsForGroupColumns(groupsColumnHeaders);
-            final CellProcessor[] membersCellProcessors = CellProcessorUtil.getCellProcessorsForMemberColumns(membersColumnHeaders);
+            for (CSVRecord record : groupsParser) {
+                final Group group = translateRecordToGroup(record);
+                groups.put(group.getGroupId(), group);
 
-            GroupCsvRow groupCsvRow;
-            while ((groupCsvRow = groupsBeanReader.read(GroupCsvRow.class, groupsColumnHeaders, groupsCellProcessors)) != null) {
-                groups.put(groupCsvRow.getGroupId(), translateRowToGroup(groupCsvRow));
-
-                if(Thread.currentThread().isInterrupted()) {
+                if (Thread.currentThread().isInterrupted()) {
                     currentTaskLogger.error("bond.classgroups.error.groupsthreadinterrupted");
                     throw new FeedDeserialisationException(resourceService.getLocalisationString(
                             "bond.classgroups.exception.groupsthreadinterrupted"));
                 }
             }
 
-            MemberCsvRow memberCsvRow;
-            while ((memberCsvRow = membersBeanReader.read(MemberCsvRow.class, membersColumnHeaders, membersCellProcessors)) != null) {
-                Group group = groups.get(memberCsvRow.getGroupId());
+            for (CSVRecord record : membersParser) {
+                final String groupId = record.get(configuration.getFeedHeaderConfig().getGroupIdHeader());
+                Group group = groups.get(groupId);
 
                 if (group == null) {
                     currentTaskLogger.warning(resourceService.getLocalisationString(
-                            "bond.classgroups.warning.memberformissinggroup",
-                            membersBeanReader.getLineNumber(), memberCsvRow.getGroupId()));
+                            "bond.classgroups.warning.memberformissinggroup", groupId));
                     continue;
                 }
 
@@ -92,7 +84,7 @@ public class CsvFeedDeserialiser implements FeedDeserialiser {
                     group.setMembers(members);
                 }
 
-                members.add(translateRowToMember(memberCsvRow));
+                members.add(translateRecordToMember(record));
 
                 if(Thread.currentThread().isInterrupted()) {
                     currentTaskLogger.error("bond.classgroups.error.membersthreadinterrupted");
@@ -100,58 +92,41 @@ public class CsvFeedDeserialiser implements FeedDeserialiser {
                             "bond.classgroups.exception.membersthreadinterrupted"));
                 }
             }
+
         } catch (IOException e) {
             currentTaskLogger.error("bond.classgroups.error.failedtoparsecsv", e);
             throw new FeedDeserialisationException(resourceService.getLocalisationString(
                     "bond.classgroups.exception.failedtoparsecsv"), e);
-        } finally {
-            if(groupsBeanReader != null) {
-                try {
-                    groupsBeanReader.close();
-                } catch (IOException e) {
-                    currentTaskLogger.error("bond.classgroups.error.failedclosegroupsbeanreader");
-                }
-            }
-            if(membersBeanReader != null) {
-                try {
-                    membersBeanReader.close();
-                } catch (IOException e) {
-                    currentTaskLogger.error("bond.classgroups.error.failedclosemembersbeanreader");
-                }
-            }
         }
 
         return groups.values();
     }
 
-
-    private String[] getCsvHeaders(CsvBeanReader beanReader) {
-        try {
-            return beanReader.getHeader(/* First row check*/ true);
-        } catch (IOException e) {
-            currentTaskLogger.error("bond.classgroups.error.failedtoreadcsvheaders", e);
-            return null;
-        }
-    }
-
-    private Group translateRowToGroup(GroupCsvRow row) {
+    private Group translateRecordToGroup(CSVRecord record) {
         Group group = new Group();
 
-        group.setCourseId(row.getCourseId());
-        group.setGroupId(row.getGroupId());
-        group.setTitle(row.getTitle());
-        group.setLeaderId(row.getLeader());
-        group.setGroupSet(row.getGroupSet());
-        group.setAvailable(row.getAvailable());
-        group.setTools(row.getTools());
+        final FeedHeaderConfig headers = configuration.getFeedHeaderConfig();
+        group.setCourseId(record.get(headers.getCourseIdHeader()));
+        group.setGroupId(record.get(headers.getGroupIdHeader()));
+        group.setTitle(record.get(headers.getTitleHeader()));
+        group.setLeaderId(record.get(headers.getLeaderHeader()));
+        group.setGroupSet(record.get(headers.getGroupSetHeader()));
+
+        final String availableStr = record.get(headers.getAvailableHeader());
+        final boolean available = Boolean.parseBoolean(availableStr);
+        group.setAvailable(available);
+
+        final String toolsStr = record.get(headers.getToolsHeader());
+        final HashSet<String> tools = Sets.newHashSet(StringUtils.split(toolsStr, "|"));
+        group.setTools(tools);
 
         return group;
     }
 
-    private Member translateRowToMember(MemberCsvRow row) {
+    private Member translateRecordToMember(CSVRecord record) {
         Member member = new Member();
 
-        member.setUserId(row.getUserId());
+        member.setUserId(record.get(configuration.getFeedHeaderConfig().getUserIdHeader()));
 
         return member;
     }
@@ -180,19 +155,19 @@ public class CsvFeedDeserialiser implements FeedDeserialiser {
         this.currentTaskLogger = currentTaskLogger;
     }
 
-    public CsvPreference getCsvPreference() {
-        return csvPreference;
-    }
-
-    public void setCsvPreference(CsvPreference csvPreference) {
-        this.csvPreference = csvPreference;
-    }
-
     public ResourceService getResourceService() {
         return resourceService;
     }
 
     public void setResourceService(ResourceService resourceService) {
         this.resourceService = resourceService;
+    }
+
+    public Configuration getConfiguration() {
+        return configuration;
+    }
+
+    public void setConfiguration(Configuration configuration) {
+        this.configuration = configuration;
     }
 }
