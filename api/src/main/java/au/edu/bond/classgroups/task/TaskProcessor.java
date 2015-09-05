@@ -18,11 +18,14 @@ import au.edu.bond.classgroups.service.TaskService;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.*;
+import java.util.concurrent.*;
 
 /**
  * Created by Shane Argo on 10/06/2014.
  */
 public class TaskProcessor implements Runnable {
+
+    public static final int MINIMUM_GROUPS_FOR_MULTITHREADING = 20;
 
     @Autowired
     private TaskService taskService;
@@ -61,12 +64,12 @@ public class TaskProcessor implements Runnable {
                 throw e;
             }
 
-            if(feedDeserialiser == null) {
+            if (feedDeserialiser == null) {
                 currentTaskLogger.info("bond.classgroups.info.preconfigdeserialiser");
                 feedDeserialiser = feedDeserialiserFactory.getDefault();
             }
 
-            if(feedDeserialiser == null) {
+            if (feedDeserialiser == null) {
                 throw new Exception(resourceService.getLocalisationString("bond.classgroups.error.nopreconfigdeserialiser"));
 
             }
@@ -87,23 +90,60 @@ public class TaskProcessor implements Runnable {
                 }
             });
 
-            int total = groups.size();
-            int count = 0;
+            final int total = groups.size();
             currentTaskLogger.info(resourceService.getLocalisationString("bond.classgroups.info.feedconsumed", total));
             currentTask.setTotalGroups(total);
-            currentTask.setProcessedGroups(count);
+            currentTask.setProcessedGroups(0);
             taskService.throttledUpdate(currentTask);
 
+            final ConcurrentLinkedQueue<Group> groupsQueue = new ConcurrentLinkedQueue<Group>(groups);
             currentTaskLogger.info("bond.classgroups.info.updatinggroups");
-            for (Group group : groups) {
-                handleGroup(group);
 
-                count++;
-                currentTask.setProcessedGroups(count);
-                taskService.throttledUpdate(currentTask);
+            int threads = total >= MINIMUM_GROUPS_FOR_MULTITHREADING && configuration.getProcessingThreads() > 0 ? configuration.getProcessingThreads() : 1;
+            ExecutorService execService = null;
+            try {
+                execService = Executors.newFixedThreadPool(threads);
+                SynchronousQueue[] synchronousQueues = new SynchronousQueue[threads];
+                for (int i = 0; i < threads; i++) {
+                    final SynchronousQueue<Boolean> synchronousQueue = new SynchronousQueue<>();
+                    synchronousQueues[i] = synchronousQueue;
+                    execService.submit(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                while (true) {
+                                    final Group group = groupsQueue.poll();
+                                    if (group == null) {
+                                        synchronousQueue.put(Boolean.TRUE);
+                                        return;
+                                    }
+                                    handleGroup(group);
 
-                if(Thread.currentThread().isInterrupted()) {
-                    throw new Exception(resourceService.getLocalisationString("bond.classgroups.error.threadinterrupted"));
+                                    currentTask.setProcessedGroups(total - groupsQueue.size());
+                                    taskService.throttledUpdate(currentTask);
+
+                                    if (Thread.currentThread().isInterrupted()) {
+//                                        throw new Exception(resourceService.getLocalisationString("bond.classgroups.error.threadinterrupted"));
+                                        synchronousQueue.put(Boolean.FALSE);
+                                        return;
+                                    }
+                                }
+                            } catch (Exception e) {
+                                try {
+                                    synchronousQueue.put(Boolean.FALSE);
+                                } catch (InterruptedException ignored) {
+                                }
+                            }
+                        }
+                    });
+
+                }
+                for (SynchronousQueue synchronousQueue : synchronousQueues) {
+                    synchronousQueue.take();
+                }
+            } finally {
+                if(execService != null) {
+                    execService.shutdownNow();
                 }
             }
 
@@ -114,14 +154,14 @@ public class TaskProcessor implements Runnable {
                 throw e;
             }
 
-            if(cleanupRunnable != null) {
+            if (cleanupRunnable != null) {
                 currentTaskLogger.info("bond.classgroups.info.cleaningup");
                 cleanupRunnable.run();
             }
 
             currentTaskLogger.info("bond.classgroups.info.complete");
         } catch (Exception e) {
-            if(currentTaskLogger != null) {
+            if (currentTaskLogger != null) {
                 currentTaskLogger.error("bond.classgroups.error.processfailed", e);
             }
             try {
@@ -137,9 +177,9 @@ public class TaskProcessor implements Runnable {
     void handleGroup(Group group) {
         GroupManager.Status status = groupManager.syncGroup(group);
 
-        if(status != GroupManager.Status.ERROR && status != GroupManager.Status.NOSYNC) {
+        if (status != GroupManager.Status.ERROR && status != GroupManager.Status.NOSYNC) {
 
-            if(configuration.getToolsMode() != Configuration.ToolsMode.CREATE
+            if (configuration.getToolsMode() != Configuration.ToolsMode.CREATE
                     || status != GroupManager.Status.CREATED) {
                 toolManager.syncGroupTools(group);
             }
@@ -165,7 +205,7 @@ public class TaskProcessor implements Runnable {
         this.feedDeserialiserFactory = feedDeserialiserFactory;
     }
 
-    public FeedDeserialiser getFeedDeserialiser()                                  {
+    public FeedDeserialiser getFeedDeserialiser() {
         return feedDeserialiser;
     }
 

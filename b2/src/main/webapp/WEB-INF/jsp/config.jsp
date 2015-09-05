@@ -91,6 +91,10 @@
 <fmt:message var="schedulingSchedulesSaturday" key="bond.classgroups.config.scheduling.schedules.saturday" />
 <fmt:message var="schedulingSchedulesSunday" key="bond.classgroups.config.scheduling.schedules.sunday" />
 
+<fmt:message var="processing" key="bond.classgroups.config.processing" />
+<fmt:message var="processingInstructions" key="bond.classgroups.config.processing.instructions" />
+<fmt:message var="processingThreads" key="bond.classgroups.config.processing.threads" />
+
 <fmt:message var="save" key="bond.classgroups.config.save" />
 
 <bbNG:genericPage ctxId="ctx" navItem="bond-ClassGroups-nav-configure">
@@ -214,6 +218,12 @@
                             <div class="scheduleColumn header">&nbsp;</div>
                         </div>
                     </div>
+                </bbNG:dataElement>
+            </bbNG:step>
+
+            <bbNG:step title="${processing}" instructions="${processingInstructions}">
+                <bbNG:dataElement label="${processingThreads}" isRequired="true">
+                    <input type="text" name="configuration.processingThreads" value="${actionBean.configuration.processingThreads}" />
                 </bbNG:dataElement>
             </bbNG:step>
 

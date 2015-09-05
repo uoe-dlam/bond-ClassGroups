@@ -60,6 +60,7 @@ public class ConfigAction implements ActionBean {
         configuration = configurationService.loadConfiguration();
         if (configuration == null) {
             configuration = new Configuration();
+            configuration.setProcessingThreads(1);
         }
     }
 

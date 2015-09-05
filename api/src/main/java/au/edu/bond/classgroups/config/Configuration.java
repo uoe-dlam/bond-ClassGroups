@@ -39,6 +39,7 @@ public class Configuration {
     private boolean schedulesEnabled;
     private List<Schedule> schedules;
     private boolean enrolStaffIfMissing;
+    private int processingThreads;
 
     public String getDefaultFeedDeserialiserBean() {
         return defaultFeedDeserialiserBean;
@@ -150,5 +151,13 @@ public class Configuration {
 
     public void setEnrolStaffIfMissing(boolean enrolStaffIfMissing) {
         this.enrolStaffIfMissing = enrolStaffIfMissing;
+    }
+
+    public int getProcessingThreads() {
+        return processingThreads;
+    }
+
+    public void setProcessingThreads(int processingThreads) {
+        this.processingThreads = processingThreads;
     }
 }
