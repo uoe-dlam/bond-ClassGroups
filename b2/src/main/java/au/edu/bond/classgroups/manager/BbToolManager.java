@@ -61,7 +61,7 @@ public class BbToolManager implements ToolManager {
         }
         Id groupId = bbGroupService.getIdFromLong(ext.getInternalGroupId());
 
-        Collection<AvailableGroupTool> deleteTools;
+        Collection<AvailableGroupTool> deleteTools = null;
         try {
             deleteTools = bbAvailableGroupToolService.getByGroupId(groupId, courseId);
         } catch (ExecutionException e) {
@@ -77,10 +77,13 @@ public class BbToolManager implements ToolManager {
             Map<AvailableGroupTool, String> createTools = new HashMap<AvailableGroupTool, String>();
             for (String tool : tools) {
                 AvailableGroupTool existingTool = null;
-                for (AvailableGroupTool deleteTool : deleteTools) {
-                    if (deleteTool.getApplicationHandle().equals(tool)) {
-                        existingTool = deleteTool;
-                        break;
+
+                if(deleteTools != null) {
+                    for (AvailableGroupTool deleteTool : deleteTools) {
+                        if (deleteTool.getApplicationHandle().equals(tool)) {
+                            existingTool = deleteTool;
+                            break;
+                        }
                     }
                 }
 
@@ -116,7 +119,7 @@ public class BbToolManager implements ToolManager {
             }
         }
 
-        if(configuration.getToolsMode() == Configuration.ToolsMode.SYNC) {
+        if(configuration.getToolsMode() == Configuration.ToolsMode.SYNC && deleteTools != null) {
             if (deleteTools.size() > 0) {
                 currentTaskLogger.info(resourceService.getLocalisationString(
                         "bond.classgroups.info.deletingtools",

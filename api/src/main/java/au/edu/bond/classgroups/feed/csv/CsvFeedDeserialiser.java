@@ -117,8 +117,10 @@ public class CsvFeedDeserialiser implements FeedDeserialiser {
         group.setAvailable(available);
 
         final String toolsStr = record.get(headers.getToolsHeader());
-        final HashSet<String> tools = Sets.newHashSet(StringUtils.split(toolsStr, "|"));
-        group.setTools(tools);
+        if(!StringUtils.isEmpty(toolsStr)) {
+            final HashSet<String> tools = Sets.newHashSet(StringUtils.split(toolsStr, "|"));
+            group.setTools(tools);
+        }
 
         return group;
     }
