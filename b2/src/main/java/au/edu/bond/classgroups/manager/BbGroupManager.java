@@ -163,9 +163,13 @@ public class BbGroupManager implements GroupManager {
 
         final List<AvailableGroupTool> remainingTools = Lists.newArrayList(bbGroup.getAvailableTools(true));
         final Collection<String> tools = (group.getTools() != null) ? group.getTools() : configuration.getDefaultTools();
+        boolean withForum = false;
         if (tools != null) {
             toolsLoop:
             for (String tool : tools) {
+                if(tool.equalsIgnoreCase("discussion_board")) {
+                    withForum = true;
+                }
                 for (int i = 0; i < remainingTools.size(); i++) {
                     final AvailableGroupTool currentTool = remainingTools.get(i);
                     if (currentTool.getApplicationHandle().equals(tool)) {
@@ -180,6 +184,8 @@ public class BbGroupManager implements GroupManager {
         for (AvailableGroupTool remainingTool : remainingTools) {
             bbGroup.removeAvailableTool(remainingTool.getApplicationHandle());
         }
+
+        bbGroup.setWithForum(withForum);
 
         final Collection<Member> feedMembers = group.getMembers();
         Set<Id> memberIds = new HashSet<>();
