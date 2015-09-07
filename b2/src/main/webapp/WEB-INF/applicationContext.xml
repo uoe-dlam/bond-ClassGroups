@@ -65,17 +65,11 @@
         <constructor-arg value="maximumSize=250,expireAfterWrite=2m" />
     </bean>
 
-    <bean id="bbAvailableGroupToolService" class="au.edu.bond.classgroups.service.BbAvailableGroupToolService">
-        <constructor-arg name="byIdCacheSpec" ref="courseLevelCacheSpec" />
-    </bean>
     <bean id="bbCourseMembershipService" class="au.edu.bond.classgroups.service.BbCourseMembershipService">
         <constructor-arg name="byIdCacheSpec" ref="courseLevelCacheSpec" />
         <constructor-arg name="byUserIdCacheSpec" ref="courseLevelCacheSpec" />
     </bean>
     <bean id="bbGradebookCustomViewService" class="au.edu.bond.classgroups.service.BbGradebookCustomViewService">
-        <constructor-arg name="byIdCacheSpec" ref="courseLevelCacheSpec" />
-    </bean>
-    <bean id="bbGroupMembershipService" class="au.edu.bond.classgroups.service.BbGroupMembershipService">
         <constructor-arg name="byIdCacheSpec" ref="courseLevelCacheSpec" />
     </bean>
     <bean id="bbCourseService" class="au.edu.bond.classgroups.service.BbCourseService">
@@ -98,11 +92,9 @@
     <bean name="cacheCleaningService" class="au.edu.bond.classgroups.service.CacheCleaningService">
         <constructor-arg name="services">
             <list>
-                <ref bean="bbAvailableGroupToolService" />
                 <ref bean="bbCourseMembershipService" />
                 <ref bean="bbCourseService" />
                 <ref bean="bbGradebookCustomViewService" />
-                <ref bean="bbGroupMembershipService" />
                 <ref bean="bbGroupService" />
                 <ref bean="bbUserService" />
                 <ref bean="groupExtensionService" />
@@ -119,8 +111,6 @@
     <bean id="scheduleManager" class="au.edu.bond.classgroups.manager.ScheduleManager" />
 
     <bean id="groupManager" class="au.edu.bond.classgroups.manager.BbGroupManager" scope="task" lazy-init="true" />
-    <bean id="memberManager" class="au.edu.bond.classgroups.manager.BbMemberManager" scope="task" lazy-init="true" />
-    <bean id="toolManager" class="au.edu.bond.classgroups.manager.BbToolManager" scope="task" lazy-init="true" />
     <bean id="smartViewManager" class="au.edu.bond.classgroups.manager.BbSmartViewManager" scope="task" lazy-init="true" />
 
     <bean id="currentTask" scope="task" factory-bean="taskService" factory-method="getCurrentTask" lazy-init="true" />

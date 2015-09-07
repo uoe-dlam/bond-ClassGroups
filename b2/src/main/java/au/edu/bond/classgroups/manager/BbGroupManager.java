@@ -5,21 +5,28 @@ import au.edu.bond.classgroups.groupext.GroupExtension;
 import au.edu.bond.classgroups.groupext.GroupExtensionService;
 import au.edu.bond.classgroups.logging.TaskLogger;
 import au.edu.bond.classgroups.model.Group;
+import au.edu.bond.classgroups.model.Member;
 import au.edu.bond.classgroups.service.*;
 import au.edu.bond.classgroups.util.EqualityUtil;
 import blackboard.base.FormattedText;
 import blackboard.data.ValidationException;
+import blackboard.data.course.AvailableGroupTool;
 import blackboard.data.course.Course;
 import blackboard.data.course.CourseMembership;
+import blackboard.data.course.GroupMembership;
 import blackboard.data.user.User;
 import blackboard.persist.Id;
 import blackboard.persist.KeyNotFoundException;
 import blackboard.persist.PersistenceException;
 import blackboard.persist.PkId;
+import blackboard.platform.course.CourseGroupManager;
+import blackboard.platform.course.CourseGroupManagerFactory;
+import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.persistence.NoResultException;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -52,7 +59,7 @@ public class BbGroupManager implements GroupManager {
         try {
             Course course = bbCourseService.getByExternalSystemId(group.getCourseId());
             courseId = course.getId();
-            if(course.isChild()) {
+            if (course.isChild()) {
                 courseId = bbCourseService.getParentId(courseId);
                 String newTitle = resourceService.getLocalisationString(
                         "bond.classgroups.pattern.childgrouppattern",
@@ -69,7 +76,7 @@ public class BbGroupManager implements GroupManager {
         try {
             ext = groupExtensionService.getGroupExtensionByExternalId(group.getGroupId());
         } catch (UncheckedExecutionException e) {
-            if(!(e.getCause() instanceof NoResultException)) {
+            if (!(e.getCause() instanceof NoResultException)) {
                 throw e;
             }
         } catch (ExecutionException e) {
@@ -78,7 +85,7 @@ public class BbGroupManager implements GroupManager {
             return Status.ERROR;
         }
 
-        if(ext != null && !ext.isSynced()) {
+        if (ext != null && !ext.isSynced()) {
             currentTaskLogger.info(resourceService.getLocalisationString(
                     "bond.classgroups.info.skippingunsyncedgroup",
                     group.getGroupId()));
@@ -88,8 +95,8 @@ public class BbGroupManager implements GroupManager {
         boolean extNew = false;
         // If extension data is found, attempt to load the Bb group it references.
         blackboard.data.course.Group bbGroup = null;
-        if(ext != null) {
-            if(ext.getInternalGroupId() == null) {
+        if (ext != null) {
+            if (ext.getInternalGroupId() == null) {
                 currentTaskLogger.info(resourceService.getLocalisationString(
                         "bond.classgroups.info.existinggroupdeleted", group.getGroupId()));
             } else {
@@ -107,10 +114,10 @@ public class BbGroupManager implements GroupManager {
         }
         boolean extDirty = updateFeedLeader(ext, group, courseId);
 
-        String title = groupTitleService.getGroupTitle(group.getTitle(), ext, ((PkId)courseId).getKey());
+        String title = groupTitleService.getGroupTitle(group.getTitle(), ext, ((PkId) courseId).getKey());
         Status status = Status.UNCHANGED;
         // If no Bb group exists (no extension data, or extension data references a deleted group), create one.
-        if(bbGroup == null) {
+        if (bbGroup == null) {
             bbGroup = new blackboard.data.course.Group();
 
             bbGroup.setCourseId(courseId);
@@ -133,55 +140,86 @@ public class BbGroupManager implements GroupManager {
             currentTaskLogger.info(resourceService.getLocalisationString(
                     "bond.classgroups.info.creatinggroup", group.getGroupId(), group.getTitle()));
         } else {
-            // Force load the group tools, otherwise the API removes them when persisting.
-            bbGroup.getAvailableTools(true);
             currentTaskLogger.info(resourceService.getLocalisationString(
                     "bond.classgroups.info.updatinggroup", group.getGroupId(), group.getTitle()));
 
-            if(!title.equals(bbGroup.getTitle())) {
+            if (!title.equals(bbGroup.getTitle())) {
                 bbGroup.setTitle(title);
                 status = Status.UPDATED;
             }
 
-            if(updateGroupSet(bbGroup, group)) {
+            if (updateGroupSet(bbGroup, group)) {
                 status = Status.UPDATED;
             }
 
-            if(configuration.getAvailabilityMode() == Configuration.AvailabilityMode.UPDATE) {
+            if (configuration.getAvailabilityMode() == Configuration.AvailabilityMode.UPDATE) {
                 boolean available = calculateAvailability(group);
-                if(bbGroup.getIsAvailable() != available) {
+                if (bbGroup.getIsAvailable() != available) {
                     bbGroup.setIsAvailable(available);
                     status = Status.UPDATED;
                 }
             }
         }
 
-            if(status == Status.CREATED || status == Status.UPDATED) {
-                // Persist the group.
-                try {
-                    bbGroupService.createOrUpdate(bbGroup);
-                } catch (ValidationException e) {
-                    currentTaskLogger.warning(resourceService.getLocalisationString(
-                            "bond.classgroups.warning.groupvalidationerrors", group.getGroupId()), e);
-                    return Status.ERROR;
-                } catch (PersistenceException e) {
-                    currentTaskLogger.warning(resourceService.getLocalisationString(
-                            "bond.classgroups.warning.groupbberrors", group.getGroupId()), e);
-                    return Status.ERROR;
-                } catch (ExecutionException e) {
-                    currentTaskLogger.warning(resourceService.getLocalisationString(
-                            "bond.classgroups.warning.groupexecution", group.getGroupId()), e);
-                    return Status.ERROR;
+        final List<AvailableGroupTool> remainingTools = Lists.newArrayList(bbGroup.getAvailableTools(true));
+        final Collection<String> tools = (group.getTools() != null) ? group.getTools() : configuration.getDefaultTools();
+        if (tools != null) {
+            toolsLoop:
+            for (String tool : tools) {
+                for (int i = 0; i < remainingTools.size(); i++) {
+                    final AvailableGroupTool currentTool = remainingTools.get(i);
+                    if (currentTool.getApplicationHandle().equals(tool)) {
+                        remainingTools.remove(i);
+                        continue toolsLoop;
+                    }
                 }
+
+                bbGroup.addAvailableTool(tool);
+            }
+        }
+        for (AvailableGroupTool remainingTool : remainingTools) {
+            bbGroup.removeAvailableTool(remainingTool.getApplicationHandle());
+        }
+
+        final Collection<Member> feedMembers = group.getMembers();
+        Set<Id> memberIds = new HashSet<>();
+        for (Member feedMember : feedMembers) {
+            final User user;
+            try {
+                user = bbUserService.getByExternalSystemId(feedMember.getUserId(), courseId);
+            } catch (ExecutionException e) {
+                //TODO: Handle this
+                continue;
             }
 
+            final CourseMembership membership;
+            try {
+                membership = bbCourseMembershipService.getByCourseIdAndUserId(courseId, user.getId());
+            } catch (ExecutionException e) {
+                //TODO: Handle this
+                continue;
+            }
+            memberIds.add(membership.getId());
+        }
+
+        if (status == Status.CREATED || status == Status.UPDATED) {
+            // Persist the group.
+            try {
+                bbGroupService.createOrUpdate(bbGroup, memberIds);
+            } catch (ExecutionException e) {
+                currentTaskLogger.warning(resourceService.getLocalisationString(
+                        "bond.classgroups.warning.groupexecution", group.getGroupId()), e);
+                return Status.ERROR;
+            }
+        }
+
         Long internalId = ((PkId) bbGroup.getId()).getKey();
-        if(!internalId.equals(ext.getInternalGroupId())) {
+        if (!internalId.equals(ext.getInternalGroupId())) {
             ext.setInternalGroupId(internalId);
             extDirty = true;
         }
 
-        if(!group.getTitle().equals(ext.getTitle())) {
+        if (!group.getTitle().equals(ext.getTitle())) {
             ext.setTitle(group.getTitle());
             extDirty = true;
         }
@@ -208,15 +246,15 @@ public class BbGroupManager implements GroupManager {
     }
 
     boolean calculateAvailability(Group group) {
-        return (group.getAvailable() != null)? group.getAvailable() :
-                        (configuration.getDefaultAvailability() == Configuration.GroupAvailability.AVAILABLE);
+        return (group.getAvailable() != null) ? group.getAvailable() :
+                (configuration.getDefaultAvailability() == Configuration.GroupAvailability.AVAILABLE);
     }
 
     private boolean updateFeedLeader(GroupExtension ext, Group group, Id courseId) {
         User user = null;
         CourseMembership courseMembership = null;
 
-        if(group.getLeaderId() != null) {
+        if (group.getLeaderId() != null) {
             try {
                 user = bbUserService.getByExternalSystemId(group.getLeaderId(), courseId);
             } catch (ExecutionException e) {
@@ -226,7 +264,7 @@ public class BbGroupManager implements GroupManager {
                 return false;
             }
 
-            if(user != null) {
+            if (user != null) {
                 try {
                     courseMembership = bbCourseMembershipService.getByCourseIdAndUserId(courseId, user.getId());
                 } catch (ExecutionException e) {
@@ -239,26 +277,26 @@ public class BbGroupManager implements GroupManager {
         }
 
         Id existingFeedId = null;
-        if(ext.getLeaderFeedCourseUserId() != null) {
+        if (ext.getLeaderFeedCourseUserId() != null) {
             existingFeedId = Id.toId(CourseMembership.DATA_TYPE, ext.getLeaderFeedCourseUserId());
         }
         Id courseMembershipId = null;
-        if(courseMembership != null) {
+        if (courseMembership != null) {
             courseMembershipId = courseMembership.getId();
         }
         boolean changed = !EqualityUtil.nullSafeEquals(existingFeedId, courseMembershipId);//(existingFeedId == null ? courseMembershipId != null : !existingFeedId.equals(courseMembershipId));
 
-        if(!changed) {
+        if (!changed) {
             return false;
         }
 
-        if(courseMembershipId == null) {
+        if (courseMembershipId == null) {
             ext.setLeaderFeedCourseUserId(null);
         } else {
-            ext.setLeaderFeedCourseUserId(((PkId)courseMembership.getId()).getKey());
+            ext.setLeaderFeedCourseUserId(((PkId) courseMembership.getId()).getKey());
         }
 
-        if(configuration.getLeaderChangedMode() == Configuration.LeaderChangedMode.FEED) {
+        if (configuration.getLeaderChangedMode() == Configuration.LeaderChangedMode.FEED) {
             ext.setLeaderOverridden(false);
         }
 
@@ -266,17 +304,17 @@ public class BbGroupManager implements GroupManager {
     }
 
     private boolean updateGroupSet(blackboard.data.course.Group bbGroup, Group group) {
-        if(bbGroup.getSetId() == null && group.getGroupSet() == null) {
+        if (bbGroup.getSetId() == null && group.getGroupSet() == null) {
             return false;
         }
 
-        if(group.getGroupSet() == null) {
+        if (group.getGroupSet() == null) {
             bbGroup.setSetId(null);
             return true;
         }
 
         blackboard.data.course.Group bbGroupSet = getOrCreateGroupSet(group.getGroupSet(), bbGroup.getCourseId());
-        if(bbGroupSet != null && !EqualityUtil.nullSafeEquals(bbGroupSet.getId(), bbGroup.getSetId())) {
+        if (bbGroupSet != null && !EqualityUtil.nullSafeEquals(bbGroupSet.getId(), bbGroup.getSetId())) {
             bbGroup.setSetId(bbGroupSet.getId());
             return true;
         }
@@ -291,7 +329,7 @@ public class BbGroupManager implements GroupManager {
         } catch (ExecutionException ignored) {
         }
 
-        if(bbGroupSet == null) {
+        if (bbGroupSet == null) {
             bbGroupSet = new blackboard.data.course.Group();
             bbGroupSet.setGroupSet(true);
             bbGroupSet.setTitle(title);
@@ -306,14 +344,6 @@ public class BbGroupManager implements GroupManager {
 
             try {
                 bbGroupService.createOrUpdate(bbGroupSet);
-            } catch (ValidationException e) {
-                currentTaskLogger.warning(resourceService.getLocalisationString(
-                        "bond.classgroups.warning.groupsetvalidationerrors", title, courseId), e);
-                return null;
-            } catch (PersistenceException e) {
-                currentTaskLogger.error(resourceService.getLocalisationString(
-                        "bond.classgroups.error.groupsetbberror", title, courseId), e);
-                return null;
             } catch (ExecutionException e) {
                 currentTaskLogger.error(resourceService.getLocalisationString(
                         "bond.classgroups.error.groupsetexecution", title, courseId), e);

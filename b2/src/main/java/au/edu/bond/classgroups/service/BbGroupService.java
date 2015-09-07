@@ -1,7 +1,6 @@
 package au.edu.bond.classgroups.service;
 
 import au.edu.bond.classgroups.dao.BbGroupDAO;
-import blackboard.data.ValidationException;
 import blackboard.data.course.Group;
 import blackboard.persist.Id;
 import blackboard.persist.PersistenceException;
@@ -12,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
@@ -85,8 +85,19 @@ public class BbGroupService implements Cleanable {
         return courseIdCache.get(getIdFromLong(groupId));
     }
 
-    public synchronized void createOrUpdate(Group group) throws ValidationException, PersistenceException, ExecutionException {
+    public synchronized void createOrUpdate(Group group) throws ExecutionException {
         bbGroupDAO.createOrUpdate(group);
+
+        Id courseId = group.getCourseId();
+        Map<Id, Group> groupMap = byIdCache.get(courseId);
+        Map<String, Group> titleMap = byTitleCache.get(courseId);
+
+        groupMap.put(group.getId(), group);
+        titleMap.put(group.getTitle(), group);
+    }
+
+    public synchronized void createOrUpdate(Group group, Set<Id> courseMembershipIds) throws ExecutionException {
+        bbGroupDAO.createOrUpdate(group, courseMembershipIds);
 
         Id courseId = group.getCourseId();
         Map<Id, Group> groupMap = byIdCache.get(courseId);

@@ -7,9 +7,12 @@ import blackboard.persist.Id;
 import blackboard.persist.PersistenceException;
 import blackboard.persist.course.GroupDbLoader;
 import blackboard.persist.course.GroupDbPersister;
+import blackboard.platform.course.CourseGroupManager;
+import blackboard.platform.course.CourseGroupManagerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
+import java.util.Set;
 
 /**
  * Created by Shane Argo on 10/06/2014.
@@ -17,7 +20,7 @@ import java.util.Collection;
 public class BbGroupDAO {
 
     GroupDbLoader groupDbLoader;
-    GroupDbPersister groupDbPersister;
+    CourseGroupManager courseGroupManager;
 
     public Group getById(Id id) throws PersistenceException {
         return getGroupDbLoader().loadById(id);
@@ -35,16 +38,20 @@ public class BbGroupDAO {
         return getByCourseId(getIdFromLong(id));
     }
 
-    public void createOrUpdate(Group group) throws PersistenceException, ValidationException {
-        getGroupDbPersister().persist(group);
+    public void createOrUpdate(Group group) {
+        getCourseGroupManager().persistGroup(group);
     }
 
-    public void delete(Id id) throws PersistenceException {
-        getGroupDbPersister().deleteById(id);
+    public void delete(Id id) {
+        getCourseGroupManager().deleteGroup(id);
     }
 
-    public void delete(long id) throws PersistenceException {
+    public void delete(long id) {
         delete(getIdFromLong(id));
+    }
+
+    public void createOrUpdate(Group group, Set<Id> courseMembershipIds) {
+        getCourseGroupManager().persistGroupAndEnroll(group, courseMembershipIds);
     }
 
     public Id getIdFromLong(long id) {
@@ -58,11 +65,13 @@ public class BbGroupDAO {
         return groupDbLoader;
     }
 
-    public GroupDbPersister getGroupDbPersister() throws PersistenceException {
-        if(groupDbPersister == null) {
-            groupDbPersister = GroupDbPersister.Default.getInstance();
+    public CourseGroupManager getCourseGroupManager() {
+        if(courseGroupManager == null) {
+            courseGroupManager = CourseGroupManagerFactory.getInstance();
         }
-        return groupDbPersister;
+        return courseGroupManager;
     }
+
+
 
 }

@@ -7,9 +7,7 @@ import au.edu.bond.classgroups.feed.FeedDeserialiser;
 import au.edu.bond.classgroups.feed.FeedDeserialiserFactory;
 import au.edu.bond.classgroups.logging.TaskLogger;
 import au.edu.bond.classgroups.manager.GroupManager;
-import au.edu.bond.classgroups.manager.MemberManager;
 import au.edu.bond.classgroups.manager.SmartViewManager;
-import au.edu.bond.classgroups.manager.ToolManager;
 import au.edu.bond.classgroups.model.Group;
 import au.edu.bond.classgroups.model.Task;
 import au.edu.bond.classgroups.service.CacheCleaningService;
@@ -17,8 +15,14 @@ import au.edu.bond.classgroups.service.ResourceService;
 import au.edu.bond.classgroups.service.TaskService;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Created by Shane Argo on 10/06/2014.
@@ -37,10 +41,6 @@ public class TaskProcessor implements Runnable {
     private TaskLogger currentTaskLogger;
     @Autowired
     private GroupManager groupManager;
-    @Autowired
-    private MemberManager memberManager;
-    @Autowired
-    private ToolManager toolManager;
     @Autowired
     private SmartViewManager smartViewManager;
     @Autowired
@@ -103,10 +103,8 @@ public class TaskProcessor implements Runnable {
             ExecutorService execService = null;
             try {
                 execService = Executors.newFixedThreadPool(threads);
-                SynchronousQueue[] synchronousQueues = new SynchronousQueue[threads];
+                final ArrayBlockingQueue<Boolean> doneQueue = new ArrayBlockingQueue<>(threads);
                 for (int i = 0; i < threads; i++) {
-                    final SynchronousQueue<Boolean> synchronousQueue = new SynchronousQueue<>();
-                    synchronousQueues[i] = synchronousQueue;
                     execService.submit(new Runnable() {
                         @Override
                         public void run() {
@@ -114,7 +112,7 @@ public class TaskProcessor implements Runnable {
                                 while (true) {
                                     final Group group = groupsQueue.poll();
                                     if (group == null) {
-                                        synchronousQueue.put(Boolean.TRUE);
+                                        doneQueue.put(Boolean.TRUE);
                                         return;
                                     }
                                     handleGroup(group);
@@ -124,13 +122,14 @@ public class TaskProcessor implements Runnable {
 
                                     if (Thread.currentThread().isInterrupted()) {
 //                                        throw new Exception(resourceService.getLocalisationString("bond.classgroups.error.threadinterrupted"));
-                                        synchronousQueue.put(Boolean.FALSE);
+                                        doneQueue.put(Boolean.FALSE);
                                         return;
                                     }
                                 }
                             } catch (Exception e) {
                                 try {
-                                    synchronousQueue.put(Boolean.FALSE);
+                                    currentTaskLogger.error("Oh shii-", e);
+                                    doneQueue.put(Boolean.FALSE);
                                 } catch (InterruptedException ignored) {
                                 }
                             }
@@ -138,8 +137,8 @@ public class TaskProcessor implements Runnable {
                     });
 
                 }
-                for (SynchronousQueue synchronousQueue : synchronousQueues) {
-                    synchronousQueue.take();
+                for (int i = 0; i < threads; i++) {
+                    doneQueue.take();
                 }
             } finally {
                 if(execService != null) {
@@ -178,13 +177,6 @@ public class TaskProcessor implements Runnable {
         GroupManager.Status status = groupManager.syncGroup(group);
 
         if (status != GroupManager.Status.ERROR && status != GroupManager.Status.NOSYNC) {
-
-            if (configuration.getToolsMode() != Configuration.ToolsMode.CREATE
-                    || status != GroupManager.Status.CREATED) {
-                toolManager.syncGroupTools(group);
-            }
-
-            memberManager.syncMembers(group);
             smartViewManager.syncSmartView(group);
         }
     }
@@ -235,22 +227,6 @@ public class TaskProcessor implements Runnable {
 
     public void setGroupManager(GroupManager groupManager) {
         this.groupManager = groupManager;
-    }
-
-    public MemberManager getMemberManager() {
-        return memberManager;
-    }
-
-    public void setMemberManager(MemberManager memberManager) {
-        this.memberManager = memberManager;
-    }
-
-    public ToolManager getToolManager() {
-        return toolManager;
-    }
-
-    public void setToolManager(ToolManager toolManager) {
-        this.toolManager = toolManager;
     }
 
     public SmartViewManager getSmartViewManager() {

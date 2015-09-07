@@ -5,15 +5,13 @@ import au.edu.bond.classgroups.feed.FeedDeserialiser;
 import au.edu.bond.classgroups.feed.FeedDeserialiserFactory;
 import au.edu.bond.classgroups.logging.TaskLogger;
 import au.edu.bond.classgroups.manager.GroupManager;
-import au.edu.bond.classgroups.manager.MemberManager;
 import au.edu.bond.classgroups.manager.SmartViewManager;
-import au.edu.bond.classgroups.manager.ToolManager;
 import au.edu.bond.classgroups.model.Group;
 import au.edu.bond.classgroups.model.Task;
 import au.edu.bond.classgroups.service.CacheCleaningService;
 import au.edu.bond.classgroups.service.ResourceService;
-import au.edu.bond.classgroups.task.TaskProcessor;
 import au.edu.bond.classgroups.service.TaskService;
+import au.edu.bond.classgroups.task.TaskProcessor;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,8 +28,6 @@ public class TaskProcessorTest {
     Task currentTask;
     TaskLogger currentTasklogger;
     GroupManager groupManager;
-    MemberManager memberManager;
-    ToolManager toolManager;
     SmartViewManager smartViewManager;
     Configuration configuration;
     ResourceService resourceService;
@@ -62,8 +58,6 @@ public class TaskProcessorTest {
 
         currentTasklogger = mock(TaskLogger.class);
         groupManager = mock(GroupManager.class);
-        memberManager = mock(MemberManager.class);
-        toolManager = mock(ToolManager.class);
         smartViewManager = mock(SmartViewManager.class);
 
         taskProcessor = new TaskProcessor();
@@ -72,8 +66,6 @@ public class TaskProcessorTest {
         taskProcessor.setCurrentTask(currentTask);
         taskProcessor.setCurrentTaskLogger(currentTasklogger);
         taskProcessor.setGroupManager(groupManager);
-        taskProcessor.setMemberManager(memberManager);
-        taskProcessor.setToolManager(toolManager);
         taskProcessor.setSmartViewManager(smartViewManager);
         taskProcessor.setConfiguration(configuration);
         taskProcessor.setResourceService(resourceService);

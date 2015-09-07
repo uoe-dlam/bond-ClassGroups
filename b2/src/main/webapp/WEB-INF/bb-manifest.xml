@@ -149,6 +149,7 @@
             <permission type="blackboard.persist.PersistPermission" name="wiki" actions="create,modify,delete"/>
             <permission type="blackboard.persist.PersistPermission" name="blog" actions="create,modify,delete"/>
             <permission type="blackboard.persist.PersistPermission" name="gradebookcustomview" actions="create,modify"/>
+            <permission type="blackboard.persist.PersistPermission" name="euditemrecipient" actions="create,modify,delete"/>
 
             <permission type="blackboard.persist.PersistPermission" name="tab" actions="create" />
             <permission type="blackboard.persist.PersistPermission" name="layoutfamily" actions="modify" />
