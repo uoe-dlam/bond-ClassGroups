@@ -15,14 +15,8 @@ import au.edu.bond.classgroups.service.ResourceService;
 import au.edu.bond.classgroups.service.TaskService;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.*;
+import java.util.concurrent.*;
 
 /**
  * Created by Shane Argo on 10/06/2014.
@@ -101,11 +95,13 @@ public class TaskProcessor implements Runnable {
 
             int threads = total >= MINIMUM_GROUPS_FOR_MULTITHREADING && configuration.getProcessingThreads() > 0 ? configuration.getProcessingThreads() : 1;
             ExecutorService execService = null;
+            final Collection<Future<?>> tasks = new HashSet<>();
+            boolean completed = true;
             try {
                 execService = Executors.newFixedThreadPool(threads);
                 final ArrayBlockingQueue<Boolean> doneQueue = new ArrayBlockingQueue<>(threads);
                 for (int i = 0; i < threads; i++) {
-                    execService.submit(new Runnable() {
+                    final Future<?> submit = execService.submit(new Runnable() {
                         @Override
                         public void run() {
                             try {
@@ -121,28 +117,38 @@ public class TaskProcessor implements Runnable {
                                     taskService.throttledUpdate(currentTask);
 
                                     if (Thread.currentThread().isInterrupted()) {
-//                                        throw new Exception(resourceService.getLocalisationString("bond.classgroups.error.threadinterrupted"));
                                         doneQueue.put(Boolean.FALSE);
                                         return;
                                     }
                                 }
                             } catch (Exception e) {
+                                currentTaskLogger.warning(resourceService.getLocalisationString("bond.classgroups.warning.threadendingexception"), e);
                                 try {
-                                    currentTaskLogger.error("Oh shii-", e);
                                     doneQueue.put(Boolean.FALSE);
                                 } catch (InterruptedException ignored) {
                                 }
+                                return;
+
                             }
                         }
                     });
-
+                    tasks.add(submit);
                 }
                 for (int i = 0; i < threads; i++) {
-                    doneQueue.take();
+                    completed &= doneQueue.take();
                 }
+            } catch (Exception e) {
+                completed = false;
+                throw e;
             } finally {
-                if(execService != null) {
+                if (execService != null) {
                     execService.shutdownNow();
+                }
+            }
+            if(!completed) {
+                currentTaskLogger.warning(resourceService.getLocalisationString("bond.classgroups.warning.threadsnotcompleted"));
+                for (Future<?> task : tasks) {
+                    task.cancel(false);
                 }
             }
 
