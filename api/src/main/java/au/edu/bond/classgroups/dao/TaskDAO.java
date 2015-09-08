@@ -71,6 +71,7 @@ public class TaskDAO implements Closeable {
 
     public Task getMostRecentlyStarted(EntityManager entityManager) {
         TypedQuery<Task> query = entityManager.createQuery("FROM Task " +
+                "WHERE startedDate is not null " +
                 "ORDER BY startedDate DESC", Task.class).setMaxResults(1);
         return query.getSingleResult();
     }
