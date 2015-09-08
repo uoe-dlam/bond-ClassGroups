@@ -4,6 +4,7 @@ import au.edu.bond.classgroups.config.PushCsvFeedDeserialiserConfig;
 import au.edu.bond.classgroups.exception.InvalidPasskeyException;
 import au.edu.bond.classgroups.exception.InvalidRunIdException;
 import au.edu.bond.classgroups.exception.InvalidTaskStateException;
+import au.edu.bond.classgroups.logging.TaskLoggerFactory;
 import au.edu.bond.classgroups.service.ResourceService;
 import au.edu.bond.classgroups.task.TaskExecutor;
 import au.edu.bond.classgroups.task.TaskProcessor;
@@ -40,10 +41,10 @@ public class PushCsvAction implements ActionBean {
 
     private DirectoryFactory directoryFactory;
     private TaskService taskService;
-    private TaskLogger nonCurrentTaskLogger;
     private PushCsvFeedDeserialiserConfig pushCsvFeedDeserialiserConfig;
     private TaskExecutor taskExecutor;
     private ResourceService resourceService;
+    private TaskLoggerFactory taskLoggerFactory;
 
     private TaskProcessorFactory taskProcessorFactory;
     private FeedDeserialiserFactory feedDeserialiserFactory;
@@ -104,14 +105,17 @@ public class PushCsvAction implements ActionBean {
 
     public Resolution execute() throws IOException, InvalidPasskeyException, InvalidTaskStateException {
         Task task = null;
+        TaskLogger taskLogger = null;
 
         try {
             task = taskService.createTask();
-            nonCurrentTaskLogger.setTask(task);
-            nonCurrentTaskLogger.info(resourceService.getLocalisationString("bond.classgroups.info.initiatedpostcsv", runId));
+            taskLogger = taskLoggerFactory.getLogger(task);
+
+            taskLogger.setTask(task);
+            taskLogger.info(resourceService.getLocalisationString("bond.classgroups.info.initiatedpostcsv", runId));
 
             if (task.getStatus() == Task.Status.SKIPPED) {
-                nonCurrentTaskLogger.info("bond.classgroups.info.skipping");
+                taskLogger.info("bond.classgroups.info.skipping");
                 return null;
             }
 
@@ -122,12 +126,18 @@ public class PushCsvAction implements ActionBean {
             TaskProcessor taskProcessor = taskProcessorFactory.getDefault();
             taskProcessor.setFeedDeserialiser(fileCsvFeedDeserialiser);
             taskProcessor.setCleanupRunnable(new DeleteRunDirectory(getPushDir()));
+            taskProcessor.setTask(task);
+            taskProcessor.setTaskLogger(taskLogger);
 
             taskExecutor.executeTaskProcessor(taskProcessor);
         } catch (Exception e) {
-            nonCurrentTaskLogger.error("bond.classgroups.error.failedpushcsv", e);
             if(task != null) {
+                if(taskLogger != null) {
+                    taskLogger.error("bond.classgroups.error.failedpushcsv", e);
+                }
                 taskService.failTask(task);
+            } else {
+                throw e;
             }
         }
 
@@ -192,15 +202,6 @@ public class PushCsvAction implements ActionBean {
         this.taskService = taskService;
     }
 
-    public TaskLogger getNonCurrentTaskLogger() {
-        return nonCurrentTaskLogger;
-    }
-
-    @SpringBean
-    public void setNonCurrentTaskLogger(TaskLogger nonCurrentTaskLogger) {
-        this.nonCurrentTaskLogger = nonCurrentTaskLogger;
-    }
-
     public FeedDeserialiserFactory getFeedDeserialiserFactory() {
         return feedDeserialiserFactory;
     }
@@ -235,6 +236,15 @@ public class PushCsvAction implements ActionBean {
     @SpringBean
     public void setResourceService(ResourceService resourceService) {
         this.resourceService = resourceService;
+    }
+
+    public TaskLoggerFactory getTaskLoggerFactory() {
+        return taskLoggerFactory;
+    }
+
+    @SpringBean
+    public void setTaskLoggerFactory(TaskLoggerFactory taskLoggerFactory) {
+        this.taskLoggerFactory = taskLoggerFactory;
     }
 
     public String getRunId() {

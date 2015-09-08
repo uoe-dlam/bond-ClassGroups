@@ -20,7 +20,7 @@ import static org.mockito.Mockito.*;
 public class CsvFeedDeserialiserTest {
 
     CsvFeedDeserialiser csvFeedDeserialiser;
-    TaskLogger logger;
+    TaskLogger taskLogger;
     ResourceService resourceService;
 
     @Before
@@ -37,13 +37,12 @@ public class CsvFeedDeserialiserTest {
         feedHeaderConfig.setUserIdHeader("userId");
         config.setFeedHeaderConfig(feedHeaderConfig);
 
-        logger = mock(TaskLogger.class);
+        taskLogger = mock(TaskLogger.class);
         resourceService = mock(ResourceService.class);
 
         when(resourceService.getLocalisationString(anyString(), anyCollection())).thenReturn("blahblah");
 
         csvFeedDeserialiser = new CsvFeedDeserialiser();
-        csvFeedDeserialiser.setCurrentTaskLogger(logger);
         csvFeedDeserialiser.setResourceService(resourceService);
         csvFeedDeserialiser.setConfiguration(config);
     }
@@ -61,11 +60,11 @@ public class CsvFeedDeserialiserTest {
         csvFeedDeserialiser.setGroupsInputStream(groupsIS);
         csvFeedDeserialiser.setMembersInputStream(membersIS);
 
-        Collection<Group> result = csvFeedDeserialiser.getGroups();
+        Collection<Group> result = csvFeedDeserialiser.getGroups(taskLogger);
 
         assertNull(result);
-        verify(logger, times(2)).error(anyString());
-        verifyNoMoreInteractions(logger);
+        verify(taskLogger, times(2)).error(anyString());
+        verifyNoMoreInteractions(taskLogger);
     }
 
     @Test
@@ -76,7 +75,7 @@ public class CsvFeedDeserialiserTest {
         csvFeedDeserialiser.setGroupsInputStream(groupsIS);
         csvFeedDeserialiser.setMembersInputStream(membersIS);
 
-        final Collection<Group> result = csvFeedDeserialiser.getGroups();
+        final Collection<Group> result = csvFeedDeserialiser.getGroups(taskLogger);
 
         assertEquals(0, result.size());
     }
@@ -89,7 +88,7 @@ public class CsvFeedDeserialiserTest {
         csvFeedDeserialiser.setGroupsInputStream(groupsIS);
         csvFeedDeserialiser.setMembersInputStream(membersIS);
 
-        Collection<Group> result = csvFeedDeserialiser.getGroups();
+        Collection<Group> result = csvFeedDeserialiser.getGroups(taskLogger);
 
         assertEquals(1, result.size());
     }
@@ -102,10 +101,10 @@ public class CsvFeedDeserialiserTest {
         csvFeedDeserialiser.setGroupsInputStream(groupsIS);
         csvFeedDeserialiser.setMembersInputStream(membersIS);
 
-        Collection<Group> result = csvFeedDeserialiser.getGroups();
+        Collection<Group> result = csvFeedDeserialiser.getGroups(taskLogger);
 
         assertEquals(1, result.size());
-        verify(logger).warning(anyString());
+        verify(taskLogger).warning(anyString());
     }
 
     @Test
@@ -123,7 +122,7 @@ public class CsvFeedDeserialiserTest {
         csvFeedDeserialiser.setGroupsInputStream(groupsIS);
         csvFeedDeserialiser.setMembersInputStream(membersIS);
 
-        Collection<Group> result = csvFeedDeserialiser.getGroups();
+        Collection<Group> result = csvFeedDeserialiser.getGroups(taskLogger);
 
         Group group2 = null;
         for(Group group: result) {

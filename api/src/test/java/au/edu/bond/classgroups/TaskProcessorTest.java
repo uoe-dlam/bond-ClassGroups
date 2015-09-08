@@ -26,7 +26,7 @@ public class TaskProcessorTest {
     TaskService taskService;
     FeedDeserialiserFactory feedDeserialiserFactory;
     Task currentTask;
-    TaskLogger currentTasklogger;
+    TaskLogger taskLogger;
     GroupManager groupManager;
     SmartViewManager smartViewManager;
     Configuration configuration;
@@ -56,20 +56,21 @@ public class TaskProcessorTest {
 
         cacheCleaningService = mock(CacheCleaningService.class);
 
-        currentTasklogger = mock(TaskLogger.class);
+        taskLogger = mock(TaskLogger.class);
         groupManager = mock(GroupManager.class);
         smartViewManager = mock(SmartViewManager.class);
 
         taskProcessor = new TaskProcessor();
         taskProcessor.setTaskService(taskService);
         taskProcessor.setFeedDeserialiserFactory(feedDeserialiserFactory);
-        taskProcessor.setCurrentTask(currentTask);
-        taskProcessor.setCurrentTaskLogger(currentTasklogger);
         taskProcessor.setGroupManager(groupManager);
         taskProcessor.setSmartViewManager(smartViewManager);
         taskProcessor.setConfiguration(configuration);
         taskProcessor.setResourceService(resourceService);
         taskProcessor.setCacheCleaningService(cacheCleaningService);
+
+        taskProcessor.setTask(currentTask);
+        taskProcessor.setTaskLogger(taskLogger);
     }
 
     @After
@@ -80,7 +81,7 @@ public class TaskProcessorTest {
     @Test
     public void testRun_withNoGroupsNoMembers_expectNoGroupCreation() throws Exception {
         Collection<Group> groups = new HashSet<Group>();
-        when(feedDeserialiser.getGroups()).thenReturn(groups);
+        when(feedDeserialiser.getGroups(taskLogger)).thenReturn(groups);
 
         taskProcessor.run();
 
@@ -97,11 +98,11 @@ public class TaskProcessorTest {
         group.setGroupId("myGroup");
         groups.add(group);
 
-        when(feedDeserialiser.getGroups()).thenReturn(groups);
+        when(feedDeserialiser.getGroups(taskLogger)).thenReturn(groups);
 
         taskProcessor.run();
 
-        verify(groupManager).syncGroup(group);
+        verify(groupManager).syncGroup(group, taskLogger);
         verifyNoMoreInteractions(groupManager);
     }
 
@@ -124,13 +125,13 @@ public class TaskProcessorTest {
         group3.setGroupId("myGroup3");
         groups.add(group3);
 
-        when(feedDeserialiser.getGroups()).thenReturn(groups);
+        when(feedDeserialiser.getGroups(taskLogger)).thenReturn(groups);
 
         taskProcessor.run();
 
-        verify(groupManager).syncGroup(group1);
-        verify(groupManager).syncGroup(group2);
-        verify(groupManager).syncGroup(group3);
+        verify(groupManager).syncGroup(group1, taskLogger);
+        verify(groupManager).syncGroup(group2, taskLogger);
+        verify(groupManager).syncGroup(group3, taskLogger);
         verifyNoMoreInteractions(groupManager);
     }
 
@@ -143,12 +144,12 @@ public class TaskProcessorTest {
         group.setGroupId("myGroup");
         groups.add(group);
 
-        when(feedDeserialiser.getGroups()).thenReturn(groups);
+        when(feedDeserialiser.getGroups(taskLogger)).thenReturn(groups);
         when(feedDeserialiserFactory.getDefault()).thenReturn(feedDeserialiser);
 
         taskProcessor.run();
 
-        verify(groupManager).syncGroup(group);
+        verify(groupManager).syncGroup(group, taskLogger);
         verifyNoMoreInteractions(groupManager);
     }
 
@@ -156,7 +157,7 @@ public class TaskProcessorTest {
     public void testRun_withCustomFeedDeserialiser_noIntetactionWithFactory() throws Exception {
 
         Collection<Group> groups = new HashSet<Group>();
-        when(feedDeserialiser.getGroups()).thenReturn(groups);
+        when(feedDeserialiser.getGroups(taskLogger)).thenReturn(groups);
 
         taskProcessor.run();
         taskProcessor.setFeedDeserialiser(feedDeserialiser);

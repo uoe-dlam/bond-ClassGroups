@@ -1,5 +1,6 @@
 package au.edu.bond.classgroups.manager;
 
+import au.edu.bond.classgroups.logging.TaskLogger;
 import au.edu.bond.classgroups.model.Group;
 
 import java.util.Collection;
@@ -13,6 +14,6 @@ public interface GroupManager {
         CREATED, UPDATED, UNCHANGED, ERROR, NOSYNC
     }
 
-    public Status syncGroup(Group group);
+    public Status syncGroup(Group group, TaskLogger taskLogger);
 
 }

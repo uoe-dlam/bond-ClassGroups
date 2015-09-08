@@ -2,6 +2,7 @@ package au.edu.bond.classgroups.task;
 
 import au.edu.bond.classgroups.exception.InvalidTaskStateException;
 import au.edu.bond.classgroups.logging.TaskLogger;
+import au.edu.bond.classgroups.logging.TaskLoggerFactory;
 import au.edu.bond.classgroups.manager.ScheduleManager;
 import au.edu.bond.classgroups.model.Task;
 import au.edu.bond.classgroups.service.TaskService;
@@ -18,6 +19,8 @@ public class ScheduledTaskProcessor implements Runnable {
     private TaskService taskService;
     @Autowired
     private ScheduleManager scheduleManager;
+    @Autowired
+    private TaskLoggerFactory taskLoggerFactory;
 
     private Task task;
 
@@ -40,11 +43,9 @@ public class ScheduledTaskProcessor implements Runnable {
 
         try {
             TaskProcessor taskProcessor = taskProcessorFactory.getDefault();
-
-            if(!taskProcessor.getCurrentTask().equals(task)) {
-//                System.out.printf("Task not equal %s != %s%n", taskProcessor.getCurrentTask().getId(), task.getId());
-                return;
-            }
+            taskProcessor.setTask(task);
+            final TaskLogger taskLogger = taskLoggerFactory.getLogger(task);
+            taskProcessor.setTaskLogger(taskLogger);
 
             taskProcessor.run();
         } catch (RuntimeException e) {

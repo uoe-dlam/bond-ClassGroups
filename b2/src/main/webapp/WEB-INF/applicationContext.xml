@@ -36,15 +36,6 @@
 
     <tx:annotation-driven transaction-manager="transactionManager" />
 
-    <bean id="taskScope" class="au.edu.bond.classgroups.spring.TaskScope" />
-    <bean class="org.springframework.beans.factory.config.CustomScopeConfigurer">
-        <property name="scopes">
-            <map>
-                <entry key="task" value-ref="taskScope" />
-            </map>
-        </property>
-    </bean>
-
     <bean id="groupExtensionDAO" class="au.edu.bond.classgroups.groupext.GroupExtensionDAO" destroy-method="close" />
     <bean id="logEntryDAO" class="au.edu.bond.classgroups.dao.LogEntryDAO" destroy-method="close" />
     <bean id="taskService" class="au.edu.bond.classgroups.service.TaskService" destroy-method="close" />
@@ -110,26 +101,22 @@
 
     <bean id="scheduleManager" class="au.edu.bond.classgroups.manager.ScheduleManager" />
 
-    <bean id="groupManager" class="au.edu.bond.classgroups.manager.BbGroupManager" scope="task" lazy-init="true" />
-    <bean id="smartViewManager" class="au.edu.bond.classgroups.manager.BbSmartViewManager" scope="task" lazy-init="true" />
-
-    <bean id="currentTask" scope="task" factory-bean="taskService" factory-method="getCurrentTask" lazy-init="true" />
-
-    <bean id="nonCurrentTaskLogger" class="au.edu.bond.classgroups.logging.HibernateTaskLogger" scope="prototype" />
-    <bean id="currentTaskLogger" class="au.edu.bond.classgroups.logging.HibernateTaskLogger" scope="task" lazy-init="true">
-        <property name="task" ref="currentTask" />
-    </bean>
+    <bean id="groupManager" class="au.edu.bond.classgroups.manager.BbGroupManager" />
+    <bean id="smartViewManager" class="au.edu.bond.classgroups.manager.BbSmartViewManager" />
 
     <bean id="taskProcessorFactory" class="au.edu.bond.classgroups.task.TaskProcessorFactory" />
-    <bean id="currentTaskProcessor" class="au.edu.bond.classgroups.task.TaskProcessor" scope="task" lazy-init="true" />
     <bean id="taskExecutor" class="au.edu.bond.classgroups.task.TaskExecutor" destroy-method="close" />
     <bean id="scheduledTaskProcessor" class="au.edu.bond.classgroups.task.ScheduledTaskProcessor" />
 
+    <bean id="taskLoggerFactory" class="au.edu.bond.classgroups.logging.TaskLoggerFactory">
+        <constructor-arg name="cacheSpec" value="maximumSize=3,expireAfterAccess=2m" />
+    </bean>
+
     <bean id="feedDeserialiserFactory" class="au.edu.bond.classgroups.feed.FeedDeserialiserFactory" />
 
-    <bean id="defaultFeedDeserialiser" scope="task" factory-bean="feedDeserialiserFactory" factory-method="getDefault" lazy-init="true" />
-    <bean id="csvFeedDeserialiser" class="au.edu.bond.classgroups.feed.csv.CsvFeedDeserialiser" scope="task" lazy-init="true" />
-    <bean id="pullFileCsvFeedDeserialiser" class="au.edu.bond.classgroups.feed.csv.FileCsvFeedDeserialiser" scope="task" lazy-init="true">
+    <bean id="defaultFeedDeserialiser" factory-bean="feedDeserialiserFactory" factory-method="getDefault" scope="prototype" />
+    <bean id="csvFeedDeserialiser" class="au.edu.bond.classgroups.feed.csv.CsvFeedDeserialiser" scope="prototype"/>
+    <bean id="pullFileCsvFeedDeserialiser" class="au.edu.bond.classgroups.feed.csv.FileCsvFeedDeserialiser" scope="prototype" >
         <property name="groupsFile">
             <bean class="java.io.File">
                 <constructor-arg>
@@ -145,7 +132,7 @@
             </bean>
         </property>
     </bean>
-    <bean id="pullUrlCsvFeedDeserialiser" class="au.edu.bond.classgroups.feed.csv.UrlCsvFeedDeserialiser" scope="task" lazy-init="true">
+    <bean id="pullUrlCsvFeedDeserialiser" class="au.edu.bond.classgroups.feed.csv.UrlCsvFeedDeserialiser" scope="prototype">
         <property name="groupsUrl">
             <bean class="java.net.URL">
                 <constructor-arg>
@@ -161,7 +148,7 @@
             </bean>
         </property>
     </bean>
-    <bean id="httpPushCsvFeedDeserialiser" class="au.edu.bond.classgroups.feed.csv.FileCsvFeedDeserialiser" scope="task" lazy-init="true" />
+    <bean id="httpPushCsvFeedDeserialiser" class="au.edu.bond.classgroups.feed.csv.FileCsvFeedDeserialiser" scope="prototype"/>
 
     <bean id="pluginsUrl" class="java.lang.String">
         <constructor-arg value="/webapps/portal/execute/tabs/tabAction?tabType=admin" />

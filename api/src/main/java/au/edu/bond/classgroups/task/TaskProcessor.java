@@ -6,6 +6,7 @@ import au.edu.bond.classgroups.exception.InvalidTaskStateException;
 import au.edu.bond.classgroups.feed.FeedDeserialiser;
 import au.edu.bond.classgroups.feed.FeedDeserialiserFactory;
 import au.edu.bond.classgroups.logging.TaskLogger;
+import au.edu.bond.classgroups.logging.TaskLoggerFactory;
 import au.edu.bond.classgroups.manager.GroupManager;
 import au.edu.bond.classgroups.manager.SmartViewManager;
 import au.edu.bond.classgroups.model.Group;
@@ -30,10 +31,6 @@ public class TaskProcessor implements Runnable {
     @Autowired
     private FeedDeserialiserFactory feedDeserialiserFactory;
     @Autowired
-    private Task currentTask;
-    @Autowired
-    private TaskLogger currentTaskLogger;
-    @Autowired
     private GroupManager groupManager;
     @Autowired
     private SmartViewManager smartViewManager;
@@ -44,22 +41,24 @@ public class TaskProcessor implements Runnable {
     @Autowired
     private CacheCleaningService cacheCleaningService;
 
+    private Task task;
+    private TaskLogger taskLogger;
     private FeedDeserialiser feedDeserialiser;
     private Runnable cleanupRunnable;
 
     @Override
     public void run() {
         try {
-            currentTaskLogger.info("bond.classgroups.info.begin");
+            taskLogger.info("bond.classgroups.info.begin");
             try {
-                taskService.beginTask(currentTask);
+                taskService.beginTask(task);
             } catch (InvalidTaskStateException e) {
-                currentTaskLogger.error("bond.classgroups.error.invalidstate", e);
+                taskLogger.error("bond.classgroups.error.invalidstate", e);
                 throw e;
             }
 
             if (feedDeserialiser == null) {
-                currentTaskLogger.info("bond.classgroups.info.preconfigdeserialiser");
+                taskLogger.info("bond.classgroups.info.preconfigdeserialiser");
                 feedDeserialiser = feedDeserialiserFactory.getDefault();
             }
 
@@ -68,12 +67,12 @@ public class TaskProcessor implements Runnable {
 
             }
 
-            currentTaskLogger.info("bond.classgroups.info.consumingfeed");
+            taskLogger.info("bond.classgroups.info.consumingfeed");
             List<Group> groups = null;
             try {
-                groups = new ArrayList<Group>(feedDeserialiser.getGroups());
+                groups = new ArrayList<Group>(feedDeserialiser.getGroups(taskLogger));
             } catch (FeedDeserialisationException e) {
-                currentTaskLogger.error("bond.classgroups.error.faileddeserialise", e);
+                taskLogger.error("bond.classgroups.error.faileddeserialise", e);
                 throw e;
             }
 
@@ -85,13 +84,13 @@ public class TaskProcessor implements Runnable {
             });
 
             final int total = groups.size();
-            currentTaskLogger.info(resourceService.getLocalisationString("bond.classgroups.info.feedconsumed", total));
-            currentTask.setTotalGroups(total);
-            currentTask.setProcessedGroups(0);
-            taskService.throttledUpdate(currentTask);
+            taskLogger.info(resourceService.getLocalisationString("bond.classgroups.info.feedconsumed", total));
+            task.setTotalGroups(total);
+            task.setProcessedGroups(0);
+            taskService.throttledUpdate(task);
 
             final ConcurrentLinkedQueue<Group> groupsQueue = new ConcurrentLinkedQueue<Group>(groups);
-            currentTaskLogger.info("bond.classgroups.info.updatinggroups");
+            taskLogger.info("bond.classgroups.info.updatinggroups");
 
             int threads = total >= MINIMUM_GROUPS_FOR_MULTITHREADING && configuration.getProcessingThreads() > 0 ? configuration.getProcessingThreads() : 1;
             ExecutorService execService = null;
@@ -111,10 +110,10 @@ public class TaskProcessor implements Runnable {
                                         doneQueue.put(Boolean.TRUE);
                                         return;
                                     }
-                                    handleGroup(group);
+                                    handleGroup(group, taskLogger);
 
-                                    currentTask.setProcessedGroups(total - groupsQueue.size());
-                                    taskService.throttledUpdate(currentTask);
+                                    task.setProcessedGroups(total - groupsQueue.size());
+                                    taskService.throttledUpdate(task);
 
                                     if (Thread.currentThread().isInterrupted()) {
                                         doneQueue.put(Boolean.FALSE);
@@ -122,7 +121,7 @@ public class TaskProcessor implements Runnable {
                                     }
                                 }
                             } catch (Exception e) {
-                                currentTaskLogger.warning(resourceService.getLocalisationString("bond.classgroups.warning.threadendingexception"), e);
+                                taskLogger.warning(resourceService.getLocalisationString("bond.classgroups.warning.threadendingexception"), e);
                                 try {
                                     doneQueue.put(Boolean.FALSE);
                                 } catch (InterruptedException ignored) {
@@ -146,31 +145,31 @@ public class TaskProcessor implements Runnable {
                 }
             }
             if(!completed) {
-                currentTaskLogger.warning(resourceService.getLocalisationString("bond.classgroups.warning.threadsnotcompleted"));
+                taskLogger.warning(resourceService.getLocalisationString("bond.classgroups.warning.threadsnotcompleted"));
                 for (Future<?> task : tasks) {
                     task.cancel(false);
                 }
             }
 
             try {
-                taskService.endTask(currentTask);
+                taskService.endTask(task);
             } catch (InvalidTaskStateException e) {
-                currentTaskLogger.error("bond.classgroups.error.invalidstate", e);
+                taskLogger.error("bond.classgroups.error.invalidstate", e);
                 throw e;
             }
 
             if (cleanupRunnable != null) {
-                currentTaskLogger.info("bond.classgroups.info.cleaningup");
+                taskLogger.info("bond.classgroups.info.cleaningup");
                 cleanupRunnable.run();
             }
 
-            currentTaskLogger.info("bond.classgroups.info.complete");
+            taskLogger.info("bond.classgroups.info.complete");
         } catch (Exception e) {
-            if (currentTaskLogger != null) {
-                currentTaskLogger.error("bond.classgroups.error.processfailed", e);
+            if (taskLogger != null) {
+                taskLogger.error("bond.classgroups.error.processfailed", e);
             }
             try {
-                taskService.failTask(currentTask);
+                taskService.failTask(task);
             } catch (InvalidTaskStateException e1) {
                 e1.printStackTrace();
             }
@@ -179,11 +178,11 @@ public class TaskProcessor implements Runnable {
         }
     }
 
-    void handleGroup(Group group) {
-        GroupManager.Status status = groupManager.syncGroup(group);
+    void handleGroup(Group group, TaskLogger taskLogger) {
+        GroupManager.Status status = groupManager.syncGroup(group, taskLogger);
 
         if (status != GroupManager.Status.ERROR && status != GroupManager.Status.NOSYNC) {
-            smartViewManager.syncSmartView(group);
+            smartViewManager.syncSmartView(group, taskLogger);
         }
     }
 
@@ -201,30 +200,6 @@ public class TaskProcessor implements Runnable {
 
     public void setFeedDeserialiserFactory(FeedDeserialiserFactory feedDeserialiserFactory) {
         this.feedDeserialiserFactory = feedDeserialiserFactory;
-    }
-
-    public FeedDeserialiser getFeedDeserialiser() {
-        return feedDeserialiser;
-    }
-
-    public void setFeedDeserialiser(FeedDeserialiser feedDeserialiser) {
-        this.feedDeserialiser = feedDeserialiser;
-    }
-
-    public Task getCurrentTask() {
-        return currentTask;
-    }
-
-    public void setCurrentTask(Task currentTask) {
-        this.currentTask = currentTask;
-    }
-
-    public TaskLogger getCurrentTaskLogger() {
-        return currentTaskLogger;
-    }
-
-    public void setCurrentTaskLogger(TaskLogger currentTaskLogger) {
-        this.currentTaskLogger = currentTaskLogger;
     }
 
     public GroupManager getGroupManager() {
@@ -251,14 +226,6 @@ public class TaskProcessor implements Runnable {
         this.configuration = configuration;
     }
 
-    public Runnable getCleanupRunnable() {
-        return cleanupRunnable;
-    }
-
-    public void setCleanupRunnable(Runnable cleanupRunnable) {
-        this.cleanupRunnable = cleanupRunnable;
-    }
-
     public ResourceService getResourceService() {
         return resourceService;
     }
@@ -273,5 +240,38 @@ public class TaskProcessor implements Runnable {
 
     public void setCacheCleaningService(CacheCleaningService cacheCleaningService) {
         this.cacheCleaningService = cacheCleaningService;
+    }
+
+
+    public Task getTask() {
+        return task;
+    }
+
+    public void setTask(Task task) {
+        this.task = task;
+    }
+
+    public TaskLogger getTaskLogger() {
+        return taskLogger;
+    }
+
+    public void setTaskLogger(TaskLogger taskLogger) {
+        this.taskLogger = taskLogger;
+    }
+
+    public Runnable getCleanupRunnable() {
+        return cleanupRunnable;
+    }
+
+    public void setCleanupRunnable(Runnable cleanupRunnable) {
+        this.cleanupRunnable = cleanupRunnable;
+    }
+
+    public FeedDeserialiser getFeedDeserialiser() {
+        return feedDeserialiser;
+    }
+
+    public void setFeedDeserialiser(FeedDeserialiser feedDeserialiser) {
+        this.feedDeserialiser = feedDeserialiser;
     }
 }

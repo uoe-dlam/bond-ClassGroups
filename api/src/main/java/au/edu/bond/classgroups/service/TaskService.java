@@ -5,7 +5,6 @@ import au.edu.bond.classgroups.exception.InvalidTaskStateException;
 import au.edu.bond.classgroups.logging.TaskLogger;
 import au.edu.bond.classgroups.model.Schedule;
 import au.edu.bond.classgroups.model.Task;
-import au.edu.bond.classgroups.spring.TaskScope;
 import au.edu.bond.classgroups.util.ScheduleUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -29,8 +28,6 @@ public class TaskService implements Closeable {
     private EntityManagerFactory entityManagerFactory;
     @Autowired
     private TaskDAO taskDAO;
-    @Autowired
-    private TaskScope taskScope;
     @Autowired
     private ResourceService resourceService;
 
@@ -112,8 +109,6 @@ public class TaskService implements Closeable {
             entityManager.close();
         }
 
-        taskScope.taskStarted(task);
-
         return task;
     }
 
@@ -160,7 +155,6 @@ public class TaskService implements Closeable {
                 return null;
             }
 
-            taskScope.taskStarted(task);
         }
         return task;
     }
@@ -222,7 +216,6 @@ public class TaskService implements Closeable {
     }
 
     public void endTask(Task task, EntityManager entityManager) throws InvalidTaskStateException {
-        try {
             Task transactionTask = taskDAO.get(task.getId(), entityManager);
 
             if (transactionTask.getStatus() != task.getStatus()) {
@@ -242,10 +235,6 @@ public class TaskService implements Closeable {
             Date now = new Date();
             task.setEndedDate(now);
             taskDAO.update(task, entityManager);
-        }
-        finally {
-            taskScope.taskStopped(task);
-        }
     }
 
     public void failTask(Task task) throws InvalidTaskStateException {
@@ -266,7 +255,6 @@ public class TaskService implements Closeable {
     }
 
     public void failTask(Task task, EntityManager entityManager) throws InvalidTaskStateException {
-        try {
             Task transactionTask = taskDAO.get(task.getId(), entityManager);
 
             if (transactionTask.getStatus() != task.getStatus()) {
@@ -280,9 +268,6 @@ public class TaskService implements Closeable {
             Date now = new Date();
             task.setEndedDate(now);
             taskDAO.update(task);
-        } finally {
-            taskScope.taskStopped(task);
-        }
     }
 
     public void cancelTask(Task task) throws InvalidTaskStateException {
@@ -303,29 +288,25 @@ public class TaskService implements Closeable {
     }
 
     public void cancelTask(Task task, EntityManager entityManager) throws InvalidTaskStateException {
-        try {
-            Task transactionTask = taskDAO.get(task.getId(), entityManager);
+        Task transactionTask = taskDAO.get(task.getId(), entityManager);
 
-            if (transactionTask.getStatus() != task.getStatus()) {
-                throw new InvalidTaskStateException(resourceService.getLocalisationString(
-                        "bond.classgroups.exception.taskupdatedexternally",
-                        task.getStatus(), transactionTask.getStatus()));
-            }
-
-            if (task.getStatus() != Task.Status.SCHEDULED) {
-                throw new InvalidTaskStateException(
-                        resourceService.getLocalisationString(
-                                "bond.classgroups.exception.cannotcancelnotsched",
-                                task.getStatus().name()));
-            }
-
-            task.setStatus(Task.Status.CANCELLED);
-            Date now = new Date();
-            task.setEndedDate(now);
-            taskDAO.update(task, entityManager);
-        } finally {
-            taskScope.taskStopped(task);
+        if (transactionTask.getStatus() != task.getStatus()) {
+            throw new InvalidTaskStateException(resourceService.getLocalisationString(
+                    "bond.classgroups.exception.taskupdatedexternally",
+                    task.getStatus(), transactionTask.getStatus()));
         }
+
+        if (task.getStatus() != Task.Status.SCHEDULED) {
+            throw new InvalidTaskStateException(
+                    resourceService.getLocalisationString(
+                            "bond.classgroups.exception.cannotcancelnotsched",
+                            task.getStatus().name()));
+        }
+
+        task.setStatus(Task.Status.CANCELLED);
+        Date now = new Date();
+        task.setEndedDate(now);
+        taskDAO.update(task, entityManager);
     }
 
     public void throttledUpdate(Task task) {
@@ -457,14 +438,6 @@ public class TaskService implements Closeable {
 
     public void setEntityManagerFactory(EntityManagerFactory entityManagerFactory) {
         this.entityManagerFactory = entityManagerFactory;
-    }
-
-    public TaskScope getTaskScope() {
-        return taskScope;
-    }
-
-    public void setTaskScope(TaskScope taskScope) {
-        this.taskScope = taskScope;
     }
 
     public ResourceService getResourceService() {

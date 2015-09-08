@@ -26,8 +26,6 @@ public class BbSmartViewManager implements SmartViewManager {
     public static final int CUSTOM_VIEW_TITLE_MAX_LENGTH = 64;
 
     @Autowired
-    private TaskLogger currentTaskLogger;
-    @Autowired
     private GroupExtensionService groupExtensionService;
     @Autowired
     private BbGroupService bbGroupService;
@@ -41,12 +39,12 @@ public class BbSmartViewManager implements SmartViewManager {
     private ResourceService resourceService;
 
     @Override
-    public void syncSmartView(Group group) {
+    public void syncSmartView(Group group, TaskLogger taskLogger) {
         Id courseId;
         try {
             courseId = bbCourseService.getByExternalSystemId(group.getCourseId()).getId();
         } catch (ExecutionException e) {
-            currentTaskLogger.warning(resourceService.getLocalisationString(
+            taskLogger.warning(resourceService.getLocalisationString(
                     "bond.classgroups.warning.cantfindcourse",
                     group.getCourseId()));
             return;
@@ -56,7 +54,7 @@ public class BbSmartViewManager implements SmartViewManager {
         try {
             ext = groupExtensionService.getGroupExtensionByExternalId(group.getGroupId());
         } catch (ExecutionException e) {
-            currentTaskLogger.warning(resourceService.getLocalisationString(
+            taskLogger.warning(resourceService.getLocalisationString(
                     "bond.classgroups.warning.cantloadextension", group.getCourseId()));
             return;
         }
@@ -71,7 +69,7 @@ public class BbSmartViewManager implements SmartViewManager {
             try {
                 gradebookCustomView = bbGradebookCustomViewService.getById(customViewId, courseId);
             } catch (ExecutionException e) {
-                currentTaskLogger.warning(resourceService.getLocalisationString(
+                taskLogger.warning(resourceService.getLocalisationString(
                         "bond.classgroups.warning.couldnotfindsmartview",
                         group.getGroupId()));
                 return;
@@ -80,7 +78,7 @@ public class BbSmartViewManager implements SmartViewManager {
 
         boolean dirty = false;
         if(gradebookCustomView == null) {
-            currentTaskLogger.info(resourceService.getLocalisationString(
+            taskLogger.info(resourceService.getLocalisationString(
                     "bond.classgroups.info.creatingsmartview", group.getGroupId(), group.getTitle()));
             gradebookCustomView = new GradebookCustomView();
 
@@ -114,11 +112,11 @@ public class BbSmartViewManager implements SmartViewManager {
         try {
             bbGradebookCustomViewService.createOrUpdate(gradebookCustomView);
         } catch (BbSecurityException e) {
-            currentTaskLogger.error(resourceService.getLocalisationString(
+            taskLogger.error(resourceService.getLocalisationString(
                     "bond.classgroups.error.failedtocreatesmartview", group.getGroupId()), e);
             return;
         } catch (ExecutionException e) {
-            currentTaskLogger.error(resourceService.getLocalisationString(
+            taskLogger.error(resourceService.getLocalisationString(
                     "bond.classgroups.error.failedtocreatesmartviewexecution", group.getGroupId()), e);
             return;
         }
@@ -128,7 +126,7 @@ public class BbSmartViewManager implements SmartViewManager {
         try {
             groupExtensionService.update(ext, ((PkId) courseId).getKey());
         } catch (ExecutionException e) {
-            currentTaskLogger.warning(resourceService.getLocalisationString(
+            taskLogger.warning(resourceService.getLocalisationString(
                     "bond.classgroups.warning.failedextupdate", group.getGroupId(), courseId), e);
             return;
         }
@@ -149,14 +147,6 @@ public class BbSmartViewManager implements SmartViewManager {
 
     public void setBbGroupService(BbGroupService bbGroupService) {
         this.bbGroupService = bbGroupService;
-    }
-
-    public TaskLogger getCurrentTaskLogger() {
-        return currentTaskLogger;
-    }
-
-    public void setCurrentTaskLogger(TaskLogger currentTaskLogger) {
-        this.currentTaskLogger = currentTaskLogger;
     }
 
     public BbGradebookCustomViewService getBbGradebookCustomViewService() {

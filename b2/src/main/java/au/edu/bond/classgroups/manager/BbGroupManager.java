@@ -21,6 +21,7 @@ import blackboard.persist.PersistenceException;
 import blackboard.persist.PkId;
 import blackboard.platform.course.CourseGroupManager;
 import blackboard.platform.course.CourseGroupManagerFactory;
+import com.alltheducks.configutils.service.ConfigurationService;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,8 +36,6 @@ import java.util.concurrent.ExecutionException;
 public class BbGroupManager implements GroupManager {
 
     @Autowired
-    private TaskLogger currentTaskLogger;
-    @Autowired
     private BbGroupService bbGroupService;
     @Autowired
     private BbCourseService bbCourseService;
@@ -47,14 +46,15 @@ public class BbGroupManager implements GroupManager {
     @Autowired
     private BbCourseMembershipService bbCourseMembershipService;
     @Autowired
-    private Configuration configuration;
+    private ConfigurationService<Configuration> configurationService;
     @Autowired
     private GroupTitleService groupTitleService;
     @Autowired
     private ResourceService resourceService;
 
     @Override
-    public Status syncGroup(Group group) {
+    public Status syncGroup(Group group, TaskLogger taskLogger) {
+        Configuration configuration = configurationService.loadConfiguration();
         Id courseId;
         try {
             Course course = bbCourseService.getByExternalSystemId(group.getCourseId());
@@ -67,7 +67,7 @@ public class BbGroupManager implements GroupManager {
                 group.setTitle(newTitle);
             }
         } catch (ExecutionException e) {
-            currentTaskLogger.warning(resourceService.getLocalisationString(
+            taskLogger.warning(resourceService.getLocalisationString(
                     "bond.classgroups.warning.cantfindcourse", group.getCourseId()));
             return Status.ERROR;
         }
@@ -80,13 +80,13 @@ public class BbGroupManager implements GroupManager {
                 throw e;
             }
         } catch (ExecutionException e) {
-            currentTaskLogger.warning(resourceService.getLocalisationString(
+            taskLogger.warning(resourceService.getLocalisationString(
                     "bond.classgroups.warning.cantloadextension", group.getGroupId(), group.getCourseId()));
             return Status.ERROR;
         }
 
         if (ext != null && !ext.isSynced()) {
-            currentTaskLogger.info(resourceService.getLocalisationString(
+            taskLogger.info(resourceService.getLocalisationString(
                     "bond.classgroups.info.skippingunsyncedgroup",
                     group.getGroupId()));
             return Status.NOSYNC;
@@ -97,13 +97,13 @@ public class BbGroupManager implements GroupManager {
         blackboard.data.course.Group bbGroup = null;
         if (ext != null) {
             if (ext.getInternalGroupId() == null) {
-                currentTaskLogger.info(resourceService.getLocalisationString(
+                taskLogger.info(resourceService.getLocalisationString(
                         "bond.classgroups.info.existinggroupdeleted", group.getGroupId()));
             } else {
                 try {
                     bbGroup = bbGroupService.getById(ext.getInternalGroupId(), courseId);
                 } catch (ExecutionException e) {
-                    currentTaskLogger.info(resourceService.getLocalisationString(
+                    taskLogger.info(resourceService.getLocalisationString(
                             "bond.classgroups.info.existinggroupmissing", group.getGroupId()), e);
                 }
             }
@@ -112,7 +112,7 @@ public class BbGroupManager implements GroupManager {
             ext.setExternalSystemId(group.getGroupId());
             extNew = true;
         }
-        boolean extDirty = updateFeedLeader(ext, group, courseId);
+        boolean extDirty = updateFeedLeader(ext, group, courseId, configuration, taskLogger);
 
         String title = groupTitleService.getGroupTitle(group.getTitle(), ext, ((PkId) courseId).getKey());
         Status status = Status.UNCHANGED;
@@ -131,16 +131,16 @@ public class BbGroupManager implements GroupManager {
             bbGroup.setGroupSet(false);
             bbGroup.setSelfEnrolledAllowed(false);
 
-            bbGroup.setIsAvailable(calculateAvailability(group));
+            bbGroup.setIsAvailable(calculateAvailability(group, configuration));
 
-            updateGroupSet(bbGroup, group);
+            updateGroupSet(bbGroup, group, configuration, taskLogger);
 
             status = Status.CREATED;
 
-            currentTaskLogger.info(resourceService.getLocalisationString(
+            taskLogger.info(resourceService.getLocalisationString(
                     "bond.classgroups.info.creatinggroup", group.getGroupId(), group.getTitle()));
         } else {
-            currentTaskLogger.info(resourceService.getLocalisationString(
+            taskLogger.info(resourceService.getLocalisationString(
                     "bond.classgroups.info.updatinggroup", group.getGroupId(), group.getTitle()));
 
             if (!title.equals(bbGroup.getTitle())) {
@@ -148,12 +148,12 @@ public class BbGroupManager implements GroupManager {
                 status = Status.UPDATED;
             }
 
-            if (updateGroupSet(bbGroup, group)) {
+            if (updateGroupSet(bbGroup, group, configuration, taskLogger)) {
                 status = Status.UPDATED;
             }
 
             if (configuration.getAvailabilityMode() == Configuration.AvailabilityMode.UPDATE) {
-                boolean available = calculateAvailability(group);
+                boolean available = calculateAvailability(group, configuration);
                 if (bbGroup.getIsAvailable() != available) {
                     bbGroup.setIsAvailable(available);
                     status = Status.UPDATED;
@@ -213,7 +213,7 @@ public class BbGroupManager implements GroupManager {
             try {
                 bbGroupService.createOrUpdate(bbGroup, memberIds);
             } catch (ExecutionException e) {
-                currentTaskLogger.warning(resourceService.getLocalisationString(
+                taskLogger.warning(resourceService.getLocalisationString(
                         "bond.classgroups.warning.groupexecution", group.getGroupId()), e);
                 return Status.ERROR;
             }
@@ -234,7 +234,7 @@ public class BbGroupManager implements GroupManager {
             try {
                 groupExtensionService.create(ext);
             } catch (ExecutionException e) {
-                currentTaskLogger.warning(resourceService.getLocalisationString(
+                taskLogger.warning(resourceService.getLocalisationString(
                         "bond.classgroups.warning.failedextcreate", group.getGroupId(), courseId), e);
                 return Status.ERROR;
             }
@@ -242,7 +242,7 @@ public class BbGroupManager implements GroupManager {
             try {
                 groupExtensionService.update(ext, ((PkId) courseId).getKey());
             } catch (ExecutionException e) {
-                currentTaskLogger.warning(resourceService.getLocalisationString(
+                taskLogger.warning(resourceService.getLocalisationString(
                         "bond.classgroups.warning.failedextupdate", group.getGroupId(), courseId), e);
                 return Status.ERROR;
             }
@@ -251,12 +251,12 @@ public class BbGroupManager implements GroupManager {
         return status;
     }
 
-    boolean calculateAvailability(Group group) {
+    boolean calculateAvailability(Group group, Configuration configuration) {
         return (group.getAvailable() != null) ? group.getAvailable() :
                 (configuration.getDefaultAvailability() == Configuration.GroupAvailability.AVAILABLE);
     }
 
-    private boolean updateFeedLeader(GroupExtension ext, Group group, Id courseId) {
+    private boolean updateFeedLeader(GroupExtension ext, Group group, Id courseId, Configuration configuration, TaskLogger taskLogger) {
         User user = null;
         CourseMembership courseMembership = null;
 
@@ -264,7 +264,7 @@ public class BbGroupManager implements GroupManager {
             try {
                 user = bbUserService.getByExternalSystemId(group.getLeaderId(), courseId);
             } catch (ExecutionException e) {
-                currentTaskLogger.warning(resourceService.getLocalisationString(
+                taskLogger.warning(resourceService.getLocalisationString(
                         "bond.classgroups.warning.cantfindleader",
                         group.getLeaderId(), group.getGroupId()), e);
                 return false;
@@ -274,7 +274,7 @@ public class BbGroupManager implements GroupManager {
                 try {
                     courseMembership = bbCourseMembershipService.getByCourseIdAndUserId(courseId, user.getId());
                 } catch (ExecutionException e) {
-                    currentTaskLogger.error(resourceService.getLocalisationString(
+                    taskLogger.error(resourceService.getLocalisationString(
                             "bond.classgroups.error.cantfindleadermemberexecution",
                             group.getLeaderId(), group.getGroupId()), e);
                     return false;
@@ -309,7 +309,7 @@ public class BbGroupManager implements GroupManager {
         return true;
     }
 
-    private boolean updateGroupSet(blackboard.data.course.Group bbGroup, Group group) {
+    private boolean updateGroupSet(blackboard.data.course.Group bbGroup, Group group, Configuration configuration, TaskLogger taskLogger) {
         if (bbGroup.getSetId() == null && group.getGroupSet() == null) {
             return false;
         }
@@ -319,7 +319,7 @@ public class BbGroupManager implements GroupManager {
             return true;
         }
 
-        blackboard.data.course.Group bbGroupSet = getOrCreateGroupSet(group.getGroupSet(), bbGroup.getCourseId());
+        blackboard.data.course.Group bbGroupSet = getOrCreateGroupSet(group.getGroupSet(), bbGroup.getCourseId(), configuration, taskLogger);
         if (bbGroupSet != null && !EqualityUtil.nullSafeEquals(bbGroupSet.getId(), bbGroup.getSetId())) {
             bbGroup.setSetId(bbGroupSet.getId());
             return true;
@@ -328,7 +328,7 @@ public class BbGroupManager implements GroupManager {
         return false;
     }
 
-    private blackboard.data.course.Group getOrCreateGroupSet(String title, Id courseId) {
+    private blackboard.data.course.Group getOrCreateGroupSet(String title, Id courseId, Configuration configuration, TaskLogger taskLogger) {
         blackboard.data.course.Group bbGroupSet = null;
         try {
             bbGroupSet = bbGroupService.getByTitleAndCourseId(title, courseId);
@@ -351,21 +351,13 @@ public class BbGroupManager implements GroupManager {
             try {
                 bbGroupService.createOrUpdate(bbGroupSet);
             } catch (ExecutionException e) {
-                currentTaskLogger.error(resourceService.getLocalisationString(
+                taskLogger.error(resourceService.getLocalisationString(
                         "bond.classgroups.error.groupsetexecution", title, courseId), e);
                 return null;
             }
         }
 
         return bbGroupSet;
-    }
-
-    public TaskLogger getCurrentTaskLogger() {
-        return currentTaskLogger;
-    }
-
-    public void setCurrentTaskLogger(TaskLogger currentTaskLogger) {
-        this.currentTaskLogger = currentTaskLogger;
     }
 
     public BbGroupService getBbGroupService() {
@@ -408,12 +400,12 @@ public class BbGroupManager implements GroupManager {
         this.bbCourseMembershipService = bbCourseMembershipService;
     }
 
-    public Configuration getConfiguration() {
-        return configuration;
+    public ConfigurationService<Configuration> getConfigurationService() {
+        return configurationService;
     }
 
-    public void setConfiguration(Configuration configuration) {
-        this.configuration = configuration;
+    public void setConfigurationService(ConfigurationService<Configuration> configurationService) {
+        this.configurationService = configurationService;
     }
 
     public GroupTitleService getGroupTitleService() {

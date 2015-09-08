@@ -1,6 +1,7 @@
 package au.edu.bond.classgroups.stripes;
 
 import au.edu.bond.classgroups.config.Configuration;
+import au.edu.bond.classgroups.logging.TaskLoggerFactory;
 import au.edu.bond.classgroups.task.TaskExecutor;
 import au.edu.bond.classgroups.task.TaskProcessor;
 import au.edu.bond.classgroups.task.TaskProcessorFactory;
@@ -23,10 +24,11 @@ public class DefaultDeserialiserAction implements ActionBean {
 
     private TaskProcessorFactory taskProcessorFactory;
     private TaskService taskService;
-    private TaskLogger nonCurrentTaskLogger;
     private TaskExecutor taskExecutor;
     private String pluginsUrl;
     private Configuration configuration;
+    private TaskLoggerFactory taskLoggerFactory;
+
 
     @DefaultHandler
     public Resolution display() {
@@ -36,16 +38,17 @@ public class DefaultDeserialiserAction implements ActionBean {
     }
 
     public Resolution execute() throws IOException {
-
         Task task = taskService.createTask();
-        nonCurrentTaskLogger.setTask(task);
+        final TaskLogger taskLogger = taskLoggerFactory.getLogger(task);
 
         if(task.getStatus() == Task.Status.SKIPPED) {
-            nonCurrentTaskLogger.info("bond.classgroups.info.skipping");
+            taskLogger.info("bond.classgroups.info.skipping");
             return null;
         }
 
         TaskProcessor taskProcessor = taskProcessorFactory.getDefault();
+        taskProcessor.setTask(task);
+        taskProcessor.setTaskLogger(taskLogger);
         taskExecutor.executeTaskProcessor(taskProcessor);
 
         return new RedirectResolution(String.format("/Log.action?taskId=%s",task.getId()));
@@ -87,15 +90,6 @@ public class DefaultDeserialiserAction implements ActionBean {
         this.taskService = taskService;
     }
 
-    public TaskLogger getNonCurrentTaskLogger() {
-        return nonCurrentTaskLogger;
-    }
-
-    @SpringBean
-    public void setNonCurrentTaskLogger(TaskLogger nonCurrentTaskLogger) {
-        this.nonCurrentTaskLogger = nonCurrentTaskLogger;
-    }
-
     public TaskExecutor getTaskExecutor() {
         return taskExecutor;
     }
@@ -121,5 +115,14 @@ public class DefaultDeserialiserAction implements ActionBean {
     @SpringBean
     public void setConfiguration(Configuration configuration) {
         this.configuration = configuration;
+    }
+
+    public TaskLoggerFactory getTaskLoggerFactory() {
+        return taskLoggerFactory;
+    }
+
+    @SpringBean
+    public void setTaskLoggerFactory(TaskLoggerFactory taskLoggerFactory) {
+        this.taskLoggerFactory = taskLoggerFactory;
     }
 }

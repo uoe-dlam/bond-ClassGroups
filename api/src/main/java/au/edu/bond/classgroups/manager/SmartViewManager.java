@@ -1,5 +1,6 @@
 package au.edu.bond.classgroups.manager;
 
+import au.edu.bond.classgroups.logging.TaskLogger;
 import au.edu.bond.classgroups.model.Group;
 
 /**
@@ -7,6 +8,6 @@ import au.edu.bond.classgroups.model.Group;
  */
 public interface SmartViewManager {
 
-    public void syncSmartView(Group group);
+    public void syncSmartView(Group group, TaskLogger taskLogger);
 
 }

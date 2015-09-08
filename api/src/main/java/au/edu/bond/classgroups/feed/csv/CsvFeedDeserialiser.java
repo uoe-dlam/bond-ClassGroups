@@ -27,8 +27,6 @@ import java.util.*;
 public class CsvFeedDeserialiser implements FeedDeserialiser {
 
     @Autowired
-    private TaskLogger currentTaskLogger;
-    @Autowired
     private ResourceService resourceService;
     @Autowired
     Configuration configuration;
@@ -37,7 +35,7 @@ public class CsvFeedDeserialiser implements FeedDeserialiser {
     private InputStream membersInputStream;
 
     @Override
-    public Collection<Group> getGroups() throws FeedDeserialisationException {
+    public Collection<Group> getGroups(TaskLogger taskLogger) throws FeedDeserialisationException {
         //Map instead of list/collection so that the groups can be easily found again during member processing.
         Map<String, Group> groups = new HashMap<String, Group>();
 
@@ -46,11 +44,11 @@ public class CsvFeedDeserialiser implements FeedDeserialiser {
 
             boolean stop = false;
             if (!groupsParser.getHeaderMap().keySet().containsAll(configuration.getFeedHeaderConfig().getGroupsFeedHeaders())) {
-                currentTaskLogger.error("bond.classgroups.error.missingheadergroups");
+                taskLogger.error("bond.classgroups.error.missingheadergroups");
                 stop = true;
             }
             if (!membersParser.getHeaderMap().keySet().containsAll(configuration.getFeedHeaderConfig().getMembersFeedHeaders())) {
-                currentTaskLogger.error("bond.classgroups.error.missingheadermembers");
+                taskLogger.error("bond.classgroups.error.missingheadermembers");
                 stop = true;
             }
             if (stop) {
@@ -62,7 +60,7 @@ public class CsvFeedDeserialiser implements FeedDeserialiser {
                 groups.put(group.getGroupId(), group);
 
                 if (Thread.currentThread().isInterrupted()) {
-                    currentTaskLogger.error("bond.classgroups.error.groupsthreadinterrupted");
+                    taskLogger.error("bond.classgroups.error.groupsthreadinterrupted");
                     throw new FeedDeserialisationException(resourceService.getLocalisationString(
                             "bond.classgroups.exception.groupsthreadinterrupted"));
                 }
@@ -73,7 +71,7 @@ public class CsvFeedDeserialiser implements FeedDeserialiser {
                 Group group = groups.get(groupId);
 
                 if (group == null) {
-                    currentTaskLogger.warning(resourceService.getLocalisationString(
+                    taskLogger.warning(resourceService.getLocalisationString(
                             "bond.classgroups.warning.memberformissinggroup", groupId));
                     continue;
                 }
@@ -87,14 +85,14 @@ public class CsvFeedDeserialiser implements FeedDeserialiser {
                 members.add(translateRecordToMember(record));
 
                 if(Thread.currentThread().isInterrupted()) {
-                    currentTaskLogger.error("bond.classgroups.error.membersthreadinterrupted");
+                    taskLogger.error("bond.classgroups.error.membersthreadinterrupted");
                     throw new FeedDeserialisationException(resourceService.getLocalisationString(
                             "bond.classgroups.exception.membersthreadinterrupted"));
                 }
             }
 
         } catch (IOException e) {
-            currentTaskLogger.error("bond.classgroups.error.failedtoparsecsv", e);
+            taskLogger.error("bond.classgroups.error.failedtoparsecsv", e);
             throw new FeedDeserialisationException(resourceService.getLocalisationString(
                     "bond.classgroups.exception.failedtoparsecsv"), e);
         }
@@ -147,14 +145,6 @@ public class CsvFeedDeserialiser implements FeedDeserialiser {
 
     public void setMembersInputStream(InputStream membersInputStream) {
         this.membersInputStream = membersInputStream;
-    }
-
-    public TaskLogger getCurrentTaskLogger() {
-        return currentTaskLogger;
-    }
-
-    public void setCurrentTaskLogger(TaskLogger currentTaskLogger) {
-        this.currentTaskLogger = currentTaskLogger;
     }
 
     public ResourceService getResourceService() {

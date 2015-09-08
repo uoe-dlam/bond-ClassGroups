@@ -16,8 +16,6 @@ import java.util.Collection;
 public class FileCsvFeedDeserialiser implements FeedDeserialiser {
 
     @Autowired
-    private TaskLogger currentTaskLogger;
-    @Autowired
     private CsvFeedDeserialiser csvFeedDeserialiser;
     @Autowired
     private ResourceService resourceService;
@@ -26,14 +24,14 @@ public class FileCsvFeedDeserialiser implements FeedDeserialiser {
     private File membersFile;
 
     @Override
-    public Collection<Group> getGroups() throws FeedDeserialisationException {
+    public Collection<Group> getGroups(TaskLogger taskLogger) throws FeedDeserialisationException {
         InputStream groupsIS = null;
         InputStream membersIS = null;
         try {
             try {
                 groupsIS = new FileInputStream(groupsFile);
             } catch (FileNotFoundException e) {
-                currentTaskLogger.error("bond.classgroups.error.opengroupsfailed");
+                taskLogger.error("bond.classgroups.error.opengroupsfailed");
                 throw new FeedDeserialisationException(
                         resourceService.getLocalisationString("bond.classgroups.exception.opengroupsfailed"), e);
             }
@@ -41,7 +39,7 @@ public class FileCsvFeedDeserialiser implements FeedDeserialiser {
             try {
                 membersIS = new FileInputStream(membersFile);
             } catch (FileNotFoundException e) {
-                currentTaskLogger.error("bond.classgroups.error.openmembersfailed");
+                taskLogger.error("bond.classgroups.error.openmembersfailed");
                 throw new FeedDeserialisationException(
                         resourceService.getLocalisationString("bond.classgroups.exception.openmembersfailed"), e);
             }
@@ -49,31 +47,23 @@ public class FileCsvFeedDeserialiser implements FeedDeserialiser {
             csvFeedDeserialiser.setGroupsInputStream(groupsIS);
             csvFeedDeserialiser.setMembersInputStream(membersIS);
 
-            return csvFeedDeserialiser.getGroups();
+            return csvFeedDeserialiser.getGroups(taskLogger);
         } finally {
             if(groupsIS != null) {
                 try {
                     groupsIS.close();
                 } catch (IOException e) {
-                    currentTaskLogger.error("bond.classgroups.error.failedclosegroups");
+                    taskLogger.error("bond.classgroups.error.failedclosegroups");
                 }
             }
             if(membersIS != null) {
                 try {
                     membersIS.close();
                 } catch (IOException e) {
-                    currentTaskLogger.error("bond.classgroups.error.failedclosemembers");
+                    taskLogger.error("bond.classgroups.error.failedclosemembers");
                 }
             }
         }
-    }
-
-    public TaskLogger getCurrentTaskLogger() {
-        return currentTaskLogger;
-    }
-
-    public void setCurrentTaskLogger(TaskLogger currentTaskLogger) {
-        this.currentTaskLogger = currentTaskLogger;
     }
 
     public File getGroupsFile() {

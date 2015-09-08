@@ -1,6 +1,7 @@
 package au.edu.bond.classgroups.feed;
 
 import au.edu.bond.classgroups.exception.FeedDeserialisationException;
+import au.edu.bond.classgroups.logging.TaskLogger;
 import au.edu.bond.classgroups.model.Group;
 
 import java.util.Collection;
@@ -11,6 +12,6 @@ import java.util.Collection;
  */
 public interface FeedDeserialiser {
 
-    public Collection<Group> getGroups() throws FeedDeserialisationException;
+    public Collection<Group> getGroups(TaskLogger taskLogger) throws FeedDeserialisationException;
 
 }
