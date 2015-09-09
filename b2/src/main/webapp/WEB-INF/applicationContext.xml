@@ -112,9 +112,6 @@
         <constructor-arg name="cacheSpec" value="maximumSize=3,expireAfterAccess=2m" />
     </bean>
 
-    <bean id="feedDeserialiserFactory" class="au.edu.bond.classgroups.feed.FeedDeserialiserFactory" />
-
-    <bean id="defaultFeedDeserialiser" factory-bean="feedDeserialiserFactory" factory-method="getDefault" scope="prototype" />
     <bean id="csvFeedDeserialiser" class="au.edu.bond.classgroups.feed.csv.CsvFeedDeserialiser" scope="prototype"/>
     <bean id="pullFileCsvFeedDeserialiser" class="au.edu.bond.classgroups.feed.csv.FileCsvFeedDeserialiser" scope="prototype" >
         <property name="groupsFile">
@@ -171,7 +168,10 @@
         <constructor-arg name="handle" value="ClassGroups" />
     </bean>
 
-
+    <bean id="feedFetcherFactory" class="au.edu.bond.classgroups.feed.FeedFetcherFactory">
+        <property name="configuration" ref="configuration" />
+        <property name="directoryFactory" ref="configurationDirectoryFactory" />
+    </bean>
 
     <!--Configuration-->
     <bean id="configurationDirectoryFactory" class="au.edu.bond.classgroups.config.BbDirectoryFactory" />
@@ -184,10 +184,10 @@
     <bean id="configurationService" class="au.edu.bond.classgroups.config.ClassGroupsConfigurationService">
         <constructor-arg name="internalConfigurationService">
             <bean class="com.alltheducks.configutils.service.XmlConfigurationService">
-                <property name="configurationXMLFile" ref="configurationXMLFile" />
-                <property name="XStream">
+                <constructor-arg name="configurationXmlFile" ref="configurationXMLFile" />
+                <constructor-arg name="xStream">
                     <bean class="au.edu.bond.classgroups.config.ConfigurationXStreamFactory" factory-method="getConfigXStream" />
-                </property>
+                </constructor-arg>
             </bean>
         </constructor-arg>
     </bean>

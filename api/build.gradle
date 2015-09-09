@@ -15,8 +15,8 @@ dependencies {
             'org.hibernate:hibernate-entitymanager:4.3.5.Final',
             'org.springframework:spring-beans:4.0.5.RELEASE',
             'org.springframework:spring-context:4.0.5.RELEASE',
-            'com.thoughtworks.xstream:xstream:1.4.4',
-            files("../lib/b2-config-utils-1.0.2.jar"),
+            'com.thoughtworks.xstream:xstream:1.4.7',
+            files("../lib/b2-config-utils-1.0.3.jar"),
             'com.google.guava:guava:16.0'
 
 }

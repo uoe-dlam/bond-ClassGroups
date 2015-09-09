@@ -9,23 +9,27 @@ import java.util.List;
  */
 public class Configuration {
 
-    public static enum ToolsMode {
+    public enum ToolsMode {
         CREATE, READ, SYNC
     }
 
-    public static enum LeaderChangedMode {
+    public enum LeaderChangedMode {
         OVERRIDE, FEED
     }
 
-    public static enum AvailabilityMode {
+    public enum AvailabilityMode {
         CREATE, UPDATE
     }
 
-    public static enum GroupAvailability {
+    public enum GroupAvailability {
         AVAILABLE, UNAVAILABLE
     }
 
-    private String defaultFeedDeserialiserBean;
+    public enum FeedFetcherType {
+        URL, FILE
+    }
+
+    private FeedFetcherType feedFetcherType;
     private ToolsMode toolsMode;
     private List<String> defaultTools;
     private LeaderChangedMode leaderChangedMode;
@@ -42,14 +46,6 @@ public class Configuration {
     private int processingThreads;
     private FeedHeaderConfig feedHeaderConfig;
     private GroupAvailability groupSetAvailability;
-
-    public String getDefaultFeedDeserialiserBean() {
-        return defaultFeedDeserialiserBean;
-    }
-
-    public void setDefaultFeedDeserialiserBean(String defaultFeedDeserialiserBean) {
-        this.defaultFeedDeserialiserBean = defaultFeedDeserialiserBean;
-    }
 
     public ToolsMode getToolsMode() {
         return toolsMode;
@@ -179,4 +175,11 @@ public class Configuration {
         this.groupSetAvailability = groupSetAvailability;
     }
 
+    public FeedFetcherType getFeedFetcherType() {
+        return feedFetcherType;
+    }
+
+    public void setFeedFetcherType(FeedFetcherType feedFetcherType) {
+        this.feedFetcherType = feedFetcherType;
+    }
 }

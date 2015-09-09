@@ -25,6 +25,8 @@ public class ConfigurationXStreamFactory {
         mapper.addClassAlias("schedule", Schedule.class);
         xstream.registerLocalConverter(Configuration.class, "schedules", new CollectionConverter(mapper));
 
+        xstream.ignoreUnknownElements();
+
         return xstream;
     }
 

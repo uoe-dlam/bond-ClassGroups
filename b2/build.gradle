@@ -36,7 +36,8 @@ dependencies {
             'com.google.code.gson:gson:2.2.4'
 
     compile 'net.sourceforge.stripes:stripes:1.5.7',
-            files('../lib/bb-stripes-utils-1.0.0.jar')
+            files('../lib/bb-stripes-utils-1.0.0.jar')//,
+//            files('../lib/b2-config-utils-1.0.3.jar')
 
     compile project(':api')
 

@@ -2,7 +2,6 @@ package au.edu.bond.classgroups;
 
 import au.edu.bond.classgroups.config.Configuration;
 import au.edu.bond.classgroups.feed.FeedDeserialiser;
-import au.edu.bond.classgroups.feed.FeedDeserialiserFactory;
 import au.edu.bond.classgroups.logging.TaskLogger;
 import au.edu.bond.classgroups.manager.GroupManager;
 import au.edu.bond.classgroups.manager.SmartViewManager;
@@ -24,7 +23,6 @@ import static org.mockito.Mockito.*;
 public class TaskProcessorTest {
 
     TaskService taskService;
-    FeedDeserialiserFactory feedDeserialiserFactory;
     Task currentTask;
     TaskLogger taskLogger;
     GroupManager groupManager;
@@ -48,9 +46,6 @@ public class TaskProcessorTest {
         currentTask.setStatus(Task.Status.PENDING);
 
         feedDeserialiser = mock(FeedDeserialiser.class);
-        feedDeserialiserFactory = mock(FeedDeserialiserFactory.class);
-        when(feedDeserialiserFactory.getDefault()).thenReturn(feedDeserialiser);
-
         resourceService = mock(ResourceService.class);
         when(resourceService.getLocalisationString(anyString(), anyCollection())).thenReturn("blahblah");
 
@@ -62,12 +57,12 @@ public class TaskProcessorTest {
 
         taskProcessor = new TaskProcessor();
         taskProcessor.setTaskService(taskService);
-        taskProcessor.setFeedDeserialiserFactory(feedDeserialiserFactory);
         taskProcessor.setGroupManager(groupManager);
         taskProcessor.setSmartViewManager(smartViewManager);
         taskProcessor.setConfiguration(configuration);
         taskProcessor.setResourceService(resourceService);
         taskProcessor.setCacheCleaningService(cacheCleaningService);
+        taskProcessor.setFeedDeserialiser(feedDeserialiser);
 
         taskProcessor.setTask(currentTask);
         taskProcessor.setTaskLogger(taskLogger);
@@ -85,7 +80,6 @@ public class TaskProcessorTest {
 
         taskProcessor.run();
 
-        verify(feedDeserialiserFactory).getDefault();
         verifyNoMoreInteractions(groupManager);
     }
 
@@ -145,7 +139,6 @@ public class TaskProcessorTest {
         groups.add(group);
 
         when(feedDeserialiser.getGroups(taskLogger)).thenReturn(groups);
-        when(feedDeserialiserFactory.getDefault()).thenReturn(feedDeserialiser);
 
         taskProcessor.run();
 
@@ -162,7 +155,6 @@ public class TaskProcessorTest {
         taskProcessor.run();
         taskProcessor.setFeedDeserialiser(feedDeserialiser);
 
-        verify(feedDeserialiserFactory).getDefault();
         verifyNoMoreInteractions(groupManager);
 
     }

@@ -33,13 +33,6 @@ public class TaskService implements Closeable {
 
     private final Date lastStatUpdate = new Date(0);
 
-    public static final Collection<Task.Status> currentStatuses;
-    static {
-        currentStatuses = new HashSet<Task.Status>();
-        currentStatuses.add(Task.Status.PENDING);
-        currentStatuses.add(Task.Status.PROCESSING);
-    }
-
     public Task getById(Long id) {
         return getById(id, null);
     }
@@ -72,9 +65,9 @@ public class TaskService implements Closeable {
     private Task getCurrentTask(EntityManager entityManager) {
         final List<Task> tasks;
         if(entityManager == null) {
-            tasks = taskDAO.getByStatus(currentStatuses);
+            tasks = taskDAO.getByStatus(Task.Status.PROCESSING);
         } else {
-            tasks = taskDAO.getByStatus(currentStatuses, entityManager);
+            tasks = taskDAO.getByStatus(Task.Status.PROCESSING, entityManager);
         }
         if(tasks.size() == 0) {
             return null;
@@ -90,15 +83,7 @@ public class TaskService implements Closeable {
 
         entityTransaction.begin();
         try {
-            final Task existingTask = getCurrentTask(entityManager);
-
-
-            if (existingTask == null) {
-                task = createPendingTask();
-
-            } else {
-                task = createSkippedTask();
-            }
+            task = createPendingTask();
 
             taskDAO.create(task, entityManager);
             entityTransaction.commit();
@@ -192,9 +177,14 @@ public class TaskService implements Closeable {
         }
 
         task.setStatus(Task.Status.PROCESSING);
+        task.setProcessingNode(getServerName());
         Date now = new Date();
         task.setStartedDate(now);
         taskDAO.update(task, entityManager);
+    }
+
+    public Task beginNextTask(EntityManager entityManager) {
+
     }
 
     public void endTask(Task task) throws InvalidTaskStateException {
@@ -353,7 +343,6 @@ public class TaskService implements Closeable {
     private Task createPendingTask() {
         Task task = createBaseTask();
         task.setStatus(Task.Status.PENDING);
-        task.setProcessingNode(getServerName());
         return task;
     }
 
@@ -419,7 +408,7 @@ public class TaskService implements Closeable {
         try {
             server = InetAddress.getLocalHost().getHostName();
         } catch (UnknownHostException e) {
-            server = "UNKNOWN";
+            throw new RuntimeException(e);
         }
         return server;
     }

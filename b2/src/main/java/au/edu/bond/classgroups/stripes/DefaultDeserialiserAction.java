@@ -1,6 +1,9 @@
 package au.edu.bond.classgroups.stripes;
 
 import au.edu.bond.classgroups.config.Configuration;
+import au.edu.bond.classgroups.exception.InvalidTaskStateException;
+import au.edu.bond.classgroups.feed.FeedFetcher;
+import au.edu.bond.classgroups.feed.FeedFetcherFactory;
 import au.edu.bond.classgroups.logging.TaskLoggerFactory;
 import au.edu.bond.classgroups.task.TaskExecutor;
 import au.edu.bond.classgroups.task.TaskProcessor;
@@ -22,36 +25,53 @@ public class DefaultDeserialiserAction implements ActionBean {
 
     private boolean defaultDeserialiserConfigured;
 
-    private TaskProcessorFactory taskProcessorFactory;
     private TaskService taskService;
     private TaskExecutor taskExecutor;
     private String pluginsUrl;
     private Configuration configuration;
     private TaskLoggerFactory taskLoggerFactory;
+    private FeedFetcherFactory feedFetcherFactory;
 
 
     @DefaultHandler
     public Resolution display() {
-        defaultDeserialiserConfigured = (configuration.getDefaultFeedDeserialiserBean() != null);
+        defaultDeserialiserConfigured = (configuration.getFeedFetcherType() != null);
 
         return new ForwardResolution("/WEB-INF/jsp/defaultdeserialiser.jsp");
     }
 
-    public Resolution execute() throws IOException {
-        Task task = taskService.createTask();
-        final TaskLogger taskLogger = taskLoggerFactory.getLogger(task);
+    public Resolution execute() throws IOException, InvalidTaskStateException {
+        Task task = null;
+        TaskLogger taskLogger = null;
 
-        if(task.getStatus() == Task.Status.SKIPPED) {
-            taskLogger.info("bond.classgroups.info.skipping");
-            return null;
+        try {
+            task = taskService.createTask();
+            taskLogger = taskLoggerFactory.getLogger(task);
+
+            if (task.getStatus() == Task.Status.SKIPPED) {
+                taskLogger.info("bond.classgroups.info.skipping");
+                return null;
+            }
+
+            final FeedFetcher configuredFeedFetcher = feedFetcherFactory.getConfiguredFeedFetcher();
+            configuredFeedFetcher.fetchData(task);
+
+//        TaskProcessor taskProcessor = taskProcessorFactory.getDefault();
+//        taskProcessor.setTask(task);
+//        taskProcessor.setTaskLogger(taskLogger);
+//        taskExecutor.executeTaskProcessor(taskProcessor);
+
+            return new RedirectResolution(String.format("/Log.action?taskId=%s", task.getId()));
+        } catch (Exception e) {
+            if(task != null) {
+                if(taskLogger != null) {
+//                    taskLogger.log();
+                }
+                taskService.failTask(task);
+            }
         }
 
-        TaskProcessor taskProcessor = taskProcessorFactory.getDefault();
-        taskProcessor.setTask(task);
-        taskProcessor.setTaskLogger(taskLogger);
-        taskExecutor.executeTaskProcessor(taskProcessor);
-
-        return new RedirectResolution(String.format("/Log.action?taskId=%s",task.getId()));
+        return null;
     }
 
     public boolean isDefaultDeserialiserConfigured() {
@@ -70,15 +90,6 @@ public class DefaultDeserialiserAction implements ActionBean {
     @Override
     public ActionBeanContext getContext() {
         return context;
-    }
-
-    public TaskProcessorFactory getTaskProcessorFactory() {
-        return taskProcessorFactory;
-    }
-
-    @SpringBean
-    public void setTaskProcessorFactory(TaskProcessorFactory taskProcessorFactory) {
-        this.taskProcessorFactory = taskProcessorFactory;
     }
 
     public TaskService getTaskService() {
@@ -124,5 +135,14 @@ public class DefaultDeserialiserAction implements ActionBean {
     @SpringBean
     public void setTaskLoggerFactory(TaskLoggerFactory taskLoggerFactory) {
         this.taskLoggerFactory = taskLoggerFactory;
+    }
+
+    public FeedFetcherFactory getFeedFetcherFactory() {
+        return feedFetcherFactory;
+    }
+
+    @SpringBean
+    public void setFeedFetcherFactory(FeedFetcherFactory feedFetcherFactory) {
+        this.feedFetcherFactory = feedFetcherFactory;
     }
 }

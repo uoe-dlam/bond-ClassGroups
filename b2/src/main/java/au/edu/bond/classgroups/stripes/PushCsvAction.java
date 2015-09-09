@@ -7,10 +7,7 @@ import au.edu.bond.classgroups.exception.InvalidTaskStateException;
 import au.edu.bond.classgroups.logging.TaskLoggerFactory;
 import au.edu.bond.classgroups.service.ResourceService;
 import au.edu.bond.classgroups.task.TaskExecutor;
-import au.edu.bond.classgroups.task.TaskProcessor;
 import au.edu.bond.classgroups.task.TaskProcessorFactory;
-import au.edu.bond.classgroups.feed.FeedDeserialiserFactory;
-import au.edu.bond.classgroups.feed.csv.FileCsvFeedDeserialiser;
 import au.edu.bond.classgroups.logging.TaskLogger;
 import au.edu.bond.classgroups.model.Task;
 import au.edu.bond.classgroups.service.DirectoryFactory;
@@ -47,7 +44,6 @@ public class PushCsvAction implements ActionBean {
     private TaskLoggerFactory taskLoggerFactory;
 
     private TaskProcessorFactory taskProcessorFactory;
-    private FeedDeserialiserFactory feedDeserialiserFactory;
 
     private File pushDir;
     private File groupsFile;
@@ -119,17 +115,27 @@ public class PushCsvAction implements ActionBean {
                 return null;
             }
 
-            FileCsvFeedDeserialiser fileCsvFeedDeserialiser = feedDeserialiserFactory.getHttpPushCsvFeedDeserialiser();
-            fileCsvFeedDeserialiser.setGroupsFile(getGroupsFile());
-            fileCsvFeedDeserialiser.setMembersFile(getMembersFile());
+            final File feedDirectory = directoryFactory.getFeedDirectory(task);
+            FileUtils.moveFileToDirectory(getGroupsFile(), feedDirectory, true);
+            FileUtils.moveFileToDirectory(getMembersFile(), feedDirectory, true);
 
-            TaskProcessor taskProcessor = taskProcessorFactory.getDefault();
-            taskProcessor.setFeedDeserialiser(fileCsvFeedDeserialiser);
-            taskProcessor.setCleanupRunnable(new DeleteRunDirectory(getPushDir()));
-            taskProcessor.setTask(task);
-            taskProcessor.setTaskLogger(taskLogger);
+            try {
+                FileUtils.deleteDirectory(getPushDir());
+            } catch (IOException e) {
+                taskLogger.info(resourceService.getLocalisationString("bond.classgroups.warning.failedtodeleteincomingdatadirectory"));
+            }
 
-            taskExecutor.executeTaskProcessor(taskProcessor);
+//            FileCsvFeedDeserialiser fileCsvFeedDeserialiser = feedDeserialiserFactory.getHttpPushCsvFeedDeserialiser();
+//            fileCsvFeedDeserialiser.setGroupsFile(getGroupsFile());
+//            fileCsvFeedDeserialiser.setMembersFile(getMembersFile());
+//
+//            TaskProcessor taskProcessor = taskProcessorFactory.getDefault();
+//            taskProcessor.setFeedDeserialiser(fileCsvFeedDeserialiser);
+//            taskProcessor.setCleanupRunnable(new DeleteRunDirectory(getPushDir()));
+//            taskProcessor.setTask(task);
+//            taskProcessor.setTaskLogger(taskLogger);
+//
+//            taskExecutor.executeTaskProcessor(taskProcessor);
         } catch (Exception e) {
             if(task != null) {
                 if(taskLogger != null) {
@@ -202,15 +208,6 @@ public class PushCsvAction implements ActionBean {
         this.taskService = taskService;
     }
 
-    public FeedDeserialiserFactory getFeedDeserialiserFactory() {
-        return feedDeserialiserFactory;
-    }
-
-    @SpringBean
-    public void setFeedDeserialiserFactory(FeedDeserialiserFactory feedDeserialiserFactory) {
-        this.feedDeserialiserFactory = feedDeserialiserFactory;
-    }
-
     public PushCsvFeedDeserialiserConfig getPushCsvFeedDeserialiserConfig() {
         return pushCsvFeedDeserialiserConfig;
     }
@@ -263,21 +260,4 @@ public class PushCsvAction implements ActionBean {
         this.passkey = passkey;
     }
 
-    private class DeleteRunDirectory implements Runnable {
-
-        private File runDir;
-
-        public DeleteRunDirectory(File runDir) {
-            this.runDir = runDir;
-        }
-
-        @Override
-        public void run() {
-            try {
-                FileUtils.deleteDirectory(runDir);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
 }

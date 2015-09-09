@@ -180,7 +180,7 @@
                 <div class="deserialiserTabFrame pullFileCsvConfig">
                     <div class="stepHelp">${pullCsvFileInstructions}</div>
                     <bbNG:dataElement>
-                        <label><input type="radio" name="configuration.defaultFeedDeserialiserBean" value="pullFileCsvFeedDeserialiser" ${actionBean.configuration.defaultFeedDeserialiserBean.equals("pullFileCsvFeedDeserialiser")?"checked=checked":""} /> ${pullCsvFileDefault}</label>
+                        <label><input type="radio" name="configuration.feedFetcherType" value="FILE" ${actionBean.configuration.feedFetcherType.toString().equals("FILE")?"checked=checked":""} /> ${pullCsvFileDefault}</label>
                     </bbNG:dataElement>
                     <bbNG:dataElement label="${pullCsvFileGroupsFilePath}">
                         <input type="text" name="configuration.pullFileCsvFeedDeserialiser.groupsFilePath" value="${actionBean.configuration.pullFileCsvFeedDeserialiser.groupsFilePath}" />
@@ -193,7 +193,7 @@
                 <div class="deserialiserTabFrame pullUrlCsvConfig">
                     <div class="stepHelp">${pullCsvUrlInstructions}</div>
                     <bbNG:dataElement>
-                    <label><input type="radio" name="configuration.defaultFeedDeserialiserBean" value="pullUrlCsvFeedDeserialiser" ${actionBean.configuration.defaultFeedDeserialiserBean.equals("pullUrlCsvFeedDeserialiser")?"checked=checked":""} /> ${pullCsvUrlDefault}</label>
+                    <label><input type="radio" name="configuration.feedFetcherType" value="URL" ${actionBean.configuration.feedFetcherType.toString().equals("URL")?"checked=checked":""} /> ${pullCsvUrlDefault}</label>
                     </bbNG:dataElement>
                     <bbNG:dataElement label="${pullCsvFileGroupsFileUrl}">
                         <input type="text" name="configuration.pullUrlCsvFeedDeserialiser.groupsUrl" value="${actionBean.configuration.pullUrlCsvFeedDeserialiser.groupsUrl}" />

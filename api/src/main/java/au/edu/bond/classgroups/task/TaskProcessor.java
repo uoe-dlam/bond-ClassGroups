@@ -4,9 +4,7 @@ import au.edu.bond.classgroups.config.Configuration;
 import au.edu.bond.classgroups.exception.FeedDeserialisationException;
 import au.edu.bond.classgroups.exception.InvalidTaskStateException;
 import au.edu.bond.classgroups.feed.FeedDeserialiser;
-import au.edu.bond.classgroups.feed.FeedDeserialiserFactory;
 import au.edu.bond.classgroups.logging.TaskLogger;
-import au.edu.bond.classgroups.logging.TaskLoggerFactory;
 import au.edu.bond.classgroups.manager.GroupManager;
 import au.edu.bond.classgroups.manager.SmartViewManager;
 import au.edu.bond.classgroups.model.Group;
@@ -28,8 +26,6 @@ public class TaskProcessor implements Runnable {
 
     @Autowired
     private TaskService taskService;
-    @Autowired
-    private FeedDeserialiserFactory feedDeserialiserFactory;
     @Autowired
     private GroupManager groupManager;
     @Autowired
@@ -55,16 +51,6 @@ public class TaskProcessor implements Runnable {
             } catch (InvalidTaskStateException e) {
                 taskLogger.error("bond.classgroups.error.invalidstate", e);
                 throw e;
-            }
-
-            if (feedDeserialiser == null) {
-                taskLogger.info("bond.classgroups.info.preconfigdeserialiser");
-                feedDeserialiser = feedDeserialiserFactory.getDefault();
-            }
-
-            if (feedDeserialiser == null) {
-                throw new Exception(resourceService.getLocalisationString("bond.classgroups.error.nopreconfigdeserialiser"));
-
             }
 
             taskLogger.info("bond.classgroups.info.consumingfeed");
@@ -192,14 +178,6 @@ public class TaskProcessor implements Runnable {
 
     public void setTaskService(TaskService taskService) {
         this.taskService = taskService;
-    }
-
-    public FeedDeserialiserFactory getFeedDeserialiserFactory() {
-        return feedDeserialiserFactory;
-    }
-
-    public void setFeedDeserialiserFactory(FeedDeserialiserFactory feedDeserialiserFactory) {
-        this.feedDeserialiserFactory = feedDeserialiserFactory;
     }
 
     public GroupManager getGroupManager() {
