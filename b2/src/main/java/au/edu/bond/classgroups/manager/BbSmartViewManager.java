@@ -78,8 +78,8 @@ public class BbSmartViewManager implements SmartViewManager {
 
         boolean dirty = false;
         if(gradebookCustomView == null) {
-            taskLogger.info(resourceService.getLocalisationString(
-                    "bond.classgroups.info.creatingsmartview", group.getGroupId(), group.getTitle()));
+//            taskLogger.info(resourceService.getLocalisationString(
+//                    "bond.classgroups.info.creatingsmartview", group.getGroupId(), group.getTitle()));
             gradebookCustomView = new GradebookCustomView();
 
             String alias = String.format("gr_%s", ext.getInternalGroupId());
