@@ -194,7 +194,8 @@ public class BbGroupManager implements GroupManager {
             try {
                 user = bbUserService.getByExternalSystemId(feedMember.getUserId(), courseId);
             } catch (ExecutionException e) {
-                //TODO: Handle this
+                taskLogger.warning(resourceService.getLocalisationString("bond.classgroups.warning.couldnotloaduser",
+                        feedMember.getUserId(), group.getCourseId(), group.getGroupId()), e);
                 continue;
             }
 
@@ -202,7 +203,8 @@ public class BbGroupManager implements GroupManager {
             try {
                 membership = bbCourseMembershipService.getByCourseIdAndUserId(courseId, user.getId());
             } catch (ExecutionException e) {
-                //TODO: Handle this
+                taskLogger.warning(resourceService.getLocalisationString("bond.classgroups.warning.couldnotloadcousemember",
+                        feedMember.getUserId(), group.getCourseId(), group.getGroupId()), e);
                 continue;
             }
             memberIds.add(membership.getId());

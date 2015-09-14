@@ -62,7 +62,7 @@ public class DefaultDeserialiserAction implements ActionBean {
             if(task != null) {
                 e.printStackTrace();
                 if(taskLogger != null) {
-//                    TODO: taskLogger.log();
+                    taskLogger.error("bond.classgroups.error.defaultexecutorfailed", e);
                 }
                 taskService.failTask(task);
             }

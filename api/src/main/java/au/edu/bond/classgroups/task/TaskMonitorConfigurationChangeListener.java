@@ -62,9 +62,7 @@ public class TaskMonitorConfigurationChangeListener implements ConfigurationChan
                     e.printStackTrace();
                 }
             }
-        }
-
-                , 0, 10, TimeUnit.SECONDS);
+        }, 0, 10, TimeUnit.SECONDS);
     }
 
     @Override
