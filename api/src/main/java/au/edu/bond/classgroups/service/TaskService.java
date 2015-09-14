@@ -5,6 +5,7 @@ import au.edu.bond.classgroups.exception.InvalidTaskStateException;
 import au.edu.bond.classgroups.model.Schedule;
 import au.edu.bond.classgroups.model.Task;
 import au.edu.bond.classgroups.util.ScheduleUtil;
+import au.edu.bond.classgroups.util.ServerUtil;
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -152,7 +153,7 @@ public class TaskService implements Closeable {
             task.setStatus(Task.Status.SKIPPED);
             taskDAO.update(task, entityManager);
         } else {
-            task = taskDAO.beginScheduled(task.getId(), getServerName(), entityManager);
+            task = taskDAO.beginScheduled(task.getId(), ServerUtil.getServerName(), entityManager);
 
             if(task == null) {
                 return null;
@@ -246,7 +247,7 @@ public class TaskService implements Closeable {
         }
 
         task.setStatus(Task.Status.PROCESSING);
-        task.setProcessingNode(getServerName());
+        task.setProcessingNode(ServerUtil.getServerName());
         Date now = new Date();
         task.setStartedDate(now);
         taskDAO.update(task, entityManager);
@@ -443,7 +444,7 @@ public class TaskService implements Closeable {
         Date now = new Date();
         task.setEnteredDate(now);
 
-        task.setEnteredNode(getServerName());
+        task.setEnteredNode(ServerUtil.getServerName());
 
         return task;
     }
@@ -523,16 +524,6 @@ public class TaskService implements Closeable {
                 entityManager.close();
             }
         }
-    }
-
-    private String getServerName() {
-        String server = null;
-        try {
-            server = InetAddress.getLocalHost().getHostName();
-        } catch (UnknownHostException e) {
-            throw new RuntimeException(e);
-        }
-        return server;
     }
 
     public TaskDAO getTaskDAO() {

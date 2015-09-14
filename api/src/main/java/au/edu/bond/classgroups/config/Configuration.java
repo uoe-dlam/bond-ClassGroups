@@ -44,6 +44,8 @@ public class Configuration {
     private List<Schedule> schedules;
     private boolean enrolStaffIfMissing;
     private int processingThreads;
+    private String processingServerNamePattern;
+    private int queuePollingFrequencySeconds;
     private FeedHeaderConfig feedHeaderConfig;
     private GroupAvailability groupSetAvailability;
 
@@ -181,5 +183,21 @@ public class Configuration {
 
     public void setFeedFetcherType(FeedFetcherType feedFetcherType) {
         this.feedFetcherType = feedFetcherType;
+    }
+
+    public String getProcessingServerNamePattern() {
+        return processingServerNamePattern;
+    }
+
+    public void setProcessingServerNamePattern(String processingServerNamePattern) {
+        this.processingServerNamePattern = processingServerNamePattern;
+    }
+
+    public int getQueuePollingFrequencySeconds() {
+        return queuePollingFrequencySeconds;
+    }
+
+    public void setQueuePollingFrequencySeconds(int queuePollingFrequencySeconds) {
+        this.queuePollingFrequencySeconds = queuePollingFrequencySeconds;
     }
 }

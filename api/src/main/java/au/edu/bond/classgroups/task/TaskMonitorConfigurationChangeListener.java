@@ -8,9 +8,13 @@ import au.edu.bond.classgroups.logging.TaskLoggerFactory;
 import au.edu.bond.classgroups.model.Task;
 import au.edu.bond.classgroups.service.DirectoryFactory;
 import au.edu.bond.classgroups.service.TaskService;
+import au.edu.bond.classgroups.util.ServerUtil;
 import com.alltheducks.configutils.monitor.ConfigurationChangeListener;
+import org.apache.commons.lang.StringUtils;
 
 import java.util.concurrent.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by shane on 9/09/2015.
@@ -35,9 +39,23 @@ public class TaskMonitorConfigurationChangeListener implements ConfigurationChan
 
     @Override
     public void configurationChanged(Configuration configuration) {
+        // Cancel existing schedule
         if(scheduledFuture != null) {
             scheduledFuture.cancel(false);
         }
+
+        // Check this server should run the process
+        if(StringUtils.isNotBlank(configuration.getProcessingServerNamePattern())) {
+            final Pattern serverNamePattern = Pattern.compile(configuration.getProcessingServerNamePattern());
+            final Matcher matcher = serverNamePattern.matcher(ServerUtil.getServerName());
+            if(!matcher.matches()) {
+                return;
+            }
+        };
+
+        int freq = configuration.getQueuePollingFrequencySeconds() > 0 ? configuration.getQueuePollingFrequencySeconds() : 10;
+
+        // Schedule the process
         scheduledFuture = executorService.scheduleWithFixedDelay(new Runnable() {
             @Override
             public void run() {
@@ -62,7 +80,7 @@ public class TaskMonitorConfigurationChangeListener implements ConfigurationChan
                     e.printStackTrace();
                 }
             }
-        }, 0, 10, TimeUnit.SECONDS);
+        }, 0, freq, TimeUnit.SECONDS);
     }
 
     @Override

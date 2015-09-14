@@ -4,6 +4,7 @@ import au.edu.bond.classgroups.config.Configuration;
 import au.edu.bond.classgroups.config.FeedHeaderConfig;
 import au.edu.bond.classgroups.dao.BbAvailableGroupToolDAO;
 import au.edu.bond.classgroups.model.Schedule;
+import au.edu.bond.classgroups.util.ServerUtil;
 import blackboard.data.navigation.NavigationApplication;
 import blackboard.persist.PersistenceException;
 import com.alltheducks.bb.stripes.EntitlementRestrictions;
@@ -30,8 +31,11 @@ public class ConfigAction implements ActionBean {
     private ConfigurationService<Configuration> configurationService;
     private BbAvailableGroupToolDAO bbAvailableGroupToolDAO;
 
+    private String currentServerName;
+
     @DefaultHandler
     public Resolution display() {
+        currentServerName = ServerUtil.getServerName();
         return new ForwardResolution("/WEB-INF/jsp/config.jsp");
     }
 
@@ -61,7 +65,12 @@ public class ConfigAction implements ActionBean {
         configuration = configurationService.loadConfiguration();
         if (configuration == null) {
             configuration = new Configuration();
+        }
+        if (configuration.getProcessingThreads() <= 0) {
             configuration.setProcessingThreads(1);
+        }
+        if(configuration.getQueuePollingFrequencySeconds() <= 0) {
+            configuration.setQueuePollingFrequencySeconds(10);
         }
         if(configuration.getFeedHeaderConfig() == null) {
             final FeedHeaderConfig feedHeaderConfig = new FeedHeaderConfig();
@@ -126,6 +135,14 @@ public class ConfigAction implements ActionBean {
     @SpringBean
     public void setBbAvailableGroupToolDAO(BbAvailableGroupToolDAO bbAvailableGroupToolDAO) {
         this.bbAvailableGroupToolDAO = bbAvailableGroupToolDAO;
+    }
+
+    public String getCurrentServerName() {
+        return currentServerName;
+    }
+
+    public void setCurrentServerName(String currentServerName) {
+        this.currentServerName = currentServerName;
     }
 
     public Map<String, String> getAllGroupTools() throws PersistenceException {

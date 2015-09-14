@@ -110,6 +110,11 @@
 <fmt:message var="processing" key="bond.classgroups.config.processing" />
 <fmt:message var="processingInstructions" key="bond.classgroups.config.processing.instructions" />
 <fmt:message var="processingThreads" key="bond.classgroups.config.processing.threads" />
+<fmt:message var="queuePollingFrequencySeconds" key="bond.classgroups.config.processing.queuepollingfrequencyseconds" />
+<fmt:message var="processingServerNamePattern" key="bond.classgroups.config.processing.processingservernamepattern" />
+<fmt:message var="currentServer" key="bond.classgroups.config.processing.currentserver">
+    <fmt:param value="${actionBean.currentServerName}" />
+</fmt:message>
 
 <fmt:message var="save" key="bond.classgroups.config.save" />
 
@@ -274,6 +279,13 @@
                 <bbNG:dataElement label="${processingThreads}" isRequired="true">
                     <input type="text" name="configuration.processingThreads" value="${actionBean.configuration.processingThreads}" />
                 </bbNG:dataElement>
+                <bbNG:dataElement label="${queuePollingFrequencySeconds}" isRequired="true">
+                    <input type="text" name="configuration.queuePollingFrequencySeconds" value="${actionBean.configuration.queuePollingFrequencySeconds}" />
+                </bbNG:dataElement>
+                <bbNG:dataElement label="${processingServerNamePattern}" isRequired="true">
+                    <input type="text" name="configuration.processingServerNamePattern" value="${actionBean.configuration.processingServerNamePattern}" /><br/>
+                    <em>${currentServer}</em>
+                </bbNG:dataElement>
             </bbNG:step>
 
             <bbNG:stepSubmit showCancelButton="true">
@@ -295,7 +307,7 @@
                     friday: "${schedulingSchedulesFriday}",
                     saturday: "${schedulingSchedulesSaturday}",
                     sunday: "${schedulingSchedulesSunday}"
-                }
+                };
 
                 var schedules = ${actionBean.schedulesJson};
                 if(schedules) {
