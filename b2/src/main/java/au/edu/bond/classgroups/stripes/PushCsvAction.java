@@ -115,9 +115,8 @@ public class PushCsvAction implements ActionBean {
                 return null;
             }
 
-            final File feedDirectory = directoryFactory.getFeedDirectory(task);
-            FileUtils.moveFileToDirectory(getGroupsFile(), feedDirectory, true);
-            FileUtils.moveFileToDirectory(getMembersFile(), feedDirectory, true);
+            FileUtils.moveFile(getGroupsFile(), directoryFactory.getFeedGroupsFile(task));
+            FileUtils.moveFile(getMembersFile(), directoryFactory.getFeedMembersFile(task));
 
             try {
                 FileUtils.deleteDirectory(getPushDir());
@@ -125,17 +124,7 @@ public class PushCsvAction implements ActionBean {
                 taskLogger.info(resourceService.getLocalisationString("bond.classgroups.warning.failedtodeleteincomingdatadirectory"));
             }
 
-//            FileCsvFeedDeserialiser fileCsvFeedDeserialiser = feedDeserialiserFactory.getHttpPushCsvFeedDeserialiser();
-//            fileCsvFeedDeserialiser.setGroupsFile(getGroupsFile());
-//            fileCsvFeedDeserialiser.setMembersFile(getMembersFile());
-//
-//            TaskProcessor taskProcessor = taskProcessorFactory.getDefault();
-//            taskProcessor.setFeedDeserialiser(fileCsvFeedDeserialiser);
-//            taskProcessor.setCleanupRunnable(new DeleteRunDirectory(getPushDir()));
-//            taskProcessor.setTask(task);
-//            taskProcessor.setTaskLogger(taskLogger);
-//
-//            taskExecutor.executeTaskProcessor(taskProcessor);
+            taskService.pendingTask(task);
         } catch (Exception e) {
             if(task != null) {
                 if(taskLogger != null) {
@@ -159,14 +148,14 @@ public class PushCsvAction implements ActionBean {
 
     private File getGroupsFile() {
         if (groupsFile == null) {
-            groupsFile = new File(getPushDir(), "groups.csv");
+            groupsFile = new File(getPushDir(), "groups");
         }
         return groupsFile;
     }
 
     private File getMembersFile() {
         if (membersFile == null) {
-            membersFile = new File(getPushDir(), "members.csv");
+            membersFile = new File(getPushDir(), "members");
         }
         return membersFile;
     }

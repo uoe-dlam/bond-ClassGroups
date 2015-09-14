@@ -152,6 +152,15 @@
     </bean>
 
     <bean id="scheduledTaskConfigurationChangeListener" class="au.edu.bond.classgroups.task.ScheduledTaskConfigurationChangeListener" />
+    
+    <bean id="taskMonitorConfigurationChangeListener" class="au.edu.bond.classgroups.task.TaskMonitorConfigurationChangeListener">
+        <property name="taskExecutor" ref="taskExecutor" />
+        <property name="taskLoggerFactory" ref="taskLoggerFactory" />
+        <property name="taskProcessorFactory" ref="taskProcessorFactory" />
+        <property name="taskService" ref="taskService" />
+        <property name="feedDeserialiserFactory" ref="feedDeserialiserFactory" />
+        <property name="directoryFactory" ref="configurationDirectoryFactory" />
+    </bean>
 
     <bean id="taskCleanupRunner" class="au.edu.bond.classgroups.task.TaskCleanupRunner" />
     <bean id="cleanupDelaySeconds" class="java.lang.Long">
@@ -169,9 +178,11 @@
     </bean>
 
     <bean id="feedFetcherFactory" class="au.edu.bond.classgroups.feed.FeedFetcherFactory">
-        <property name="configuration" ref="configuration" />
+        <property name="configurationService" ref="configurationService" />
         <property name="directoryFactory" ref="configurationDirectoryFactory" />
     </bean>
+
+    <bean id="feedDeserialiserFactory" class="au.edu.bond.classgroups.feed.FeedDeserialiserFactory" />
 
     <!--Configuration-->
     <bean id="configurationDirectoryFactory" class="au.edu.bond.classgroups.config.BbDirectoryFactory" />
@@ -200,6 +211,7 @@
         <constructor-arg name="listeners">
             <list>
                 <ref bean="scheduledTaskConfigurationChangeListener"/>
+                <ref bean="taskMonitorConfigurationChangeListener" />
             </list>
         </constructor-arg>
     </bean>

@@ -2,16 +2,18 @@ package au.edu.bond.classgroups.service;
 
 import au.edu.bond.classgroups.dao.TaskDAO;
 import au.edu.bond.classgroups.exception.InvalidTaskStateException;
-import au.edu.bond.classgroups.logging.TaskLogger;
 import au.edu.bond.classgroups.model.Schedule;
 import au.edu.bond.classgroups.model.Task;
 import au.edu.bond.classgroups.util.ScheduleUtil;
+import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
+import javax.persistence.NoResultException;
 import java.io.Closeable;
+import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -30,6 +32,8 @@ public class TaskService implements Closeable {
     private TaskDAO taskDAO;
     @Autowired
     private ResourceService resourceService;
+    @Autowired
+    private DirectoryFactory directoryFactory;
 
     private final Date lastStatUpdate = new Date(0);
 
@@ -76,41 +80,55 @@ public class TaskService implements Closeable {
     }
 
     public Task createTask() {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-        EntityTransaction entityTransaction = entityManager.getTransaction();
+        EntityManager entityManager = null;
+        EntityTransaction entityTransaction = null;
 
-        Task task;
-
-        entityTransaction.begin();
         try {
-            task = createPendingTask();
+            entityManager = entityManagerFactory.createEntityManager();
+            entityTransaction = entityManager.getTransaction();
+
+            entityTransaction.begin();
+
+            Task task = createNewTask();
 
             taskDAO.create(task, entityManager);
             entityTransaction.commit();
+
+            return task;
         } catch (RuntimeException e) {
-            entityTransaction.rollback();
+            if(entityTransaction != null) {
+                entityTransaction.rollback();
+            }
             throw e;
         } finally {
-            entityManager.close();
+            if(entityManager != null) {
+                entityManager.close();
+            }
         }
-
-        return task;
     }
 
     public Task prepareScheduledTask(Task task) throws InvalidTaskStateException {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-        EntityTransaction entityTransaction = entityManager.getTransaction();
+        EntityManager entityManager = null;
+        EntityTransaction entityTransaction = null;
 
-        entityTransaction.begin();
         try {
+            entityManager = entityManagerFactory.createEntityManager();
+            entityTransaction = entityManager.getTransaction();
+
+            entityTransaction.begin();
+
             final Task result = prepareScheduledTask(task, entityManager);
             entityTransaction.commit();
             return result;
         } catch (RuntimeException e) {
-            entityTransaction.rollback();
+            if(entityTransaction != null) {
+                entityTransaction.rollback();
+            }
             throw e;
         } finally {
-            entityManager.close();
+            if(entityManager != null) {
+                entityManager.close();
+            }
         }
     }
 
@@ -144,19 +162,70 @@ public class TaskService implements Closeable {
         return task;
     }
 
-    public void beginTask(Task task) throws InvalidTaskStateException {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-        EntityTransaction entityTransaction = entityManager.getTransaction();
+    public void pendingTask(Task task) throws InvalidTaskStateException {
+        EntityManager entityManager = null;
+        EntityTransaction entityTransaction = null;
 
-        entityTransaction.begin();
         try {
+            entityManager = entityManagerFactory.createEntityManager();
+            entityTransaction = entityManager.getTransaction();
+
+            entityTransaction.begin();
+
+            pendingTask(task, entityManager);
+            entityTransaction.commit();
+        } catch (RuntimeException e) {
+            if(entityTransaction != null) {
+                entityTransaction.rollback();
+            }
+            throw e;
+        } finally {
+            if(entityManager != null) {
+                entityManager.close();
+            }
+        }
+    }
+
+    public void pendingTask(Task task, EntityManager entityManager) throws InvalidTaskStateException {
+        Task transactionTask = taskDAO.get(task.getId(), entityManager);
+
+        if(transactionTask.getStatus() != task.getStatus()) {
+            throw new InvalidTaskStateException(resourceService.getLocalisationString(
+                    "bond.classgroups.exception.taskupdatedexternally",
+                    task.getStatus(), transactionTask.getStatus()));
+        }
+
+        if(task.getStatus() != Task.Status.NEW) {
+            throw new InvalidTaskStateException(
+                    resourceService.getLocalisationString(
+                            "bond.classgroups.exception.cannotbeginnotnew",
+                            task.getStatus().name()));
+        }
+
+        task.setStatus(Task.Status.PENDING);
+        taskDAO.update(task, entityManager);
+    }
+
+    public void beginTask(Task task) throws InvalidTaskStateException {
+        EntityManager entityManager = null;
+        EntityTransaction entityTransaction = null;
+
+        try {
+            entityManager = entityManagerFactory.createEntityManager();
+            entityTransaction = entityManager.getTransaction();
+
+            entityTransaction.begin();
             beginTask(task, entityManager);
             entityTransaction.commit();
         } catch (RuntimeException e) {
-            entityTransaction.rollback();
+            if(entityTransaction != null) {
+                entityTransaction.rollback();
+            }
             throw e;
         } finally {
-            entityManager.close();
+            if(entityManager != null) {
+                entityManager.close();
+            }
         }
     }
 
@@ -183,23 +252,43 @@ public class TaskService implements Closeable {
         taskDAO.update(task, entityManager);
     }
 
-    public Task beginNextTask(EntityManager entityManager) {
+    public Task getNextPending() {
+        return getNextPending(null);
+    }
 
+    private Task getNextPending(EntityManager entityManager) {
+        try {
+            if (entityManager == null) {
+                return taskDAO.getNextPending();
+            } else {
+                return taskDAO.getNextPending(entityManager);
+            }
+        } catch (NoResultException e) {
+            return null;
+        }
     }
 
     public void endTask(Task task) throws InvalidTaskStateException {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-        EntityTransaction entityTransaction = entityManager.getTransaction();
+        EntityManager entityManager = null;
+        EntityTransaction entityTransaction = null;
 
-        entityTransaction.begin();
         try {
+            entityManager = entityManagerFactory.createEntityManager();
+            entityTransaction = entityManager.getTransaction();
+
+            entityTransaction.begin();
+
             endTask(task, entityManager);
             entityTransaction.commit();
         } catch (RuntimeException e) {
-            entityTransaction.rollback();
+            if(entityTransaction != null) {
+                entityTransaction.rollback();
+            }
             throw e;
         } finally {
-            entityManager.close();
+            if(entityManager != null) {
+                entityManager.close();
+            }
         }
 
 
@@ -228,19 +317,26 @@ public class TaskService implements Closeable {
     }
 
     public void failTask(Task task) throws InvalidTaskStateException {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-        EntityTransaction entityTransaction = entityManager.getTransaction();
+        EntityManager entityManager = null;
+        EntityTransaction entityTransaction = null;
 
-        entityTransaction.begin();
         try {
+            entityManager = entityManagerFactory.createEntityManager();
+            entityTransaction = entityManager.getTransaction();
+
+            entityTransaction.begin();
+
             failTask(task, entityManager);
             entityTransaction.commit();
         } catch (RuntimeException e) {
-            entityTransaction.rollback();
+            if(entityTransaction != null) {
+                entityTransaction.rollback();
+            }
             throw e;
         } finally {
-            entityManager.close();
-
+            if(entityManager != null) {
+                entityManager.close();
+            }
         }
     }
 
@@ -261,18 +357,26 @@ public class TaskService implements Closeable {
     }
 
     public void cancelTask(Task task) throws InvalidTaskStateException {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-        EntityTransaction entityTransaction = entityManager.getTransaction();
+        EntityManager entityManager = null;
+        EntityTransaction entityTransaction = null;
 
         entityTransaction.begin();
         try {
+            entityManager = entityManagerFactory.createEntityManager();
+            entityTransaction = entityManager.getTransaction();
+
+            entityTransaction.begin();
             cancelTask(task, entityManager);
             entityTransaction.commit();
         } catch (RuntimeException e) {
-            entityTransaction.rollback();
+            if(entityTransaction != null) {
+                entityTransaction.rollback();
+            }
             throw e;
         } finally {
-            entityManager.close();
+            if(entityManager != null) {
+                entityManager.close();
+            }
 
         }
     }
@@ -316,7 +420,11 @@ public class TaskService implements Closeable {
     }
 
     public void deleteOlderThan(Date date) {
-        taskDAO.deleteOlderThan(date);
+        final Collection<Long> deletedIds = taskDAO.deleteOlderThan(date);
+        for (Long deletedId : deletedIds) {
+            final File feedDirectory = directoryFactory.getFeedDirectory(deletedId);
+            FileUtils.deleteQuietly(feedDirectory);
+        }
     }
 
     public void deleteOlderThan(int days) {
@@ -325,7 +433,7 @@ public class TaskService implements Closeable {
         }
 
         Calendar calendar = GregorianCalendar.getInstance();
-        calendar.add(Calendar.DAY_OF_YEAR, -1*days);
+        calendar.add(Calendar.DAY_OF_YEAR, -1 * days);
 
         deleteOlderThan(calendar.getTime());
     }
@@ -337,6 +445,12 @@ public class TaskService implements Closeable {
 
         task.setEnteredNode(getServerName());
 
+        return task;
+    }
+
+    private Task createNewTask() {
+        Task task = createBaseTask();
+        task.setStatus(Task.Status.NEW);
         return task;
     }
 
@@ -366,13 +480,17 @@ public class TaskService implements Closeable {
         Calendar nextOccurrenceCal = schedules == null ? null : ScheduleUtil.GetNextOccurrence(schedules);
         Date nextOccurrence = nextOccurrenceCal == null ? null : nextOccurrenceCal.getTime();
 
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-        EntityTransaction entityTransaction = entityManager.getTransaction();
+        EntityManager entityManager = null;
+        EntityTransaction entityTransaction = null;
 
-        Task task = null;
-
-        entityTransaction.begin();
         try {
+            entityManager = entityManagerFactory.createEntityManager();
+            entityTransaction = entityManager.getTransaction();
+
+            Task task = null;
+
+            entityTransaction.begin();
+
             final List<Task> scheduledTasks = taskDAO.getByStatus(Task.Status.SCHEDULED, entityManager);
 
             for(Task scheduledTask : scheduledTasks) {
@@ -393,14 +511,18 @@ public class TaskService implements Closeable {
             }
 
             entityTransaction.commit();
+
+            return task;
         } catch (RuntimeException e) {
-            entityTransaction.rollback();
+            if(entityTransaction != null) {
+                entityTransaction.rollback();
+            }
             throw e;
         } finally {
-            entityManager.close();
+            if(entityManager != null) {
+                entityManager.close();
+            }
         }
-
-        return task;
     }
 
     private String getServerName() {
@@ -435,6 +557,14 @@ public class TaskService implements Closeable {
 
     public void setResourceService(ResourceService resourceService) {
         this.resourceService = resourceService;
+    }
+
+    public DirectoryFactory getDirectoryFactory() {
+        return directoryFactory;
+    }
+
+    public void setDirectoryFactory(DirectoryFactory directoryFactory) {
+        this.directoryFactory = directoryFactory;
     }
 
     @Override

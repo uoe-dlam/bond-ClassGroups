@@ -11,7 +11,7 @@ import java.util.Date;
 public class Task {
 
     public static enum Status {
-        PENDING, PROCESSING, SKIPPED, COMPLETE, FAILED, UNKNOWN, SCHEDULED, CANCELLED
+        PENDING, PROCESSING, SKIPPED, COMPLETE, FAILED, UNKNOWN, SCHEDULED, CANCELLED, NEW
     }
 
     private Long id;

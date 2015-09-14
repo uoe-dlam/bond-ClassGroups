@@ -19,8 +19,8 @@ public abstract class FeedFetcher {
     public void fetchData(Task task) throws IOException {
         final File feedDirectory = directoryFactory.getFeedDirectory(task);
 
-        FileUtils.copyInputStreamToFile(new BufferedInputStream(fetchGroupsData()), new File(feedDirectory, "groups"));
-        FileUtils.copyInputStreamToFile(new BufferedInputStream(fetchMembersData()), new File(feedDirectory, "members"));
+        FileUtils.copyInputStreamToFile(new BufferedInputStream(fetchGroupsData()), directoryFactory.getFeedGroupsFile(task));
+        FileUtils.copyInputStreamToFile(new BufferedInputStream(fetchMembersData()), directoryFactory.getFeedMembersFile(task));
     }
 
     public DirectoryFactory getDirectoryFactory() {

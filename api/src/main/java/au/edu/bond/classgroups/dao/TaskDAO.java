@@ -51,10 +51,38 @@ public class TaskDAO implements Closeable {
     }
 
     public List<Task> getByStatus(Collection<Task.Status> statuses) {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-        final List<Task> task = getByStatus(statuses, entityManager);
-        entityManager.close();
-        return task;
+        EntityManager entityManager = null;
+        try {
+            entityManager = entityManagerFactory.createEntityManager();
+            return getByStatus(statuses, entityManager);
+        } finally {
+            if(entityManager != null) {
+                entityManager.close();
+            }
+        }
+    }
+
+    public Task getNextPending(EntityManager entityManager) {
+        TypedQuery<Task> query = entityManager.createQuery("FROM Task " +
+                "WHERE status = :pending_status " +
+                "AND NOT EXISTS (FROM Task WHERE status = :processing_status) " +
+                "ORDER BY enteredDate, id", Task.class);
+        query.setMaxResults(1);
+        query.setParameter("pending_status", Task.Status.PENDING);
+        query.setParameter("processing_status", Task.Status.PROCESSING);
+        return query.getSingleResult();
+    }
+
+    public Task getNextPending() {
+        EntityManager entityManager = null;
+        try {
+            entityManager = entityManagerFactory.createEntityManager();
+            return getNextPending(entityManager);
+        } finally {
+            if(entityManager != null) {
+                entityManager.close();
+            }
+        }
     }
 
     public Collection<Task> getAll(EntityManager entityManager) {
@@ -63,10 +91,15 @@ public class TaskDAO implements Closeable {
     }
 
     public Collection<Task> getAll() {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-        final Collection<Task> tasks = getAll(entityManager);
-        entityManager.close();
-        return tasks;
+        EntityManager entityManager = null;
+        try {
+            entityManager = entityManagerFactory.createEntityManager();
+            return getAll(entityManager);
+        } finally {
+            if(entityManager != null) {
+                entityManager.close();
+            }
+        }
     }
 
     public Task getMostRecentlyStarted(EntityManager entityManager) {
@@ -77,10 +110,15 @@ public class TaskDAO implements Closeable {
     }
 
     public Task getMostRecentlyStarted() {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-        final Task task = getMostRecentlyStarted(entityManager);
-        entityManager.close();
-        return task;
+        EntityManager entityManager = null;
+        try {
+        entityManager = entityManagerFactory.createEntityManager();
+        return getMostRecentlyStarted(entityManager);
+        } finally {
+            if(entityManager != null) {
+                entityManager.close();
+            }
+        }
     }
 
     public Task get(long id, EntityManager entityManager) {
@@ -88,10 +126,15 @@ public class TaskDAO implements Closeable {
     }
 
     public Task get(long id) {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-        final Task task = get(id, entityManager);
-        entityManager.close();
-        return task;
+        EntityManager entityManager = null;
+        try {
+        entityManager = entityManagerFactory.createEntityManager();
+        return get(id, entityManager);
+        } finally {
+            if(entityManager != null) {
+                entityManager.close();
+            }
+        }
     }
 
     public void create(Task task, EntityManager entityManager) {
@@ -99,18 +142,24 @@ public class TaskDAO implements Closeable {
     }
 
     public void create(Task task) {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-        EntityTransaction entityTransaction = entityManager.getTransaction();
-
-        entityTransaction.begin();
+        EntityManager entityManager = null;
+        EntityTransaction entityTransaction = null;
         try {
+            entityManager = entityManagerFactory.createEntityManager();
+            entityTransaction = entityManager.getTransaction();
+
+            entityTransaction.begin();
             create(task, entityManager);
             entityTransaction.commit();
         } catch(RuntimeException e) {
-            entityTransaction.rollback();
+            if(entityTransaction != null) {
+                entityTransaction.rollback();
+            }
             throw e;
         } finally {
-            entityManager.close();
+            if(entityManager != null) {
+                entityManager.close();
+            }
         }
     }
 
@@ -119,18 +168,25 @@ public class TaskDAO implements Closeable {
     }
 
     public void update(Task task) {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-        EntityTransaction entityTransaction = entityManager.getTransaction();
+        EntityManager entityManager = null;
+        EntityTransaction entityTransaction = null;
 
-        entityTransaction.begin();
         try {
+            entityManager = entityManagerFactory.createEntityManager();
+            entityTransaction = entityManager.getTransaction();
+            entityTransaction.begin();
+
             update(task, entityManager);
             entityTransaction.commit();
         } catch(RuntimeException e) {
-            entityTransaction.rollback();
+            if(entityTransaction != null) {
+                entityTransaction.rollback();
+            }
             throw e;
         } finally {
-            entityManager.close();
+            if(entityManager != null) {
+                entityManager.close();
+            }
         }
     }
 
@@ -139,18 +195,25 @@ public class TaskDAO implements Closeable {
     }
 
     public void delete(Task task) {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-        EntityTransaction entityTransaction = entityManager.getTransaction();
+        EntityManager entityManager = null;
+        EntityTransaction entityTransaction = null;
 
-        entityTransaction.begin();
         try {
+            entityManager = entityManagerFactory.createEntityManager();
+            entityTransaction = entityManager.getTransaction();
+            entityTransaction.begin();
+
             delete(task, entityManager);
             entityTransaction.commit();
         } catch(RuntimeException e) {
-            entityTransaction.rollback();
+            if(entityTransaction != null) {
+                entityTransaction.rollback();
+            }
             throw e;
         } finally {
-            entityManager.close();
+            if(entityManager != null) {
+                entityManager.close();
+            }
         }
     }
 
@@ -160,61 +223,87 @@ public class TaskDAO implements Closeable {
     }
 
     public void delete(long id) {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-        EntityTransaction entityTransaction = entityManager.getTransaction();
+        EntityManager entityManager = null;
+        EntityTransaction entityTransaction = null;
 
-        entityTransaction.begin();
         try {
+            entityManager = entityManagerFactory.createEntityManager();
+            entityTransaction = entityManager.getTransaction();
+            entityTransaction.begin();
+
             delete(id, entityManager);
             entityTransaction.commit();
         } catch(RuntimeException e) {
-            entityTransaction.rollback();
+            if(entityTransaction != null) {
+                entityTransaction.rollback();
+            }
             throw e;
         } finally {
-
-            entityManager.close();
+            if(entityManager != null) {
+                entityManager.close();
+            }
         }
     }
 
-    public void deleteOlderThan(Date date, EntityManager entityManager) {
-        Query q = entityManager.createQuery("delete Task where enteredDate < :date");
+    public Collection<Long> deleteOlderThan(Date date, EntityManager entityManager) {
+        TypedQuery<Task> q = entityManager.createQuery("FROM Task WHERE enteredDate < :date", Task.class);
         q.setParameter("date", date);
-        q.executeUpdate();
+        final List<Task> resultList = q.getResultList();
+        final Set<Long> deletedIds = new HashSet<>();
+        for (Task task : resultList) {
+            deletedIds.add(task.getId());
+            delete(task, entityManager);
+        }
+        return deletedIds;
     }
 
-    public void deleteOlderThan(Date date) {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-        EntityTransaction entityTransaction = entityManager.getTransaction();
+    public Collection<Long> deleteOlderThan(Date date) {
+        EntityManager entityManager = null;
+        EntityTransaction entityTransaction = null;
 
-        entityTransaction.begin();
         try {
-            deleteOlderThan(date, entityManager);
+            entityManager = entityManagerFactory.createEntityManager();
+            entityTransaction = entityManager.getTransaction();
+            entityTransaction.begin();
+
+            final Collection<Long> deletedIds = deleteOlderThan(date, entityManager);
             entityTransaction.commit();
+
+            return deletedIds;
         } catch(RuntimeException e) {
-            entityTransaction.rollback();
+            if(entityTransaction != null) {
+                entityTransaction.rollback();
+            }
             throw e;
         } finally {
-            entityManager.close();
+            if(entityManager != null) {
+                entityManager.close();
+            }
         }
     }
 
     public Task beginScheduled(long id, String node) {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-        EntityTransaction entityTransaction = entityManager.getTransaction();
+        EntityManager entityManager = null;
+        EntityTransaction entityTransaction = null;
 
-        Task returned;
-        entityTransaction.begin();
         try {
-            returned = beginScheduled(id, node, entityManager);
+            entityManager = entityManagerFactory.createEntityManager();
+            entityTransaction = entityManager.getTransaction();
+            entityTransaction.begin();
+
+            Task returned = beginScheduled(id, node, entityManager);
             entityTransaction.commit();
+            return returned;
         } catch(RuntimeException e) {
-            entityTransaction.rollback();
+            if(entityTransaction != null) {
+                entityTransaction.rollback();
+            }
             throw e;
         } finally {
-            entityManager.close();
+            if(entityManager != null) {
+                entityManager.close();
+            }
         }
-
-        return returned;
     }
 
     public Task beginScheduled(long id, String node, EntityManager entityManager) {
@@ -254,22 +343,27 @@ public class TaskDAO implements Closeable {
     }
 
     public Task createScheduled(Task task) {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-        EntityTransaction entityTransaction = entityManager.getTransaction();
+        EntityManager entityManager = null;
+        EntityTransaction entityTransaction = null;
 
-        Task returned;
-        entityTransaction.begin();
         try {
-            returned = createScheduled(task, entityManager);
+            entityManager = entityManagerFactory.createEntityManager();
+            entityTransaction = entityManager.getTransaction();
+
+            entityTransaction.begin();
+            Task returned = createScheduled(task, entityManager);
             entityTransaction.commit();
+            return returned;
         } catch(RuntimeException e) {
-            entityTransaction.rollback();
+            if(entityTransaction != null) {
+                entityTransaction.rollback();
+            }
             throw e;
         } finally {
-            entityManager.close();
+            if(entityManager != null) {
+                entityManager.close();
+            }
         }
-
-        return returned;
     }
 
     public Task createScheduled(final Task task, EntityManager entityManager) {

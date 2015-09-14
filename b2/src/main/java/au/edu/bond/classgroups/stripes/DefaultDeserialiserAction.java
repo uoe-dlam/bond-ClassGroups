@@ -56,22 +56,23 @@ public class DefaultDeserialiserAction implements ActionBean {
             final FeedFetcher configuredFeedFetcher = feedFetcherFactory.getConfiguredFeedFetcher();
             configuredFeedFetcher.fetchData(task);
 
-//        TaskProcessor taskProcessor = taskProcessorFactory.getDefault();
-//        taskProcessor.setTask(task);
-//        taskProcessor.setTaskLogger(taskLogger);
-//        taskExecutor.executeTaskProcessor(taskProcessor);
+            taskService.pendingTask(task);
 
-            return new RedirectResolution(String.format("/Log.action?taskId=%s", task.getId()));
         } catch (Exception e) {
             if(task != null) {
+                e.printStackTrace();
                 if(taskLogger != null) {
-//                    taskLogger.log();
+//                    TODO: taskLogger.log();
                 }
                 taskService.failTask(task);
             }
         }
 
+        if(task != null) {
+            return new RedirectResolution(String.format("/Log.action?taskId=%s", task.getId()));
+        }
         return null;
+
     }
 
     public boolean isDefaultDeserialiserConfigured() {

@@ -31,8 +31,22 @@ public abstract class DirectoryFactory {
     }
 
     public File getFeedDirectory(Task task) {
-        final File file = new File(getFeedBaseDirectory(), String.format("task%s", task.getId().toString()));
+        return getFeedDirectory(task.getId());
+    }
+
+    public File getFeedDirectory(long taskId) {
+        final File file = new File(getFeedBaseDirectory(), String.format("task%s", Long.toString(taskId)));
         file.mkdirs();
+        return file;
+    }
+
+    public File getFeedGroupsFile(Task task) {
+        final File file = new File(getFeedDirectory(task), "groups");
+        return file;
+    }
+
+    public File getFeedMembersFile(Task task) {
+        final File file = new File(getFeedDirectory(task), "members");
         return file;
     }
 

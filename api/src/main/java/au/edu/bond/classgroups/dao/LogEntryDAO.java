@@ -27,95 +27,140 @@ public class LogEntryDAO implements Closeable {
     }
 
     public Collection<LogEntry> getAllForTask(Task task) {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-        TypedQuery<LogEntry> query = entityManager.createQuery("FROM LogEntry WHERE taskId = :taskId", LogEntry.class);
-        query.setParameter("taskId", task.getId());
-        final List<LogEntry> logEntries = query.getResultList();
-        entityManager.close();
-        return logEntries;
+        EntityManager entityManager = null;
+
+        try {
+            entityManager = entityManagerFactory.createEntityManager();
+            TypedQuery<LogEntry> query = entityManager.createQuery("FROM LogEntry WHERE taskId = :taskId", LogEntry.class);
+            query.setParameter("taskId", task.getId());
+            return query.getResultList();
+        } finally {
+            if(entityManager != null) {
+                entityManager.close();
+            }
+        }
     }
 
     public Collection<LogEntry> getAllForTaskAfterId(Task task, Long id) {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-        TypedQuery<LogEntry> query = entityManager.createQuery("FROM LogEntry " +
-                "WHERE taskId = :taskId " +
-                "AND id > :afterId", LogEntry.class);
-        query.setParameter("taskId", task.getId());
-        query.setParameter("afterId", id);
-        final List<LogEntry> logEntries = query.getResultList();
-        entityManager.close();
-        return logEntries;
+        EntityManager entityManager = null;
+
+        try {
+            entityManager = entityManagerFactory.createEntityManager();
+            TypedQuery<LogEntry> query = entityManager.createQuery("FROM LogEntry " +
+                    "WHERE taskId = :taskId " +
+                    "AND id > :afterId", LogEntry.class);
+            query.setParameter("taskId", task.getId());
+            query.setParameter("afterId", id);
+            return query.getResultList();
+        } finally {
+            if(entityManager != null) {
+                entityManager.close();
+            }
+        }
     }
 
     public LogEntry get(long id) {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-        final LogEntry logEntry = entityManager.find(LogEntry.class, id);
-        entityManager.close();
-        return logEntry;
+        EntityManager entityManager = null;
+        try {
+            entityManager = entityManagerFactory.createEntityManager();
+            return entityManager.find(LogEntry.class, id);
+        } finally {
+            if(entityManager != null) {
+                entityManager.close();
+            }
+        }
     }
 
     public void create(LogEntry entry) {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-        EntityTransaction entityTransaction = entityManager.getTransaction();
+        EntityManager entityManager = null;
+        EntityTransaction entityTransaction = null;
 
-        entityTransaction.begin();
         try {
+            entityManager = entityManagerFactory.createEntityManager();
+            entityTransaction = entityManager.getTransaction();
+
+            entityTransaction.begin();
             entityManager.persist(entry);
             entityTransaction.commit();
         } catch(RuntimeException e) {
-            entityTransaction.rollback();
+            if(entityTransaction != null) {
+                entityTransaction.rollback();
+            }
             throw e;
         } finally {
-            entityManager.close();
+            if(entityManager != null) {
+                entityManager.close();
+            }
         }
     }
 
     public void update(LogEntry entry) {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-        EntityTransaction entityTransaction = entityManager.getTransaction();
+        EntityManager entityManager = null;
+        EntityTransaction entityTransaction = null;
 
-        entityTransaction.begin();
         try {
+            entityManager = entityManagerFactory.createEntityManager();
+            entityTransaction = entityManager.getTransaction();
+
+            entityTransaction.begin();
             entityManager.remove(entry);
             entityTransaction.commit();
         } catch(RuntimeException e) {
-            entityTransaction.rollback();
+            if(entityTransaction != null) {
+                entityTransaction.rollback();
+            }
             throw e;
         } finally {
-            entityManager.close();
+            if(entityManager != null) {
+                entityManager.close();
+            }
         }
     }
 
     public void delete(LogEntry entry) {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-        EntityTransaction entityTransaction = entityManager.getTransaction();
+        EntityManager entityManager = null;
+        EntityTransaction entityTransaction = null;
 
-        entityTransaction.begin();
         try {
+            entityManager = entityManagerFactory.createEntityManager();
+            entityTransaction = entityManager.getTransaction();
+
+            entityTransaction.begin();
             entityManager.remove(entry);
             entityTransaction.commit();
         } catch(RuntimeException e) {
-            entityTransaction.rollback();
+            if(entityTransaction != null) {
+                entityTransaction.rollback();
+            }
             throw e;
         } finally {
-            entityManager.close();
+            if(entityManager != null) {
+                entityManager.close();
+            }
         }
     }
 
 
     public void delete(long id) {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-        EntityTransaction entityTransaction = entityManager.getTransaction();
+        EntityManager entityManager = null;
+        EntityTransaction entityTransaction = null;
 
-        entityTransaction.begin();
         try {
+            entityManager = entityManagerFactory.createEntityManager();
+            entityTransaction = entityManager.getTransaction();
+
+            entityTransaction.begin();
             entityManager.remove(get(id));
             entityTransaction.commit();
         } catch(RuntimeException e) {
-            entityTransaction.rollback();
+            if(entityTransaction != null) {
+                entityTransaction.rollback();
+            }
             throw e;
         } finally {
-            entityManager.close();
+            if(entityManager != null) {
+                entityManager.close();
+            }
         }
     }
 

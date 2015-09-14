@@ -2,6 +2,7 @@ package au.edu.bond.classgroups.feed;
 
 import au.edu.bond.classgroups.config.Configuration;
 import au.edu.bond.classgroups.service.DirectoryFactory;
+import com.alltheducks.configutils.service.ConfigurationService;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.File;
@@ -11,10 +12,11 @@ import java.io.File;
  */
 public class FeedFetcherFactory {
 
-    private Configuration configuration;
+    private ConfigurationService<Configuration> configurationService;
     private DirectoryFactory directoryFactory;
 
     public FeedFetcher getConfiguredFeedFetcher() {
+        final Configuration configuration = configurationService.loadConfiguration();
         switch (configuration.getFeedFetcherType()) {
             case URL:
                 final UrlFeedFetcher urlFeedFetcher = new UrlFeedFetcher(configuration.getPullUrlCsvFeedDeserialiser().getGroupsUrl(), configuration.getPullUrlCsvFeedDeserialiser().getMembersUrl());
@@ -32,12 +34,12 @@ public class FeedFetcherFactory {
         return null;
     }
 
-    public Configuration getConfiguration() {
-        return configuration;
+    public ConfigurationService<Configuration> getConfigurationService() {
+        return configurationService;
     }
 
-    public void setConfiguration(Configuration configuration) {
-        this.configuration = configuration;
+    public void setConfigurationService(ConfigurationService<Configuration> configurationService) {
+        this.configurationService = configurationService;
     }
 
     public DirectoryFactory getDirectoryFactory() {
