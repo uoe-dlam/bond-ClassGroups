@@ -47,7 +47,9 @@ public class BbGroupService implements Cleanable {
                 Map<Id, Group> groupMap = byIdCache.get(courseId);
                 ConcurrentHashMap<String, Group> titleMap = new ConcurrentHashMap<String, Group>();
                 for (Group group : groupMap.values()) {
-                    titleMap.put(group.getTitle(), group);
+                    if(group != null && group.getTitle() != null && !group.getTitle().isEmpty()) {
+                        titleMap.put(group.getTitle(), group);
+                    }
                 }
                 return titleMap;
             }
@@ -74,6 +76,9 @@ public class BbGroupService implements Cleanable {
     }
 
     public Group getByTitleAndCourseId(String title, Id courseId) throws ExecutionException {
+        if(title == null || title.isEmpty()) {
+            return null;
+        }
         return byTitleCache.get(courseId).get(title);
     }
 

@@ -189,25 +189,40 @@ public class BbGroupManager implements GroupManager {
 
         final Collection<Member> feedMembers = group.getMembers();
         Set<Id> memberIds = new HashSet<>();
-        for (Member feedMember : feedMembers) {
-            final User user;
-            try {
-                user = bbUserService.getByExternalSystemId(feedMember.getUserId(), courseId);
-            } catch (ExecutionException e) {
-                taskLogger.warning(resourceService.getLocalisationString("bond.classgroups.warning.couldnotloaduser",
-                        feedMember.getUserId(), group.getCourseId(), group.getGroupId()), e);
-                continue;
-            }
+        if(feedMembers != null) {
+            for (Member feedMember : feedMembers) {
+                final User user;
+                try {
+                    user = bbUserService.getByExternalSystemId(feedMember.getUserId(), courseId);
+                } catch (ExecutionException e) {
+                    taskLogger.warning(resourceService.getLocalisationString("bond.classgroups.warning.couldnotloaduser",
+                            feedMember.getUserId(), group.getCourseId(), group.getGroupId()), e);
+                    continue;
+                }
 
-            final CourseMembership membership;
-            try {
-                membership = bbCourseMembershipService.getByCourseIdAndUserId(courseId, user.getId());
-            } catch (ExecutionException e) {
-                taskLogger.warning(resourceService.getLocalisationString("bond.classgroups.warning.couldnotloadcousemember",
-                        feedMember.getUserId(), group.getCourseId(), group.getGroupId()), e);
-                continue;
+                if (user == null) {
+                    taskLogger.warning(resourceService.getLocalisationString("bond.classgroups.warning.couldnotloaduser",
+                            feedMember.getUserId(), group.getCourseId(), group.getGroupId()));
+                    continue;
+                }
+
+                final CourseMembership membership;
+                try {
+                    membership = bbCourseMembershipService.getByCourseIdAndUserId(courseId, user.getId());
+                } catch (ExecutionException e) {
+                    taskLogger.warning(resourceService.getLocalisationString("bond.classgroups.warning.couldnotloadcousemember",
+                            feedMember.getUserId(), group.getCourseId(), group.getGroupId()), e);
+                    continue;
+                }
+
+                if (membership == null) {
+                    taskLogger.warning(resourceService.getLocalisationString("bond.classgroups.warning.couldnotloadcousemember",
+                            feedMember.getUserId(), group.getCourseId(), group.getGroupId()));
+                    continue;
+                }
+
+                memberIds.add(membership.getId());
             }
-            memberIds.add(membership.getId());
         }
 
         if (status == Status.CREATED || status == Status.UPDATED) {
@@ -316,7 +331,7 @@ public class BbGroupManager implements GroupManager {
             return false;
         }
 
-        if (group.getGroupSet() == null) {
+        if (group.getGroupSet() == null || group.getGroupSet().isEmpty()) {
             bbGroup.setSetId(null);
             return true;
         }
@@ -331,6 +346,10 @@ public class BbGroupManager implements GroupManager {
     }
 
     private blackboard.data.course.Group getOrCreateGroupSet(String title, Id courseId, Configuration configuration, TaskLogger taskLogger) {
+        if(title == null || title.isEmpty()) {
+            return null;
+        }
+
         blackboard.data.course.Group bbGroupSet = null;
         try {
             bbGroupSet = bbGroupService.getByTitleAndCourseId(title, courseId);

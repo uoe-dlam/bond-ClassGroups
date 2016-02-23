@@ -124,7 +124,7 @@ public class TaskProcessor implements Runnable {
                 }
             } catch (Exception e) {
                 completed = false;
-                throw e;
+//                throw e;
             } finally {
                 if (execService != null) {
                     execService.shutdownNow();
