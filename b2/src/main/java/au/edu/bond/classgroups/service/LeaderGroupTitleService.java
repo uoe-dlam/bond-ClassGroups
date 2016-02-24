@@ -39,14 +39,14 @@ public class LeaderGroupTitleService implements GroupTitleService {
         CourseMembership courseMembership = null;
         try {
             courseMembership = bbCourseMembershipService.getById(leaderCourseMembershipId, courseIdObj);
-        } catch (ExecutionException e) {
+        } catch (Exception e) {
             return baseTitle;
         }
 
         User user = null;
         try {
             user = bbUserService.getById(courseMembership.getUserId(), courseIdObj);
-        } catch (ExecutionException e) {
+        } catch (Exception e) {
             return baseTitle;
         }
 

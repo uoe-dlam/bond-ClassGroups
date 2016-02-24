@@ -17,19 +17,19 @@ public class FeedHeaderConfig {
     private String toolsHeader;
     private String userIdHeader;
 
-    public Collection<String> getGroupsFeedHeaders() {
+    public Collection<String> getRequiredGroupsFeedHeaders() {
         final HashSet<String> headers = new HashSet<>();
         headers.add(courseIdHeader);
         headers.add(groupIdHeader);
         headers.add(titleHeader);
-        headers.add(leaderHeader);
-        headers.add(groupSetHeader);
-        headers.add(availableHeader);
-        headers.add(toolsHeader);
+//        headers.add(leaderHeader);
+//        headers.add(groupSetHeader);
+//        headers.add(availableHeader);
+//        headers.add(toolsHeader);
         return headers;
     }
 
-    public Collection<String> getMembersFeedHeaders() {
+    public Collection<String> getRequiredMembersFeedHeaders() {
         final HashSet<String> headers = new HashSet<>();
         headers.add(groupIdHeader);
         headers.add(userIdHeader);

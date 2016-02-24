@@ -43,11 +43,11 @@ public class CsvFeedDeserialiser implements FeedDeserialiser {
             final CSVParser membersParser = CSVFormat.DEFAULT.withHeader().parse(new InputStreamReader(membersInputStream))) {
 
             boolean stop = false;
-            if (!groupsParser.getHeaderMap().keySet().containsAll(configuration.getFeedHeaderConfig().getGroupsFeedHeaders())) {
+            if (!groupsParser.getHeaderMap().keySet().containsAll(configuration.getFeedHeaderConfig().getRequiredGroupsFeedHeaders())) {
                 taskLogger.error("bond.classgroups.error.missingheadergroups");
                 stop = true;
             }
-            if (!membersParser.getHeaderMap().keySet().containsAll(configuration.getFeedHeaderConfig().getMembersFeedHeaders())) {
+            if (!membersParser.getHeaderMap().keySet().containsAll(configuration.getFeedHeaderConfig().getRequiredMembersFeedHeaders())) {
                 taskLogger.error("bond.classgroups.error.missingheadermembers");
                 stop = true;
             }
@@ -107,17 +107,26 @@ public class CsvFeedDeserialiser implements FeedDeserialiser {
         group.setCourseId(record.get(headers.getCourseIdHeader()));
         group.setGroupId(record.get(headers.getGroupIdHeader()));
         group.setTitle(record.get(headers.getTitleHeader()));
-        group.setLeaderId(record.get(headers.getLeaderHeader()));
-        group.setGroupSet(record.get(headers.getGroupSetHeader()));
 
-        final String availableStr = record.get(headers.getAvailableHeader());
-        final boolean available = Boolean.parseBoolean(availableStr);
-        group.setAvailable(available);
+        if(record.isSet(headers.getLeaderHeader())) {
+            group.setLeaderId(record.get(headers.getLeaderHeader()));
+        }
+        if(record.isSet(headers.getGroupSetHeader())) {
+            group.setGroupSet(record.get(headers.getGroupSetHeader()));
+        }
 
-        final String toolsStr = record.get(headers.getToolsHeader());
-        if(!StringUtils.isEmpty(toolsStr)) {
-            final HashSet<String> tools = Sets.newHashSet(StringUtils.split(toolsStr, "|"));
-            group.setTools(tools);
+        if(record.isSet(headers.getAvailableHeader())) {
+            final String availableStr = record.get(headers.getAvailableHeader());
+            final boolean available = Boolean.parseBoolean(availableStr);
+            group.setAvailable(available);
+        }
+
+        if(record.isSet(headers.getToolsHeader())) {
+            final String toolsStr = record.get(headers.getToolsHeader());
+            if (!StringUtils.isEmpty(toolsStr)) {
+                final HashSet<String> tools = Sets.newHashSet(StringUtils.split(toolsStr, "|"));
+                group.setTools(tools);
+            }
         }
 
         return group;
