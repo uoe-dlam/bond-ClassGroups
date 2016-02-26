@@ -1,6 +1,10 @@
 apply plugin: 'war'
 version = getB2Version()
 
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
+
+
 ext {
 //    deployServer = "bb-app-dev.ad.bond.edu.au"
 //    deployInstance = "BBLEARN"
