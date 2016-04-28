@@ -116,6 +116,14 @@
     <fmt:param value="${actionBean.currentServerName}" />
 </fmt:message>
 
+<fmt:message var="logging" key="bond.classgroups.config.logging" />
+<fmt:message var="loggingInstructions" key="bond.classgroups.config.logging.logginginstructions" />
+<fmt:message var="loggingLevel" key="bond.classgroups.config.logging.logginglevel" />
+<fmt:message var="loggingLevelNormal" key="bond.classgroups.config.logging.logginglevelnormal" />
+<fmt:message var="loggingLevelNormalDesc" key="bond.classgroups.config.logging.loggingleveldescription" />
+<fmt:message var="loggingLevelDebug" key="bond.classgroups.config.logging.loggingleveldebug" />
+<fmt:message var="loggingLevelDebugDesc" key="bond.classgroups.config.logging.loggingleveldebugdecscription" />
+
 <fmt:message var="save" key="bond.classgroups.config.save" />
 
 <bbNG:genericPage ctxId="ctx" navItem="bond-ClassGroups-nav-configure">
@@ -282,9 +290,18 @@
                 <bbNG:dataElement label="${queuePollingFrequencySeconds}" isRequired="true">
                     <input type="text" name="configuration.queuePollingFrequencySeconds" value="${actionBean.configuration.queuePollingFrequencySeconds}" />
                 </bbNG:dataElement>
-                <bbNG:dataElement label="${processingServerNamePattern}" isRequired="true">
+                <bbNG:dataElement label="${processingServerNamePattern}">
                     <input type="text" name="configuration.processingServerNamePattern" value="${actionBean.configuration.processingServerNamePattern}" /><br/>
                     <em>${currentServer}</em>
+                </bbNG:dataElement>
+            </bbNG:step>
+
+            <bbNG:step title="${logging}" instructions="${loggingInstructions}">
+                <bbNG:dataElement label="${loggingLevel}" isRequired="true">
+                    <ul>
+                        <li><label><input type="radio" name="configuration.loggingLevel" value="NORMAL" ${actionBean.configuration.loggingLevel.toString().equals("NORMAL")?"checked=checked":""} /> <strong>${loggingLevelNormal}</strong>: ${loggingLevelNormalDesc}</label></li>
+                        <li><label><input type="radio" name="configuration.loggingLevel" value="DEBUG" ${actionBean.configuration.loggingLevel.toString().equals("DEBUG")?"checked=checked":""} /> <strong>${loggingLevelDebug}</strong>: ${loggingLevelDebugDesc}</label></li>
+                    </ul>
                 </bbNG:dataElement>
             </bbNG:step>
 

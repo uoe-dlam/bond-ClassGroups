@@ -29,6 +29,10 @@ public class Configuration {
         URL, FILE
     }
 
+    public enum LoggingLevel {
+        NORMAL, DEBUG
+    }
+
     private FeedFetcherType feedFetcherType;
     private ToolsMode toolsMode;
     private List<String> defaultTools;
@@ -48,6 +52,8 @@ public class Configuration {
     private int queuePollingFrequencySeconds;
     private FeedHeaderConfig feedHeaderConfig;
     private GroupAvailability groupSetAvailability;
+    private LoggingLevel loggingLevel;
+
 
     public ToolsMode getToolsMode() {
         return toolsMode;
@@ -200,4 +206,13 @@ public class Configuration {
     public void setQueuePollingFrequencySeconds(int queuePollingFrequencySeconds) {
         this.queuePollingFrequencySeconds = queuePollingFrequencySeconds;
     }
+
+    public LoggingLevel getLoggingLevel() {
+        return loggingLevel;
+    }
+
+    public void setLoggingLevel(LoggingLevel loggingLevel) {
+        this.loggingLevel = loggingLevel;
+    }
+
 }

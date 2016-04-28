@@ -137,11 +137,15 @@ public class BbGroupManager implements GroupManager {
 
             status = Status.CREATED;
 
-//            taskLogger.info(resourceService.getLocalisationString(
-//                    "bond.classgroups.info.creatinggroup", group.getGroupId(), group.getTitle()));
+            if(configuration.getLoggingLevel().equals(Configuration.LoggingLevel.DEBUG)) {
+                taskLogger.info(resourceService.getLocalisationString(
+                        "bond.classgroups.info.creatinggroup", group.getGroupId(), group.getTitle()));
+            }
         } else {
-//            taskLogger.info(resourceService.getLocalisationString(
-//                    "bond.classgroups.info.updatinggroup", group.getGroupId(), group.getTitle()));
+            if(configuration.getLoggingLevel().equals(Configuration.LoggingLevel.DEBUG)) {
+                taskLogger.info(resourceService.getLocalisationString(
+                        "bond.classgroups.info.updatinggroup", group.getGroupId(), group.getTitle()));
+            }
 
             if (!title.equals(bbGroup.getTitle())) {
                 bbGroup.setTitle(title);

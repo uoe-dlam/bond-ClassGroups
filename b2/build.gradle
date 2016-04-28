@@ -27,6 +27,7 @@ dependencies {
     providedCompile 'blackboard.platform:bb-platform:9.1.140152.0',
                     'blackboard.platform:bb-taglibs:9.1.140152.0',
                     'javax.servlet:servlet-api:2.5',
+                    'jstl:jstl:1.2',
                     'com.google.guava:guava:16.0'
 
     compile 'javax.inject:javax.inject:1',
