@@ -23,6 +23,7 @@ import blackboard.platform.course.CourseGroupManager;
 import blackboard.platform.course.CourseGroupManagerFactory;
 import com.alltheducks.configutils.service.ConfigurationService;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -191,46 +192,79 @@ public class BbGroupManager implements GroupManager {
 
         bbGroup.setWithForum(withForum);
 
-        final Collection<Member> feedMembers = group.getMembers();
+        final List<GroupMembership> groupMemberships = bbGroup.getGroupMemberships();
+        HashSet<Id> existingGroupMembers = Sets.newHashSetWithExpectedSize(groupMemberships.size());
+        for (GroupMembership groupMembership : groupMemberships) {
+            existingGroupMembers.add(groupMembership.getCourseMembershipId());
+        }
+
+        final Collection<Member> members = group.getMembers();
+        final Set<String> feedMembers = Sets.newHashSetWithExpectedSize(members.size());
+        for (Member member : members) {
+            feedMembers.add(member.getUserId());
+        }
+        if(group.getLeaderId() != null) {
+            feedMembers.add(group.getLeaderId());
+        }
         Set<Id> memberIds = new HashSet<>();
-        if(feedMembers != null) {
-            for (Member feedMember : feedMembers) {
-                final User user;
-                try {
-                    user = bbUserService.getByExternalSystemId(feedMember.getUserId(), courseId);
-                } catch (ExecutionException e) {
-                    taskLogger.warning(resourceService.getLocalisationString("bond.classgroups.warning.couldnotloaduser",
-                            feedMember.getUserId(), group.getCourseId(), group.getGroupId()), e);
-                    continue;
-                }
 
-                if (user == null) {
-                    taskLogger.warning(resourceService.getLocalisationString("bond.classgroups.warning.couldnotloaduser",
-                            feedMember.getUserId(), group.getCourseId(), group.getGroupId()));
-                    continue;
-                }
-
-                final CourseMembership membership;
-                try {
-                    membership = bbCourseMembershipService.getByCourseIdAndUserId(courseId, user.getId());
-                } catch (ExecutionException e) {
-                    taskLogger.warning(resourceService.getLocalisationString("bond.classgroups.warning.couldnotloadcousemember",
-                            feedMember.getUserId(), group.getCourseId(), group.getGroupId()), e);
-                    continue;
-                }
-
-                if (membership == null) {
-                    taskLogger.warning(resourceService.getLocalisationString("bond.classgroups.warning.couldnotloadcousemember",
-                            feedMember.getUserId(), group.getCourseId(), group.getGroupId()));
-                    continue;
-                }
-
-                memberIds.add(membership.getId());
+        for (String feedMember : feedMembers) {
+            final User user;
+            try {
+                user = bbUserService.getByExternalSystemId(feedMember, courseId);
+            } catch (ExecutionException e) {
+                taskLogger.warning(resourceService.getLocalisationString("bond.classgroups.warning.couldnotloaduser",
+                        feedMember, group.getCourseId(), group.getGroupId()), e);
+                continue;
             }
+
+            if (user == null) {
+                taskLogger.warning(resourceService.getLocalisationString("bond.classgroups.warning.couldnotloaduser",
+                        feedMember, group.getCourseId(), group.getGroupId()));
+                continue;
+            }
+
+            final CourseMembership membership;
+            try {
+                membership = bbCourseMembershipService.getByCourseIdAndUserId(courseId, user.getId());
+            } catch (ExecutionException e) {
+                taskLogger.warning(resourceService.getLocalisationString("bond.classgroups.warning.couldnotloadcousemember",
+                        feedMember, group.getCourseId(), group.getGroupId()), e);
+                continue;
+            }
+
+            if (membership == null) {
+                taskLogger.warning(resourceService.getLocalisationString("bond.classgroups.warning.couldnotloadcousemember",
+                        feedMember, group.getCourseId(), group.getGroupId()));
+                continue;
+            }
+
+            final Id membershipId = membership.getId();
+            final boolean foundInExisting = existingGroupMembers.remove(membershipId);
+            if(!foundInExisting) {
+                status = Status.UPDATED;
+            }
+
+            memberIds.add(membershipId);
+        }
+
+        if(!existingGroupMembers.isEmpty()) {
+            status = Status.UPDATED;
         }
 
         if (status == Status.CREATED || status == Status.UPDATED) {
             // Persist the group.
+            if(configuration.getLoggingLevel().equals(Configuration.LoggingLevel.DEBUG)) {
+                if(status == Status.CREATED) {
+                    taskLogger.info(resourceService.getLocalisationString(
+                            "bond.classgroups.info.creatinggroupdebug",
+                            group.getGroupId(), group.getCourseId(), bbGroup.getTitle(), memberIds.size()));
+                } else if (status == Status.UPDATED) {
+                    taskLogger.info(resourceService.getLocalisationString(
+                            "bond.classgroups.info.updatinggroupdebug",
+                            group.getGroupId(), bbGroup.getId().toExternalString(), group.getCourseId(), courseId.toExternalString(), bbGroup.getTitle(), memberIds.size()));
+                }
+            }
             try {
                 bbGroupService.createOrUpdate(bbGroup, memberIds);
             } catch (ExecutionException e) {

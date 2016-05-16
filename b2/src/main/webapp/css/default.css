@@ -8,6 +8,7 @@
     border: 1px solid #ccc;
     border-bottom: none;
     margin: 0;
+    cursor: pointer;
 }
 .deserialiserTab a {
     display: inline-block;

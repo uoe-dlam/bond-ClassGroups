@@ -38,6 +38,7 @@ public class TaskProcessorTest {
     public void setUp() throws Exception {
         configuration = new Configuration();
         configuration.setToolsMode(Configuration.ToolsMode.CREATE);
+        configuration.setLoggingLevel(Configuration.LoggingLevel.DEBUG);
 
         taskService = mock(TaskService.class);
 

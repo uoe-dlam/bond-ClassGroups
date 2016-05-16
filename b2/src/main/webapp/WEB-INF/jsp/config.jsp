@@ -185,9 +185,9 @@
 
             <bbNG:step title="${deserialiser}" instructions="${deserialiserInstructions}">
                 <div class="deserialiserTabList">
-                    <div class="deserialiserTab pullFileCsvConfig tabSelected"><a href="#" onclick="showTab('pullFileCsvConfig');">${pullCsvFile}</a></div>
-                    <div class="deserialiserTab pullUrlCsvConfig"><a href="#" onclick="showTab('pullUrlCsvConfig');">${pullCsvUrl}</a></div>
-                    <div class="deserialiserTab pushCsvConfig"><a href="#" onclick="showTab('pushCsvConfig');">${httpPushCsv}</a></div>
+                    <div class="deserialiserTab pullFileCsvConfig tabSelected"><a onclick="showTab('pullFileCsvConfig');">${pullCsvFile}</a></div>
+                    <div class="deserialiserTab pullUrlCsvConfig"><a onclick="showTab('pullUrlCsvConfig');">${pullCsvUrl}</a></div>
+                    <div class="deserialiserTab pushCsvConfig"><a onclick="showTab('pushCsvConfig');">${httpPushCsv}</a></div>
                 </div>
 
                 <div class="deserialiserTabFrame pullFileCsvConfig">
