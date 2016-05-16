@@ -55,7 +55,10 @@ public class CsvFeedDeserialiser implements FeedDeserialiser {
                 return null;
             }
 
+            int groupRecordsCount = 0;
             for (CSVRecord record : groupsParser) {
+                groupRecordsCount++;
+
                 final Group group = translateRecordToGroup(record);
                 groups.put(group.getGroupId(), group);
 
@@ -66,7 +69,9 @@ public class CsvFeedDeserialiser implements FeedDeserialiser {
                 }
             }
 
+            int memberRecordsCount = 0;
             for (CSVRecord record : membersParser) {
+                memberRecordsCount++;
                 final String groupId = record.get(configuration.getFeedHeaderConfig().getGroupIdHeader());
                 Group group = groups.get(groupId);
 
@@ -89,6 +94,11 @@ public class CsvFeedDeserialiser implements FeedDeserialiser {
                     throw new FeedDeserialisationException(resourceService.getLocalisationString(
                             "bond.classgroups.exception.membersthreadinterrupted"));
                 }
+            }
+
+            if(configuration.getLoggingLevel().equals(Configuration.LoggingLevel.DEBUG)) {
+                taskLogger.info(resourceService.getLocalisationString(
+                        "bond.classgroups.info.recordcount", groupRecordsCount, memberRecordsCount));
             }
 
         } catch (IOException e) {

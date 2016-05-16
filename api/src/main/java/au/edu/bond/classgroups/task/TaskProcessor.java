@@ -53,6 +53,19 @@ public class TaskProcessor implements Runnable {
                 throw e;
             }
 
+            String logLevelStr;
+            switch (configuration.getLoggingLevel()) {
+                case NORMAL:
+                    logLevelStr = resourceService.getLocalisationString("bond.classgroups.config.logging.logginglevelnormal");
+                    break;
+                case DEBUG:
+                    logLevelStr = resourceService.getLocalisationString("bond.classgroups.config.logging.loggingleveldebug");
+                    break;
+                default:
+                    logLevelStr = resourceService.getLocalisationString("bond.classgroups.config.logging.logginglevelunknown");
+            }
+            taskLogger.info(resourceService.getLocalisationString("bond.classgroups.info.loglevel", logLevelStr));
+
             taskLogger.info("bond.classgroups.info.consumingfeed");
             List<Group> groups = null;
             try {
@@ -70,7 +83,13 @@ public class TaskProcessor implements Runnable {
             });
 
             final int total = groups.size();
-            taskLogger.info(resourceService.getLocalisationString("bond.classgroups.info.feedconsumed", total));
+            int memberCount = 0;
+            for (Group group : groups) {
+                if(group.getMembers() != null) {
+                    memberCount += group.getMembers().size();
+                }
+            }
+            taskLogger.info(resourceService.getLocalisationString("bond.classgroups.info.feedconsumed", total, memberCount));
             task.setTotalGroups(total);
             task.setProcessedGroups(0);
             taskService.throttledUpdate(task);

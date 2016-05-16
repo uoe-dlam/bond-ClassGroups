@@ -36,6 +36,7 @@ public class CsvFeedDeserialiserTest {
         feedHeaderConfig.setToolsHeader("tools");
         feedHeaderConfig.setUserIdHeader("userId");
         config.setFeedHeaderConfig(feedHeaderConfig);
+        config.setLoggingLevel(Configuration.LoggingLevel.NORMAL);
 
         taskLogger = mock(TaskLogger.class);
         resourceService = mock(ResourceService.class);
