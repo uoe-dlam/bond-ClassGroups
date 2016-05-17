@@ -199,9 +199,11 @@ public class BbGroupManager implements GroupManager {
         }
 
         final Collection<Member> members = group.getMembers();
-        final Set<String> feedMembers = Sets.newHashSetWithExpectedSize(members.size());
-        for (Member member : members) {
-            feedMembers.add(member.getUserId());
+        final Set<String> feedMembers = Sets.newHashSetWithExpectedSize(members != null ? members.size() : 1);
+        if(members != null) {
+            for (Member member : members) {
+                feedMembers.add(member.getUserId());
+            }
         }
         if(group.getLeaderId() != null) {
             feedMembers.add(group.getLeaderId());
