@@ -31,10 +31,10 @@ dependencies {
                     'com.google.guava:guava:16.0'
 
     compile 'javax.inject:javax.inject:1',
-            'org.springframework:spring-orm:4.0.5.RELEASE',
-            'org.springframework:spring-beans:4.0.5.RELEASE',
-            'org.springframework:spring-context:4.0.5.RELEASE',
-            'org.springframework:spring-web:4.0.5.RELEASE',
+            'org.springframework:spring-orm:4.3.0.RELEASE',
+            'org.springframework:spring-beans:4.3.0.RELEASE',
+            'org.springframework:spring-context:4.3.0.RELEASE',
+            'org.springframework:spring-web:4.3.0.RELEASE',
             'org.hibernate:hibernate-core:4.3.5.Final',
             'org.hibernate:hibernate-entitymanager:4.3.5.Final',
             'blackboard.platform:bb-spring-webapi:10.1',
