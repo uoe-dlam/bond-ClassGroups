@@ -34,10 +34,16 @@ dependencies {
             'org.springframework:spring-orm:4.3.0.RELEASE',
             'org.springframework:spring-beans:4.3.0.RELEASE',
             'org.springframework:spring-context:4.3.0.RELEASE',
-            'org.springframework:spring-web:4.3.0.RELEASE',
-            'org.hibernate:hibernate-core:4.3.5.Final',
-            'org.hibernate:hibernate-entitymanager:4.3.5.Final',
-            'blackboard.platform:bb-spring-webapi:10.1',
+            'org.springframework:spring-web:4.3.0.RELEASE'
+
+    compile('org.hibernate:hibernate-core:5.1.2.Final') {
+        exclude group: 'org.javassist'
+    }
+    compile('org.hibernate:hibernate-entitymanager:5.1.2.Final') {
+        exclude group: 'org.javassist'
+    }
+
+    compile 'blackboard.platform:bb-spring-webapi:10.1',
             'com.google.code.gson:gson:2.2.4'
 
     compile 'net.sourceforge.stripes:stripes:1.5.7',

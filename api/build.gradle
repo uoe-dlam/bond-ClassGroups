@@ -1,5 +1,5 @@
 apply plugin: 'java'
-version = '2.1.12'
+version = '2.1.13'
 
 sourceCompatibility = 1.7
 targetCompatibility = 1.7
@@ -14,9 +14,13 @@ dependencies {
 
     compile 'commons-io:commons-io:2.4',
             'commons-lang:commons-lang:2.6',
-            'org.apache.commons:commons-csv:1.2',
-            'org.hibernate:hibernate-entitymanager:4.3.5.Final',
-            'org.springframework:spring-beans:4.3.0.RELEASE',
+            'org.apache.commons:commons-csv:1.2'
+
+    compile('org.hibernate:hibernate-entitymanager:5.1.2.Final') {
+        exclude group: 'org.javassist'
+    }
+
+    compile 'org.springframework:spring-beans:4.3.0.RELEASE',
             'org.springframework:spring-context:4.3.0.RELEASE',
             'com.thoughtworks.xstream:xstream:1.4.7',
             files("../lib/b2-config-utils-1.0.3.jar"),
