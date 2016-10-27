@@ -84,7 +84,10 @@ public class LogEntryDAO implements Closeable {
             entityTransaction.commit();
         } catch(RuntimeException e) {
             if(entityTransaction != null) {
-                entityTransaction.rollback();
+                try {
+                    entityTransaction.rollback();
+                } catch(RuntimeException ignored) {
+                }
             }
             throw e;
         } finally {
@@ -107,7 +110,10 @@ public class LogEntryDAO implements Closeable {
             entityTransaction.commit();
         } catch(RuntimeException e) {
             if(entityTransaction != null) {
-                entityTransaction.rollback();
+                try {
+                    entityTransaction.rollback();
+                } catch(RuntimeException ignored) {
+                }
             }
             throw e;
         } finally {
@@ -130,7 +136,10 @@ public class LogEntryDAO implements Closeable {
             entityTransaction.commit();
         } catch(RuntimeException e) {
             if(entityTransaction != null) {
-                entityTransaction.rollback();
+                try {
+                    entityTransaction.rollback();
+                } catch(RuntimeException ignored) {
+                }
             }
             throw e;
         } finally {
@@ -154,7 +163,10 @@ public class LogEntryDAO implements Closeable {
             entityTransaction.commit();
         } catch(RuntimeException e) {
             if(entityTransaction != null) {
-                entityTransaction.rollback();
+                try {
+                    entityTransaction.rollback();
+                } catch(RuntimeException ignored) {
+                }
             }
             throw e;
         } finally {

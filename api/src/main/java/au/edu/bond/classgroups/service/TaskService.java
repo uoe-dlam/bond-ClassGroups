@@ -98,7 +98,10 @@ public class TaskService implements Closeable {
             return task;
         } catch (RuntimeException e) {
             if(entityTransaction != null) {
-                entityTransaction.rollback();
+                try {
+                    entityTransaction.rollback();
+                } catch(RuntimeException ignored) {
+                }
             }
             throw e;
         } finally {
@@ -123,7 +126,10 @@ public class TaskService implements Closeable {
             return result;
         } catch (RuntimeException e) {
             if(entityTransaction != null) {
-                entityTransaction.rollback();
+                try {
+                    entityTransaction.rollback();
+                } catch(RuntimeException ignored) {
+                }
             }
             throw e;
         } finally {
@@ -177,7 +183,10 @@ public class TaskService implements Closeable {
             entityTransaction.commit();
         } catch (RuntimeException e) {
             if(entityTransaction != null) {
-                entityTransaction.rollback();
+                try {
+                    entityTransaction.rollback();
+                } catch(RuntimeException ignored) {
+                }
             }
             throw e;
         } finally {
@@ -220,7 +229,10 @@ public class TaskService implements Closeable {
             entityTransaction.commit();
         } catch (RuntimeException e) {
             if(entityTransaction != null) {
-                entityTransaction.rollback();
+                try {
+                    entityTransaction.rollback();
+                } catch(RuntimeException ignored) {
+                }
             }
             throw e;
         } finally {
@@ -283,7 +295,10 @@ public class TaskService implements Closeable {
             entityTransaction.commit();
         } catch (RuntimeException e) {
             if(entityTransaction != null) {
-                entityTransaction.rollback();
+                try {
+                    entityTransaction.rollback();
+                } catch(RuntimeException ignored) {
+                }
             }
             throw e;
         } finally {
@@ -331,7 +346,10 @@ public class TaskService implements Closeable {
             entityTransaction.commit();
         } catch (RuntimeException e) {
             if(entityTransaction != null) {
-                entityTransaction.rollback();
+                try {
+                    entityTransaction.rollback();
+                } catch(RuntimeException ignored) {
+                }
             }
             throw e;
         } finally {
@@ -371,7 +389,10 @@ public class TaskService implements Closeable {
             entityTransaction.commit();
         } catch (RuntimeException e) {
             if(entityTransaction != null) {
-                entityTransaction.rollback();
+                try {
+                    entityTransaction.rollback();
+                } catch(RuntimeException ignored) {
+                }
             }
             throw e;
         } finally {
@@ -516,7 +537,10 @@ public class TaskService implements Closeable {
             return task;
         } catch (RuntimeException e) {
             if(entityTransaction != null) {
-                entityTransaction.rollback();
+                try {
+                    entityTransaction.rollback();
+                } catch(RuntimeException ignored) {
+                }
             }
             throw e;
         } finally {

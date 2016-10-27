@@ -153,7 +153,10 @@ public class TaskDAO implements Closeable {
             entityTransaction.commit();
         } catch(RuntimeException e) {
             if(entityTransaction != null) {
-                entityTransaction.rollback();
+                try {
+                    entityTransaction.rollback();
+                } catch(RuntimeException ignored) {
+                }
             }
             throw e;
         } finally {
@@ -180,7 +183,10 @@ public class TaskDAO implements Closeable {
             entityTransaction.commit();
         } catch(RuntimeException e) {
             if(entityTransaction != null) {
-                entityTransaction.rollback();
+                try {
+                    entityTransaction.rollback();
+                } catch(RuntimeException ignored) {
+                }
             }
             throw e;
         } finally {
@@ -207,7 +213,10 @@ public class TaskDAO implements Closeable {
             entityTransaction.commit();
         } catch(RuntimeException e) {
             if(entityTransaction != null) {
-                entityTransaction.rollback();
+                try {
+                    entityTransaction.rollback();
+                } catch(RuntimeException ignored) {
+                }
             }
             throw e;
         } finally {
@@ -235,7 +244,10 @@ public class TaskDAO implements Closeable {
             entityTransaction.commit();
         } catch(RuntimeException e) {
             if(entityTransaction != null) {
-                entityTransaction.rollback();
+                try {
+                    entityTransaction.rollback();
+                } catch(RuntimeException ignored) {
+                }
             }
             throw e;
         } finally {
@@ -272,7 +284,10 @@ public class TaskDAO implements Closeable {
             return deletedIds;
         } catch(RuntimeException e) {
             if(entityTransaction != null) {
-                entityTransaction.rollback();
+                try {
+                    entityTransaction.rollback();
+                } catch(RuntimeException ignored) {
+                }
             }
             throw e;
         } finally {
@@ -296,7 +311,10 @@ public class TaskDAO implements Closeable {
             return returned;
         } catch(RuntimeException e) {
             if(entityTransaction != null) {
-                entityTransaction.rollback();
+                try {
+                    entityTransaction.rollback();
+                } catch(RuntimeException ignored) {
+                }
             }
             throw e;
         } finally {
@@ -356,7 +374,10 @@ public class TaskDAO implements Closeable {
             return returned;
         } catch(RuntimeException e) {
             if(entityTransaction != null) {
-                entityTransaction.rollback();
+                try {
+                    entityTransaction.rollback();
+                } catch(RuntimeException ignored) {
+                }
             }
             throw e;
         } finally {
