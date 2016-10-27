@@ -205,7 +205,7 @@ public class BbGroupManager implements GroupManager {
                 feedMembers.add(member.getUserId());
             }
         }
-        if(group.getLeaderId() != null) {
+        if(group.getLeaderId() != null && !group.getLeaderId().isEmpty()) {
             feedMembers.add(group.getLeaderId());
         }
         Set<Id> memberIds = new HashSet<>();

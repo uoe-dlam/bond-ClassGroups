@@ -40,8 +40,8 @@ dependencies {
             'org.springframework:spring-beans:4.3.0.RELEASE',
             'org.springframework:spring-context:4.3.0.RELEASE',
             'org.springframework:spring-web:4.3.0.RELEASE',
-            'org.hibernate:hibernate-core:4.3.5.Final',
-            'org.hibernate:hibernate-entitymanager:4.3.5.Final',
+            'org.hibernate:hibernate-core:4.3.11.Final',
+            'org.hibernate:hibernate-entitymanager:4.3.11.Final',
             'blackboard.platform:bb-spring-webapi:10.1',
             'com.google.code.gson:gson:2.2.4'
 
