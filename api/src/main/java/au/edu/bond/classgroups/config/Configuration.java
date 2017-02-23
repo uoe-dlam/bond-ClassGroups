@@ -10,7 +10,7 @@ import java.util.List;
 public class Configuration {
 
     public enum ToolsMode {
-        CREATE, READ, SYNC
+        CREATE, READD, SYNC
     }
 
     public enum LeaderChangedMode {
