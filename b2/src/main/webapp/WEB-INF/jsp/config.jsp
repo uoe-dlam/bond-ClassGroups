@@ -42,6 +42,11 @@
 <fmt:message var="groupLeaderChangeModeOverrideDesc" key="bond.classgroups.config.groupleader.leaderchangemode.overridedescription" />
 <fmt:message var="groupLeaderChangeModeFeed" key="bond.classgroups.config.groupleader.leaderchangemode.feed" />
 <fmt:message var="groupLeaderChangeModeFeedDesc" key="bond.classgroups.config.groupleader.leaderchangemode.feeddescription" />
+<fmt:message var="enrolLeaderIfMissing" key="bond.classgroups.config.groupleader.enrolleaderifmissing" />
+<fmt:message var="enrolLeaderIfMissingOn" key="bond.classgroups.config.groupleader.enrolleaderifmissingon" />
+<fmt:message var="enrolLeaderIfMissingOnDesc" key="bond.classgroups.config.groupleader.enrolleaderifmissingondescription" />
+<fmt:message var="enrolLeaderIfMissingOff" key="bond.classgroups.config.groupleader.enrolleaderifmissingoff" />
+<fmt:message var="enrolLeaderIfMissingOffDesc" key="bond.classgroups.config.groupleader.enrolleaderifmissingoffdescription" />
 
 <fmt:message var="deserialiser" key="bond.classgroups.config.deserialiser" />
 <fmt:message var="deserialiserInstructions" key="bond.classgroups.config.deserialiser.instructions" />
@@ -179,6 +184,12 @@
                     <ul>
                         <li><label><input type="radio" name="configuration.leaderChangedMode" value="OVERRIDE" ${actionBean.configuration.leaderChangedMode.toString().equals("OVERRIDE")?"checked=checked":""} /> <strong>${groupLeaderChangeModeOverride}</strong>: ${groupLeaderChangeModeOverrideDesc}</label></li>
                         <li><label><input type="radio" name="configuration.leaderChangedMode" value="FEED" ${actionBean.configuration.leaderChangedMode.toString().equals("FEED")?"checked=checked":""} /> <strong>${groupLeaderChangeModeFeed}</strong>: ${groupLeaderChangeModeFeedDesc}</label></li>
+                    </ul>
+                </bbNG:dataElement>
+                <bbNG:dataElement label="${enrolLeaderIfMissing}" isRequired="true">
+                    <ul>
+                        <li><label><input type="radio" name="configuration.enrolLeaderIfMissing" value="false" ${!actionBean.configuration.enrolLeaderIfMissing?"checked=checked":""} /> <strong>${enrolLeaderIfMissingOff}</strong>: ${enrolLeaderIfMissingOffDesc}</label></li>
+                        <li><label><input type="radio" name="configuration.enrolLeaderIfMissing" value="true" ${actionBean.configuration.enrolLeaderIfMissing?"checked=checked":""} /> <strong>${enrolLeaderIfMissingOn}</strong>: ${enrolLeaderIfMissingOnDesc}</label></li>
                     </ul>
                 </bbNG:dataElement>
             </bbNG:step>

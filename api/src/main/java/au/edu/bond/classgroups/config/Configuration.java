@@ -46,7 +46,7 @@ public class Configuration {
     private int cleanUpDaysToKeep;
     private boolean schedulesEnabled;
     private List<Schedule> schedules;
-    private boolean enrolStaffIfMissing;
+    private boolean enrolLeaderIfMissing;
     private int processingThreads;
     private String processingServerNamePattern;
     private int queuePollingFrequencySeconds;
@@ -151,12 +151,12 @@ public class Configuration {
         this.schedules = schedules;
     }
 
-    public boolean isEnrolStaffIfMissing() {
-        return enrolStaffIfMissing;
+    public boolean isEnrolLeaderIfMissing() {
+        return enrolLeaderIfMissing;
     }
 
-    public void setEnrolStaffIfMissing(boolean enrolStaffIfMissing) {
-        this.enrolStaffIfMissing = enrolStaffIfMissing;
+    public void setEnrolLeaderIfMissing(boolean enrolLeaderIfMissing) {
+        this.enrolLeaderIfMissing = enrolLeaderIfMissing;
     }
 
     public int getProcessingThreads() {
