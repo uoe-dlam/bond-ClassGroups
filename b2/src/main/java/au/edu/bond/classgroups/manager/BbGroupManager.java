@@ -226,7 +226,7 @@ public class BbGroupManager implements GroupManager {
                 continue;
             }
 
-            CourseMembership membership;
+            final CourseMembership membership;
             try {
                 membership = bbCourseMembershipService.getByCourseIdAndUserId(courseId, user.getId());
             } catch (ExecutionException e) {
@@ -236,28 +236,9 @@ public class BbGroupManager implements GroupManager {
             }
 
             if (membership == null) {
-                if(configuration.isEnrolLeaderIfMissing()) {
-                    membership = new CourseMembership();
-                    membership.setCourseId(courseId);
-                    membership.setUserId(user.getId());
-                    try {
-                        bbCourseMembershipService.persistCourseMembership(membership);
-                    } catch (ValidationException e) {
-                        taskLogger.warning(resourceService.getLocalisationString(
-                                "bond.classgroups.warning.couldnotpersistleadercoursemembershipvalidationerrors",
-                                user.getId(), group.getGroupId()), e);
-                        continue;
-                    } catch (PersistenceException | ExecutionException e) {
-                        taskLogger.warning(resourceService.getLocalisationString(
-                                "bond.classgroups.warning.couldnotpersistleadercoursemembershipbberrors",
-                                user.getId(), group.getGroupId()), e);
-                        continue;
-                    }
-                } else {
-                    taskLogger.warning(resourceService.getLocalisationString("bond.classgroups.warning.couldnotloadcousemember",
-                            feedMember, group.getCourseId(), group.getGroupId()));
-                    continue;
-                }
+                taskLogger.warning(resourceService.getLocalisationString("bond.classgroups.warning.couldnotloadcousemember",
+                        feedMember, group.getCourseId(), group.getGroupId()));
+                continue;
             }
 
             final Id membershipId = membership.getId();
