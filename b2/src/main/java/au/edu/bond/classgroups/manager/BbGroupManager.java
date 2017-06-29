@@ -237,7 +237,6 @@ public class BbGroupManager implements GroupManager {
 
             if (membership == null) {
                 if(configuration.isEnrolLeaderIfMissing()) {
-                    taskLogger.info(resourceService.getLocalisationString("bond.classgroups.info.enrollingleader", feedMember, group.getCourseId(), group.getGroupId()));
                     membership = new CourseMembership();
                     membership.setCourseId(courseId);
                     membership.setUserId(user.getId());
