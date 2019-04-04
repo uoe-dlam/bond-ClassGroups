@@ -8,7 +8,7 @@ targetCompatibility = 1.7
 ext {
 //    deployServer = "bb-app-dev.ad.bond.edu.au"
 //    deployInstance = "BBLEARN"
-    deployServer = "localhost:9876"
+    deployServer = "http://localhost:9876"
     deployInstance = "BBLEARN"
 }
 
@@ -72,7 +72,9 @@ String getB2Version() {
     return manifest.plugin.version['@value'];
 }
 
-task deployB2( dependsOn: "build" ) << {
-    ant.taskdef( name: "b2deploy", classname: "org.oscelot.ant.B2DeployTask", classpath: project.configurations.deployB2.asPath )
-    ant.b2deploy( localfilepath: project.war.archivePath, host: project.ext.deployServer, courseorgavailable: 'true', clean: 'true', webappName: 'bb-starting-block-' + project.ext.deployInstance )
+task deployB2( dependsOn: "build" ) {
+    doLast {
+        ant.taskdef( name: "b2deploy", classname: "org.oscelot.ant.B2DeployTask", classpath: project.configurations.deployB2.asPath )
+        ant.b2deploy( localfilepath: project.war.archivePath, host: project.ext.deployServer, courseorgavailable: 'true', clean: 'true', webappName: 'bb-starting-block-' + project.ext.deployInstance )
+    }
 }

@@ -273,7 +273,16 @@ public class BbGroupManager implements GroupManager {
                 taskLogger.warning(resourceService.getLocalisationString(
                         "bond.classgroups.warning.groupexecution", group.getGroupId()), e);
                 return Status.ERROR;
+            } catch (PersistenceException e) {
+                taskLogger.warning(resourceService.getLocalisationString(
+                        "bond.classgroups.warning.groupexecution", group.getGroupId()), e);
+                return Status.ERROR;
+            } catch (ValidationException e) {
+                taskLogger.warning(resourceService.getLocalisationString(
+                        "bond.classgroups.warning.groupexecution", group.getGroupId()), e);
+                return Status.ERROR;
             }
+
         }
 
         Long internalId = ((PkId) bbGroup.getId()).getKey();
@@ -414,6 +423,15 @@ public class BbGroupManager implements GroupManager {
             } catch (ExecutionException e) {
                 taskLogger.error(resourceService.getLocalisationString(
                         "bond.classgroups.error.groupsetexecution", title, courseId), e);
+                return null;
+            }
+            catch (PersistenceException e) {
+                taskLogger.warning(resourceService.getLocalisationString(
+                        "bond.classgroups.error.groupexecution", title, courseId), e);
+                return null;
+            } catch (ValidationException e) {
+                taskLogger.warning(resourceService.getLocalisationString(
+                        "bond.classgroups.error.groupexecution", title, courseId), e);
                 return null;
             }
         }

@@ -1,6 +1,7 @@
 package au.edu.bond.classgroups.service;
 
 import au.edu.bond.classgroups.dao.BbGroupDAO;
+import blackboard.data.ValidationException;
 import blackboard.data.course.Group;
 import blackboard.persist.Id;
 import blackboard.persist.PersistenceException;
@@ -90,7 +91,7 @@ public class BbGroupService implements Cleanable {
         return courseIdCache.get(getIdFromLong(groupId));
     }
 
-    public synchronized void createOrUpdate(Group group) throws ExecutionException {
+    public synchronized void createOrUpdate(Group group) throws ExecutionException, PersistenceException, ValidationException {
         bbGroupDAO.createOrUpdate(group);
 
         Id courseId = group.getCourseId();
@@ -101,7 +102,7 @@ public class BbGroupService implements Cleanable {
         titleMap.put(group.getTitle(), group);
     }
 
-    public synchronized void createOrUpdate(Group group, Set<Id> courseMembershipIds) throws ExecutionException {
+    public synchronized void createOrUpdate(Group group, Set<Id> courseMembershipIds) throws ExecutionException, PersistenceException, ValidationException {
         bbGroupDAO.createOrUpdate(group, courseMembershipIds);
 
         Id courseId = group.getCourseId();
