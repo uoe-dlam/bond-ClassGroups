@@ -25,73 +25,66 @@ public class BbGroupService implements Cleanable {
     @Autowired
     private BbGroupDAO bbGroupDAO;
 
-    private LoadingCache</*Course Id*/Id, ConcurrentMap</*Group Title*/String, Group>> byTitleCache;
-    private LoadingCache</*Course Id*/Id, ConcurrentMap</*Group Id*/Id, Group>> byIdCache;
-    private LoadingCache</*Group Id*/Id, /*Course Id*/Id> courseIdCache;
+    private final LoadingCache</*Course Id*/Id, ConcurrentMap</*Group Title*/String, Group>> byTitleCache;
+    private final LoadingCache</*Course Id*/Id, ConcurrentMap</*Group Id*/Id, Group>> byIdCache;
+    private final LoadingCache</*Group Id*/Id, /*Course Id*/Id> courseIdCache;
 
-    public BbGroupService(String byIdCacheSpec, String byTitleCacheSpec, String courseIdCacheSpec) {
+    public BbGroupService(final String byIdCacheSpec, final String byTitleCacheSpec, final String courseIdCacheSpec) {
         byIdCache = CacheBuilder.from(byIdCacheSpec).build(new CacheLoader<Id, ConcurrentMap<Id, Group>>() {
             @Override
-            public ConcurrentMap<Id, Group> load(Id courseId) throws Exception {
+            public ConcurrentMap<Id, Group> load(final Id courseId) throws Exception {
                 Collection<Group> classGroups = bbGroupDAO.getByCourseId(courseId);
-                ConcurrentHashMap<Id, Group> groupMap = new ConcurrentHashMap<Id, Group>();
+                ConcurrentHashMap<Id, Group> groupMap = new ConcurrentHashMap<>();
+
                 for (Group group : classGroups) {
                     groupMap.put(group.getId(), group);
                 }
+
                 return groupMap;
             }
         });
 
         byTitleCache = CacheBuilder.from(byTitleCacheSpec).build(new CacheLoader<Id, ConcurrentMap<String, Group>>() {
             @Override
-            public ConcurrentMap<String, Group> load(Id courseId) throws Exception {
+            public ConcurrentMap<String, Group> load(final Id courseId) throws Exception {
                 Map<Id, Group> groupMap = byIdCache.get(courseId);
-                ConcurrentHashMap<String, Group> titleMap = new ConcurrentHashMap<String, Group>();
+                ConcurrentHashMap<String, Group> titleMap = new ConcurrentHashMap<>();
+
                 for (Group group : groupMap.values()) {
-                    if(group != null && group.getTitle() != null && !group.getTitle().isEmpty()) {
+                    if (group != null && group.getTitle() != null && !group.getTitle().isEmpty()) {
                         titleMap.put(group.getTitle(), group);
                     }
                 }
+
                 return titleMap;
             }
         });
 
         courseIdCache = CacheBuilder.from(courseIdCacheSpec).build(new CacheLoader<Id, Id>() {
             @Override
-            public Id load(Id groupId) throws Exception {
+            public Id load(final Id groupId) throws Exception {
                 return bbGroupDAO.getById(groupId).getCourseId();
             }
         });
     }
 
-    public Group getById(long id, Id courseId) throws ExecutionException {
+    public Group getById(final long id, final Id courseId) throws ExecutionException {
         return getById(getIdFromLong(id), courseId);
     }
 
-    public Group getById(Id groupId, Id courseId) throws ExecutionException {
+    private Group getById(final Id groupId, final Id courseId) throws ExecutionException {
         return byIdCache.get(courseId).get(groupId);
     }
 
-    public Collection<Group> getByCourseId(Id courseId) throws ExecutionException {
-        return byIdCache.get(courseId).values();
-    }
-
-    public Group getByTitleAndCourseId(String title, Id courseId) throws ExecutionException {
-        if(title == null || title.isEmpty()) {
+    public Group getByTitleAndCourseId(final String title, final Id courseId) throws ExecutionException {
+        if (title == null || title.isEmpty()) {
             return null;
         }
+
         return byTitleCache.get(courseId).get(title);
     }
 
-    public Id getCourseIdForGroupId(Id groupId) throws ExecutionException {
-        return courseIdCache.get(groupId);
-    }
-
-    public Id getCourseIdForGroupId(long groupId) throws ExecutionException {
-        return courseIdCache.get(getIdFromLong(groupId));
-    }
-
-    public synchronized void createOrUpdate(Group group) throws ExecutionException, PersistenceException, ValidationException {
+    public synchronized void createOrUpdate(final Group group) throws ExecutionException, PersistenceException, ValidationException {
         bbGroupDAO.createOrUpdate(group);
 
         Id courseId = group.getCourseId();
@@ -102,7 +95,7 @@ public class BbGroupService implements Cleanable {
         titleMap.put(group.getTitle(), group);
     }
 
-    public synchronized void createOrUpdate(Group group, Set<Id> courseMembershipIds) throws ExecutionException, PersistenceException, ValidationException {
+    public synchronized void createOrUpdate(final Group group, final Set<Id> courseMembershipIds) throws ExecutionException, PersistenceException, ValidationException {
         bbGroupDAO.createOrUpdate(group, courseMembershipIds);
 
         Id courseId = group.getCourseId();
@@ -113,11 +106,7 @@ public class BbGroupService implements Cleanable {
         titleMap.put(group.getTitle(), group);
     }
 
-    public void delete(Long groupId, Id courseId) throws PersistenceException, ExecutionException {
-        delete(getIdFromLong(groupId), courseId);
-    }
-
-    public synchronized void delete(Id groupId, Id courseId) throws PersistenceException, ExecutionException {
+    private synchronized void delete(final Id groupId, final Id courseId) throws PersistenceException, ExecutionException {
         Group group = byIdCache.get(courseId).get(groupId);
 
         Map<Id, Group> groupMap = byIdCache.get(courseId);
@@ -129,7 +118,7 @@ public class BbGroupService implements Cleanable {
         bbGroupDAO.delete(groupId);
     }
 
-    public Id getIdFromLong(Long id) {
+    public Id getIdFromLong(final Long id) {
         return Id.toId(Group.DATA_TYPE, id);
     }
 
@@ -138,13 +127,5 @@ public class BbGroupService implements Cleanable {
         byTitleCache.cleanUp();
         byIdCache.invalidateAll();
         byIdCache.cleanUp();
-    }
-
-    public BbGroupDAO getBbGroupDAO() {
-        return bbGroupDAO;
-    }
-
-    public void setBbGroupDAO(BbGroupDAO bbGroupDAO) {
-        this.bbGroupDAO = bbGroupDAO;
     }
 }
