@@ -8,7 +8,6 @@ import blackboard.persist.PersistenceException;
 import blackboard.persist.course.GroupDbLoader;
 import blackboard.persist.course.GroupDbPersister;
 import blackboard.persist.course.GroupMembershipDbPersister;
-import blackboard.platform.course.CourseGroupManager;
 
 import java.util.Collection;
 import java.util.Set;
@@ -21,8 +20,6 @@ public class BbGroupDAO {
     private GroupDbLoader groupDbLoader;
     private GroupDbPersister groupDbPersister;
     private GroupMembershipDbPersister groupMembershipDbPersister;
-    private CourseGroupManager courseGroupManager;
-
 
     public Group getById(final Id id) throws PersistenceException {
         return getGroupDbLoader().loadById(id);
