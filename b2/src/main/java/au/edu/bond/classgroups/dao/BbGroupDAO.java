@@ -10,6 +10,7 @@ import blackboard.persist.course.GroupDbPersister;
 import blackboard.persist.course.GroupMembershipDbPersister;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -42,11 +43,21 @@ public class BbGroupDAO {
     }
 
     public void createOrUpdate(final Group group, final Set<Id> courseMembershipIds) throws PersistenceException, ValidationException {
-        getGroupDbPersister().persist(group);
+        this.createOrUpdate(group);
 
         // Persist enrolments
         Id groupId = group.getId();
 
+        List<GroupMembership> currentGroupMembers = group.getGroupMemberships();
+
+        // Delete any current members that are no longer in the group
+        for (GroupMembership currentGroupMember : currentGroupMembers) {
+            if (!courseMembershipIds.contains(currentGroupMember.getCourseMembershipId())) {
+                getGroupMembershipDbPersister().deleteById(currentGroupMember.getCourseMembershipId());
+            }
+        }
+
+        // Update or insert members to the given group
         for (Id courseMembershipId : courseMembershipIds) {
             GroupMembership groupMembership = new GroupMembership();
             groupMembership.setGroupId(groupId);
