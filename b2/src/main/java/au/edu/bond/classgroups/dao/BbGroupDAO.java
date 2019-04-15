@@ -19,10 +19,10 @@ import java.util.Set;
  */
 public class BbGroupDAO {
 
-    GroupDbLoader groupDbLoader;
-    GroupDbPersister groupDbPersister;
-    GroupMembershipDbPersister groupMembershipDbPersister;
-    CourseGroupManager courseGroupManager;
+    private GroupDbLoader groupDbLoader;
+    private GroupDbPersister groupDbPersister;
+    private GroupMembershipDbPersister groupMembershipDbPersister;
+    private CourseGroupManager courseGroupManager;
 
 
     public Group getById(Id id) throws PersistenceException {
@@ -37,20 +37,12 @@ public class BbGroupDAO {
         return getGroupDbLoader().loadGroupsAndSetsByCourseId(id);
     }
 
-    public Collection<Group> getByCourseId(long id) throws PersistenceException {
-        return getByCourseId(getIdFromLong(id));
-    }
-
     public void createOrUpdate(Group group) throws PersistenceException, ValidationException {
         getGroupDbPersister().persist(group);
     }
 
     public void delete(Id id) throws PersistenceException {
         getGroupDbPersister().deleteById(id);
-    }
-
-    public void delete(long id) throws PersistenceException {
-        delete(getIdFromLong(id));
     }
 
     public void createOrUpdate(Group group, Set<Id> courseMembershipIds) throws PersistenceException, ValidationException {
@@ -67,11 +59,11 @@ public class BbGroupDAO {
         }
     }
 
-    public Id getIdFromLong(long id) {
+    private Id getIdFromLong(long id) {
         return Id.toId(Group.DATA_TYPE, id);
     }
 
-    public GroupDbLoader getGroupDbLoader() throws PersistenceException {
+    private GroupDbLoader getGroupDbLoader() throws PersistenceException {
         if(groupDbLoader == null) {
             groupDbLoader = GroupDbLoader.Default.getInstance();
         }
@@ -79,15 +71,7 @@ public class BbGroupDAO {
         return groupDbLoader;
     }
 
-    public CourseGroupManager getCourseGroupManager() {
-        if (courseGroupManager == null) {
-            courseGroupManager = CourseGroupManagerFactory.getInstance();
-        }
-
-        return courseGroupManager;
-    }
-
-    public GroupDbPersister getGroupDbPersister() throws PersistenceException {
+    private GroupDbPersister getGroupDbPersister() throws PersistenceException {
         if(groupDbPersister == null) {
             groupDbPersister = GroupDbPersister.Default.getInstance();
         }
@@ -95,7 +79,7 @@ public class BbGroupDAO {
         return groupDbPersister;
     }
 
-    public GroupMembershipDbPersister getGroupMembershipDbPersister() throws PersistenceException{
+    private GroupMembershipDbPersister getGroupMembershipDbPersister() throws PersistenceException{
         if(groupMembershipDbPersister == null) {
             groupMembershipDbPersister = GroupMembershipDbPersister.Default.getInstance();
         }
